@@ -1,5 +1,10 @@
 import numpy as np
 from sklearn.datasets import make_moons
+import torch
+from torch.utils.data import TensorDataset, DataLoader
+
+
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 def get_source_target():
@@ -33,11 +38,11 @@ def get_loader(source_X, target_X, source_y_task, target_y_task):
     target_y_task = torch.tensor(target_y_task, dtype=torch.float32)
     
     # 3. To GPU
-    source_X = source_X.to(device)
-    source_Y = source_Y.to(device)
-    target_X = target_X.to(device)
-    target_y_domain = target_y_domain.to(device)
-    target_y_task = target_y_task.to(device)
+    source_X = source_X.to(DEVICE)
+    source_Y = source_Y.to(DEVICE)
+    target_X = target_X.to(DEVICE)
+    target_y_domain = target_y_domain.to(DEVICE)
+    target_y_task = target_y_task.to(DEVICE)
     
     # 4. Instantiate DataLoader
     source_ds = TensorDataset(source_X, source_Y)
@@ -45,4 +50,4 @@ def get_loader(source_X, target_X, source_y_task, target_y_task):
     source_loader = DataLoader(source_ds, batch_size=34, shuffle=True)
     target_loader = DataLoader(target_ds, batch_size=34, shuffle=True)
     
-    return source_loader, target_loader
+    return source_loader, target_loader, source_y_task, source_X, target_X, target_y_task
