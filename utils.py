@@ -1,6 +1,8 @@
 import numpy as np
 from sklearn.datasets import make_moons
 import torch
+from torch import nn
+import torch.nn.functional as F
 from torch.utils.data import TensorDataset, DataLoader
 
 
@@ -51,3 +53,35 @@ def get_loader(source_X, target_X, source_y_task, target_y_task):
     target_loader = DataLoader(target_ds, batch_size=34, shuffle=True)
     
     return source_loader, target_loader, source_y_task, source_X, target_X, target_y_task
+
+
+class Encoder(nn.Module):
+    def __init__(self, input_size, output_size):
+        super().__init__()
+        self.fc1 = nn.Linear(input_size, output_size)
+
+    def forward(self, x):
+        return F.relu(self.fc1(x))
+
+
+class Decoder(nn.Module):
+    def __init__(self, input_size, output_size):
+        super().__init__()
+        self.fc1 = nn.Linear(input_size, 10)
+        self.fc2 = nn.Linear(10, 10)
+        self.fc3 = nn.Linear(10, output_size)
+
+    def forward(self, x):
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        x = self.fc3(x)
+        return x
+
+
+class ReverseGradient(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, input):
+        return input
+    @staticmethod
+    def backward(ctx, grad_output):
+        return grad_output * -1
