@@ -147,11 +147,15 @@ def fit(source_loader, target_loader, target_X, target_y_task, feature_extractor
     # 4. Trace Each Loss
     plt.plot(loss_domains, label="loss_domain")
     plt.plot(loss_tasks, label="loss_task")
-    plt.plot(loss_task_evals, label="loss_task_eval")
-    plt.xlabel("iter")
-    plt.ylabel("loss")
+    plt.xlabel("batch")
+    plt.ylabel("binary cross entropy loss")
     plt.legend()
-    # TODO: separate plots
+    
+    plt.figure()
+    plt.plot(loss_task_evals, label="loss_task_eval")
+    plt.xlabel("epoch")
+    plt.ylabel("binary cross entropy loss")
+    plt.legend()
     return feature_extractor, task_classifier
 
 
