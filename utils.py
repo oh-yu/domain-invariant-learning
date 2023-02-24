@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.datasets import make_moons
+from sklearn.manifold import TSNE
 import torch
 from torch import nn
 import torch.nn.functional as F
@@ -173,3 +174,20 @@ def fit_task_classifier(source_loader, task_classifier, task_optimizer, criterio
             # Updata Params
             task_optimizer.step()
     return task_classifier
+
+
+def visualize_tSNE(target_feature_eval, source_X, feature_extractor):
+    tsne = TSNE(n_components=2, learning_rate='auto', init='random', perplexity=3)
+    # TODO: Understand Argumetns for t-SNE
+
+    target_feature_eval = target_feature_eval.cpu().detach().numpy()
+    source_feature = feature_extractor(source_X)
+    source_feature = source_feature.cpu().detach().numpy()
+
+    target_feature_tsne = tsne.fit_transform(target_feature_eval)
+    source_feature_tsne = tsne.fit_transform(source_feature)
+    # TODO: Understand t-SNE Algo 
+
+    plt.scatter(source_feature_tsne[:, 0], source_feature_tsne[:, 1], label="Source")
+    plt.scatter(target_feature_tsne[:, 0], target_feature_tsne[:, 1], label="Target")
+    plt.legend()
