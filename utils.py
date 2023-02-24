@@ -159,7 +159,7 @@ def fit(source_loader, target_loader, target_X, target_y_task, feature_extractor
     return feature_extractor, task_classifier
 
 
-def fit_task_classifier(source_loader, task_classifier, task_optimizer, criterion, num_epochs=1000):
+def fit_without_adaptation(source_loader, task_classifier, task_optimizer, criterion, num_epochs=1000):
     for _ in range(num_epochs):
         for source_X_batch, source_Y_batch in source_loader:
             # Prep Data
