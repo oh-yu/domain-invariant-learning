@@ -9,7 +9,7 @@ from torch.utils.data import TensorDataset, DataLoader
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-def get_source_target():
+def get_source_target_from_make_moons():
     Xs, ys = make_moons(n_samples=100, noise=0.05)
     Xs[:, 0] -= 0.5
     theta = np.radians(-30)
