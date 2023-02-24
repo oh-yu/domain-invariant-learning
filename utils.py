@@ -152,3 +152,24 @@ def fit(source_loader, target_loader, target_X, target_y_task, feature_extractor
     plt.legend()
     # TODO: separate plots
     return feature_extractor, task_classifier
+
+
+def fit_task_classifier(source_loader, task_classifier, task_optimizer, criterion, num_epochs=1000):
+    for _ in range(num_epochs):
+        for source_X_batch, source_Y_batch in source_loader:
+            # Prep Data
+            source_X_batch = source_X_batch
+            source_y_task_batch = source_Y_batch[:, 0]
+
+            # Forward
+            pred_y_task = task_classifier(source_X_batch)
+            pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
+            loss_task = criterion(pred_y_task, source_y_task_batch)
+
+            # Backward
+            task_optimizer.zero_grad()
+            loss_task.backward()
+
+            # Updata Params
+            task_optimizer.step()
+    return task_classifier
