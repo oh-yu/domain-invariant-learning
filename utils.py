@@ -283,4 +283,4 @@ def raytune_trainer(config, options):
             pred_y_task_eval = task_classifier(target_feature_eval)
             pred_y_task_eval = torch.sigmoid(pred_y_task_eval).reshape(-1)
             loss_task_eval =  criterion(pred_y_task_eval, target_y_task)
-        tune.report(loss_task_eval.item())
+        tune.report(loss=loss_task_eval.item())
