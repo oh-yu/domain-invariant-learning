@@ -221,9 +221,9 @@ def raytune_trainer(config, options):
 
     # 3. Instantiate Criterion, Optimizer
     criterion = nn.BCELoss()
-    feature_optimizer = optim.Adam(feature_extractor.parameters(), lr=config["learning_rate"])
-    domain_optimizer = optim.Adam(domain_classifier.parameters(), lr=config["learning_rate"])
-    task_optimizer = optim.Adam(task_classifier.parameters(), lr=config["learning_rate"])
+    feature_optimizer = optim.Adam(feature_extractor.parameters(), lr=config["feature_learning_rate"], weight_decay=config["feature_weight_decay"], eps=config["feature_eps"])
+    domain_optimizer = optim.Adam(domain_classifier.parameters(), lr=config["domain_learning_rate"], weight_decay=config["domain_weight_decay"], eps=config["domain_eps"])
+    task_optimizer = optim.Adam(task_classifier.parameters(), lr=config["task_learning_rate"], weight_decay=config["task_weight_decay"], eps=config["task_eps"])
 
     # 4. Domain Invariant Learning
     reverse_grad = ReverseGradient.apply
