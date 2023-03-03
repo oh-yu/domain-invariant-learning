@@ -208,10 +208,9 @@ def visualize_tSNE(target_feature_eval, source_X, feature_extractor):
     plt.legend()
 
 
-def raytune_trainer(source_loader, target_loader, target_X, target_y_task,
-                    feature_extractor, domain_classifier, task_classifier, criterion,
-                    feature_optimizer, domain_optimizer, task_optimizer, num_epochs=1000):
+def raytune_trainer(config, options):
     # 0. Get Variables from Options
+    source_X, target_X, source_y_task, target_y_task = options.values()
 
     # 1. Instantiate DataLoader
     source_loader, target_loader, source_y_task, source_X, target_X, target_y_task = get_loader(source_X, target_X, source_y_task, target_y_task)
@@ -233,7 +232,7 @@ def raytune_trainer(source_loader, target_loader, target_X, target_y_task,
     # 4. Domain Invariant Learning
     reverse_grad = ReverseGradient.apply
     # TODO: Understand torch.autograd.Function.apply
-    for _ in range(num_epochs):
+    for _ in range(1000):
         feature_extractor.train()
         task_classifier.train()
 
