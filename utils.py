@@ -210,6 +210,17 @@ def visualize_tSNE(target_feature_eval, source_X, feature_extractor):
 def raytune_trainer(source_loader, target_loader, target_X, target_y_task,
                     feature_extractor, domain_classifier, task_classifier, criterion,
                     feature_optimizer, domain_optimizer, task_optimizer, num_epochs=1000):
+    # 0. Get Variables from Options
+
+    # 1. Instantiate DataLoader
+    source_loader, target_loader, source_y_task, source_X, target_X, target_y_task = get_loader(source_X, target_X, source_y_task, target_y_task)
+    # TODO: Get source_X, target_X, source_y_task, target_y_task from Options
+
+    # 2. Instantiate Feature Extractor, Domain Classifier, Task Classifier
+
+    # 3. Instantiate Optimizer
+
+    # 4. Domain Invariant Learning
     reverse_grad = ReverseGradient.apply
     # TODO: Understand torch.autograd.Function.apply
     for _ in range(num_epochs):
@@ -217,23 +228,23 @@ def raytune_trainer(source_loader, target_loader, target_X, target_y_task,
         task_classifier.train()
 
         for (source_X_batch, source_Y_batch), (target_X_batch, target_y_domain_batch) in zip(source_loader, target_loader):
-            # 0. Data
+            # 4.0. Data
             source_X_batch = source_X_batch
             source_y_task_batch = source_Y_batch[:, 0]
             source_y_domain_batch = source_Y_batch[:, 1]
             target_X_batch = target_X_batch
             target_y_domain_batch = target_y_domain_batch
 
-            # 1. Forward
-            # 1.1 Feature Extractor
+            # 4.1. Forward
+            # 4.1.1 Feature Extractor
             source_X_batch, target_X_batch = feature_extractor(source_X_batch), feature_extractor(target_X_batch)
 
-            # 1.2. Task Classifier
+            # 4.1.2. Task Classifier
             pred_y_task = task_classifier(source_X_batch)
             pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
             loss_task = criterion(pred_y_task, source_y_task_batch)
 
-            # 1.3. Domain Classifier
+            # 4.1.3. Domain Classifier
             source_X_batch, target_X_batch = reverse_grad(source_X_batch), reverse_grad(target_X_batch)
             pred_source_y_domain, pred_target_y_domain = domain_classifier(source_X_batch), domain_classifier(target_X_batch)
             pred_source_y_domain, pred_target_y_domain = torch.sigmoid(pred_source_y_domain).reshape(-1), torch.sigmoid(pred_target_y_domain).reshape(-1)
@@ -241,7 +252,7 @@ def raytune_trainer(source_loader, target_loader, target_X, target_y_task,
             loss_domain = criterion(pred_source_y_domain, source_y_domain_batch)
             loss_domain += criterion(pred_target_y_domain, target_y_domain_batch)
 
-            # 2. Backward, Update Params
+            # 4.2. Backward, Update Params
             domain_optimizer.zero_grad()
             task_optimizer.zero_grad()
             feature_optimizer.zero_grad()
@@ -253,7 +264,7 @@ def raytune_trainer(source_loader, target_loader, target_X, target_y_task,
             task_optimizer.step()
             feature_optimizer.step()
 
-        # 3. Evaluation
+        # 4.3. Evaluation
         feature_extractor.eval()
         task_classifier.eval()
 
