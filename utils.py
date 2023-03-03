@@ -1,5 +1,6 @@
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+from ray import tune
 from sklearn.datasets import make_moons
 from sklearn.manifold import TSNE
 import torch
@@ -206,9 +207,9 @@ def visualize_tSNE(target_feature_eval, source_X, feature_extractor):
     plt.legend()
 
 
-def raytune(source_loader, target_loader, target_X, target_y_task,
-            feature_extractor, domain_classifier, task_classifier, criterion,
-            feature_optimizer, domain_optimizer, task_optimizer, num_epochs=1000):
+def raytune_trainer(source_loader, target_loader, target_X, target_y_task,
+                    feature_extractor, domain_classifier, task_classifier, criterion,
+                    feature_optimizer, domain_optimizer, task_optimizer, num_epochs=1000):
     reverse_grad = ReverseGradient.apply
     # TODO: Understand torch.autograd.Function.apply
     for _ in range(num_epochs):
@@ -261,4 +262,4 @@ def raytune(source_loader, target_loader, target_X, target_y_task,
             pred_y_task_eval = task_classifier(target_feature_eval)
             pred_y_task_eval = torch.sigmoid(pred_y_task_eval).reshape(-1)
             loss_task_eval =  criterion(pred_y_task_eval, target_y_task)
-    return feature_extractor, task_classifier
+        tune.report(loss_task_eval.item())
