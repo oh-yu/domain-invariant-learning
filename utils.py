@@ -5,6 +5,7 @@ from sklearn.datasets import make_moons
 from sklearn.manifold import TSNE
 import torch
 from torch import nn
+from torch import optim
 import torch.nn.functional as F
 from torch.utils.data import TensorDataset, DataLoader
 
@@ -217,8 +218,17 @@ def raytune_trainer(source_loader, target_loader, target_X, target_y_task,
     # TODO: Get source_X, target_X, source_y_task, target_y_task from Options
 
     # 2. Instantiate Feature Extractor, Domain Classifier, Task Classifier
+    num_domains = 1
+    num_classes = 1
+    feature_extractor = Encoder(input_size=source_X.shape[1], output_size=config["hidden_size"]).to(DEVICE)
+    domain_classifier = Decoder(input_size=config["hidden_size"], output_size=num_domains).to(DEVICE)
+    task_classifier = Decoder(input_size=config["hidden_size"], output_size=num_classes).to(DEVICE)
 
-    # 3. Instantiate Optimizer
+    # 3. Instantiate Criterion, Optimizer
+    criterion = nn.BCELoss()
+    feature_optimizer = optim.Adam(feature_extractor.parameters(), lr=config["learning_rate"])
+    domain_optimizer = optim.Adam(domain_classifier.parameters(), lr=config["learning_rate"])
+    task_optimizer = optim.Adam(task_classifier.parameters(), lr=config["learning_rate"])
 
     # 4. Domain Invariant Learning
     reverse_grad = ReverseGradient.apply
