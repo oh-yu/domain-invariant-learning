@@ -138,10 +138,11 @@ def fit(source_loader, target_loader, target_X, target_y_task, feature_extractor
             feature_optimizer.step()
 
         # 3. Evaluation
-        target_feature_eval = feature_extractor(target_X)
-        pred_y_task_eval = task_classifier(target_feature_eval)
-        pred_y_task_eval = torch.sigmoid(pred_y_task_eval).reshape(-1)
-        loss_task_eval =  criterion(pred_y_task_eval, target_y_task)
+        with torch.no_grad():
+            target_feature_eval = feature_extractor(target_X)
+            pred_y_task_eval = task_classifier(target_feature_eval)
+            pred_y_task_eval = torch.sigmoid(pred_y_task_eval).reshape(-1)
+            loss_task_eval =  criterion(pred_y_task_eval, target_y_task)
         loss_task_evals.append(loss_task_eval.item())
     
     # 4. Trace Each Loss
