@@ -69,11 +69,11 @@ class Encoder(nn.Module):
 
 
 class Decoder(nn.Module):
-    def __init__(self, input_size, output_size):
+    def __init__(self, input_size, output_size, fc_sizes=[10, 10]):
         super().__init__()
-        self.fc1 = nn.Linear(input_size, 10)
-        self.fc2 = nn.Linear(10, 10)
-        self.fc3 = nn.Linear(10, output_size)
+        self.fc1 = nn.Linear(input_size, fc_sizes[0])
+        self.fc2 = nn.Linear(fc_sizes[0], fc_sizes[1])
+        self.fc3 = nn.Linear(fc_sizes[1], output_size)
 
     def forward(self, x):
         x = F.relu(self.fc1(x))
