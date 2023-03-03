@@ -100,7 +100,6 @@ def fit(source_loader, target_loader, target_X, target_y_task, feature_extractor
     for _ in range(num_epochs):
         feature_extractor.train()
         task_classifier.train()
-        domain_classifier.train()
 
         for (source_X_batch, source_Y_batch), (target_X_batch, target_y_domain_batch) in zip(source_loader, target_loader):
             # 0. Data
@@ -144,7 +143,6 @@ def fit(source_loader, target_loader, target_X, target_y_task, feature_extractor
         # 3. Evaluation
         feature_extractor.eval()
         task_classifier.eval()
-        domain_classifier.eval()
 
         with torch.no_grad():
             target_feature_eval = feature_extractor(target_X)
