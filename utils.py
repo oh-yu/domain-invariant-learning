@@ -204,3 +204,61 @@ def visualize_tSNE(target_feature_eval, source_X, feature_extractor):
     plt.scatter(source_feature_tsne[:, 0], source_feature_tsne[:, 1], label="Source")
     plt.scatter(target_feature_tsne[:, 0], target_feature_tsne[:, 1], label="Target")
     plt.legend()
+
+
+def raytune(source_loader, target_loader, target_X, target_y_task,
+            feature_extractor, domain_classifier, task_classifier, criterion,
+            feature_optimizer, domain_optimizer, task_optimizer, num_epochs=1000):
+    reverse_grad = ReverseGradient.apply
+    # TODO: Understand torch.autograd.Function.apply
+    for _ in range(num_epochs):
+        feature_extractor.train()
+        task_classifier.train()
+
+        for (source_X_batch, source_Y_batch), (target_X_batch, target_y_domain_batch) in zip(source_loader, target_loader):
+            # 0. Data
+            source_X_batch = source_X_batch
+            source_y_task_batch = source_Y_batch[:, 0]
+            source_y_domain_batch = source_Y_batch[:, 1]
+            target_X_batch = target_X_batch
+            target_y_domain_batch = target_y_domain_batch
+
+            # 1. Forward
+            # 1.1 Feature Extractor
+            source_X_batch, target_X_batch = feature_extractor(source_X_batch), feature_extractor(target_X_batch)
+
+            # 1.2. Task Classifier
+            pred_y_task = task_classifier(source_X_batch)
+            pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
+            loss_task = criterion(pred_y_task, source_y_task_batch)
+
+            # 1.3. Domain Classifier
+            source_X_batch, target_X_batch = reverse_grad(source_X_batch), reverse_grad(target_X_batch)
+            pred_source_y_domain, pred_target_y_domain = domain_classifier(source_X_batch), domain_classifier(target_X_batch)
+            pred_source_y_domain, pred_target_y_domain = torch.sigmoid(pred_source_y_domain).reshape(-1), torch.sigmoid(pred_target_y_domain).reshape(-1)
+
+            loss_domain = criterion(pred_source_y_domain, source_y_domain_batch)
+            loss_domain += criterion(pred_target_y_domain, target_y_domain_batch)
+
+            # 2. Backward, Update Params
+            domain_optimizer.zero_grad()
+            task_optimizer.zero_grad()
+            feature_optimizer.zero_grad()
+
+            loss_domain.backward(retain_graph = True)
+            loss_task.backward() 
+
+            domain_optimizer.step()
+            task_optimizer.step()
+            feature_optimizer.step()
+
+        # 3. Evaluation
+        feature_extractor.eval()
+        task_classifier.eval()
+
+        with torch.no_grad():
+            target_feature_eval = feature_extractor(target_X)
+            pred_y_task_eval = task_classifier(target_feature_eval)
+            pred_y_task_eval = torch.sigmoid(pred_y_task_eval).reshape(-1)
+            loss_task_eval =  criterion(pred_y_task_eval, target_y_task)
+    return feature_extractor, task_classifier
