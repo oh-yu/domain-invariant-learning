@@ -1,5 +1,5 @@
 # wandb api key
-./wandb_api_key
+wandb_api_key.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
