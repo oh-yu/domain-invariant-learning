@@ -209,12 +209,8 @@ def visualize_tSNE(target_feature_eval, source_X, feature_extractor):
 
 
 def raytune_trainer(config, options):
-    # 0. Get Variables from Options
-    source_X, target_X, source_y_task, target_y_task = options.values()
-
-    # 1. Instantiate DataLoader
-    source_loader, target_loader, source_y_task, source_X, target_X, target_y_task = get_loader(source_X, target_X, source_y_task, target_y_task)
-    # TODO: Get source_X, target_X, source_y_task, target_y_task from Options
+    # 1. Get Data from Options
+    source_loader, target_loader, source_X, target_X, target_y_task = options.values()
 
     # 2. Instantiate Feature Extractor, Domain Classifier, Task Classifier
     num_domains = 1
