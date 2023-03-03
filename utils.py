@@ -89,7 +89,9 @@ class ReverseGradient(torch.autograd.Function):
         return grad_output * -1
 
 
-def fit(source_loader, target_loader, target_X, target_y_task, feature_extractor, domain_classifier, task_classifier, criterion, feature_optimizer, domain_optimizer, task_optimizer, num_epochs=1000):
+def fit(source_loader, target_loader, target_X, target_y_task,
+        feature_extractor, domain_classifier, task_classifier, criterion,
+        feature_optimizer, domain_optimizer, task_optimizer, num_epochs=1000):
     
     reverse_grad = ReverseGradient.apply
     # TODO: Understand torch.autograd.Function.apply
