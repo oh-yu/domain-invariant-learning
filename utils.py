@@ -216,14 +216,19 @@ def raytune_trainer(config, options):
     num_domains = 1
     num_classes = 1
     feature_extractor = Encoder(input_size=source_X.shape[1], output_size=config["hidden_size"]).to(DEVICE)
-    domain_classifier = Decoder(input_size=config["hidden_size"], output_size=num_domains).to(DEVICE)
-    task_classifier = Decoder(input_size=config["hidden_size"], output_size=num_classes).to(DEVICE)
+    domain_classifier = Decoder(input_size=config["hidden_size"], output_size=num_domains,
+                                fc_sizes=[config["domain_fc1_size"], config["domain_fc2_size"]]).to(DEVICE)
+    task_classifier = Decoder(input_size=config["hidden_size"], output_size=num_classes,
+                              fc_sizes=[config["task_fc1_size"], config["task_fc2_size"]]).to(DEVICE)
 
     # 3. Instantiate Criterion, Optimizer
     criterion = nn.BCELoss()
-    feature_optimizer = optim.Adam(feature_extractor.parameters(), lr=config["feature_learning_rate"], weight_decay=config["feature_weight_decay"], eps=config["feature_eps"])
-    domain_optimizer = optim.Adam(domain_classifier.parameters(), lr=config["domain_learning_rate"], weight_decay=config["domain_weight_decay"], eps=config["domain_eps"])
-    task_optimizer = optim.Adam(task_classifier.parameters(), lr=config["task_learning_rate"], weight_decay=config["task_weight_decay"], eps=config["task_eps"])
+    feature_optimizer = optim.Adam(feature_extractor.parameters(), lr=config["feature_learning_rate"],
+                                   weight_decay=config["feature_weight_decay"], eps=config["feature_eps"])
+    domain_optimizer = optim.Adam(domain_classifier.parameters(), lr=config["domain_learning_rate"],
+                                  weight_decay=config["domain_weight_decay"], eps=config["domain_eps"])
+    task_optimizer = optim.Adam(task_classifier.parameters(), lr=config["task_learning_rate"],
+                                weight_decay=config["task_weight_decay"], eps=config["task_eps"])
 
     # 4. Domain Invariant Learning
     reverse_grad = ReverseGradient.apply
