@@ -231,6 +231,7 @@ def raytune_trainer(config, options):
                                 weight_decay=config["task_weight_decay"], eps=config["task_eps"])
 
     # 4. Domain Invariant Learning
+    # TODO: Refactoring, Mostly Duplicated with "fit"
     reverse_grad = ReverseGradient.apply
     # TODO: Understand torch.autograd.Function.apply
     for _ in range(1000):
