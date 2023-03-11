@@ -93,7 +93,7 @@ class ReverseGradient(torch.autograd.Function):
 
 def fit(source_loader, target_loader, target_X, target_y_task,
         feature_extractor, domain_classifier, task_classifier, criterion,
-        feature_optimizer, domain_optimizer, task_optimizer, num_epochs=1000):
+        feature_optimizer, domain_optimizer, task_optimizer, num_epochs=1000, is_timeseries=False):
     
     reverse_grad = ReverseGradient.apply
     # TODO: Understand torch.autograd.Function.apply
@@ -118,7 +118,13 @@ def fit(source_loader, target_loader, target_X, target_y_task,
             source_X_batch, target_X_batch = feature_extractor(source_X_batch), feature_extractor(target_X_batch)
 
             # 1.2. Task Classifier
-            pred_y_task = task_classifier(source_X_batch)
+            if is_timeseries:
+                n_days = source_X_batch.shape[0]//16
+                source_X_batch = source_X_batch.reshape(n_days, 16, source_X_batch.shape[1])
+                pred_y_task = task_classifier(source_X_batch, DEVICE)
+            else:
+                pred_y_task = task_classifier(source_X_batch)
+
             pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
             loss_task = criterion(pred_y_task, source_y_task_batch)
             loss_tasks.append(loss_task.item())
@@ -150,7 +156,14 @@ def fit(source_loader, target_loader, target_X, target_y_task,
 
         with torch.no_grad():
             target_feature_eval = feature_extractor(target_X)
-            pred_y_task_eval = task_classifier(target_feature_eval)
+
+            if is_timeseries:
+                n_days = target_feature_eval.shape[0]//16
+                target_feature_eval = target_feature_eval.reshape(n_days, 16, target_feature_eval.shape[1])
+                pred_y_task_eval = task_classifier(target_feature_eval, DEVICE)
+            else:
+                pred_y_task_eval = task_classifier(target_feature_eval)
+
             pred_y_task_eval = torch.sigmoid(pred_y_task_eval).reshape(-1)
             loss_task_eval =  criterion(pred_y_task_eval, target_y_task)
         loss_task_evals.append(loss_task_eval.item())
