@@ -29,7 +29,7 @@ def get_source_target_from_make_moons():
     return Xs, Xs_rotated, ys, ys_rotated, x_grid, x1_grid, x2_grid
 
 
-def get_loader(source_X, target_X, source_y_task, target_y_task):
+def get_loader(source_X, target_X, source_y_task, target_y_task, batch_size=34):
     # 1. Create y_domain
     source_y_domain = np.zeros_like(source_y_task).reshape(-1, 1)
     source_y_task = source_y_task.reshape(-1, 1)
@@ -53,8 +53,8 @@ def get_loader(source_X, target_X, source_y_task, target_y_task):
     # 4. Instantiate DataLoader
     source_ds = TensorDataset(source_X, source_Y)
     target_ds = TensorDataset(target_X, target_y_domain)
-    source_loader = DataLoader(source_ds, batch_size=34, shuffle=True)
-    target_loader = DataLoader(target_ds, batch_size=34, shuffle=True)
+    source_loader = DataLoader(source_ds, batch_size=batch_size, shuffle=True)
+    target_loader = DataLoader(target_ds, batch_size=batch_size, shuffle=True)
     
     return source_loader, target_loader, source_y_task, source_X, target_X, target_y_task
 
