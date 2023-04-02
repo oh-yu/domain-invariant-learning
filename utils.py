@@ -65,6 +65,44 @@ def get_source_target_from_make_moons(n_samples=100, noise=0.05, rotation_degree
 
 
 def get_loader(source_X, target_X, source_y_task, target_y_task, batch_size=34):
+    """
+    Get instances of torch.utils.data.DataLoader for domain invariant learning,
+    also return source and target data instantiated as torch.Tensor(except for source_y_task).
+
+    Parameters
+    ----------
+    source_X : ndarray of shape(N, D)
+        N is the number of samples, D is the number of features.
+        Supervised source's feature.
+    target_X : ndarray of shape(N, D)
+        Unsupervised target's feature.
+    source_y_task : ndarray of shape(N, )
+        Supervised source's task label.
+    target_y_task : ndarray of shape(N, )
+        Unsupervised target's task label, only used for evaluation.
+    batch_size : int
+        Batch size to be set in DataLoader.
+
+    Returns
+    -------
+    source_loader : torch.utils.data.DataLoader
+        Contains source's feature, task label and domain label.
+    target_loader : torch.utils.data.DataLoader
+        Contains target's feature, domain label.
+
+    source_y_task : ndarray of shape(N, 1)
+        Source's task label.
+        Not used for Training.
+    source_X : torch.Tensor of shape(N, D)
+        Source's feature instantiated as torch.Tensor,
+        also sent to on GPU.
+    target_X : torch.Tensor of shape(N, D)
+        Target's feature instantiated as torch.Tensor,
+        also sent to on GPU.
+    target_y_task : torch.Tensor of shape(N, )
+        Target's task label instantiated as torch.Tensor,
+        also sent to on GPU.
+    """
     # 1. Create y_domain
     source_y_domain = np.zeros_like(source_y_task).reshape(-1, 1)
     source_y_task = source_y_task.reshape(-1, 1)
