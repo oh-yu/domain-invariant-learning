@@ -257,6 +257,23 @@ def fit(source_loader, target_loader, target_X, target_y_task,
 
 
 def fit_without_adaptation(source_loader, task_classifier, task_optimizer, criterion, num_epochs=1000):
+    """
+    Deep Learning model's fit method without domain adaptation.
+
+    Parameters
+    ----------
+    source_loader : torch.utils.data.DataLoader
+        Contains source's feature, task label and domain label.
+        Domain Label is not used in this method.
+    task_classifier : subclass of torch.nn.Module
+        Target Deep Learning model.
+        Currently it should output one dimensional prediction(only accept binary classification).
+    task_optimizer : subclass of torch.optim.Optimizer
+        Optimizer required instantiation with task_classifier.parameters().
+    criterion : torch.nn.modules.loss.BCELoss
+        Instance calculating Binary Cross Entropy Loss.
+    num_epochs : int
+    """
     for _ in range(num_epochs):
         for source_X_batch, source_Y_batch in source_loader:
             # Prep Data
