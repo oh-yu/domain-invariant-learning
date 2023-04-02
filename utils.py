@@ -13,10 +13,10 @@ from torch.utils.data import TensorDataset, DataLoader
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-def get_source_target_from_make_moons():
-    Xs, ys = make_moons(n_samples=100, noise=0.05)
+def get_source_target_from_make_moons(n_samples=100, noise=0.05, rotation_degree=-30):
+    Xs, ys = make_moons(n_samples=n_samples, noise=noise)
     Xs[:, 0] -= 0.5
-    theta = np.radians(-30)
+    theta = np.radians(rotation_degree)
     cos, sin = np.cos(theta), np.sin(theta)
     rotate_matrix = np.array([[cos, -sin],[sin, cos]])
     Xs_rotated = Xs.dot(rotate_matrix)
