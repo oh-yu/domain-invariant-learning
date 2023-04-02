@@ -58,7 +58,7 @@ def get_source_target_from_make_moons(n_samples=100, noise=0.05, rotation_degree
     x1_min, x2_min = np.min([source_X.min(0), target_X.min(0)], 0)
     x1_max, x2_max = np.max([source_X.max(0), target_X.max(0)], 0)
     x1_grid, x2_grid = np.meshgrid(np.linspace(x1_min-0.1, x1_max+0.1, 100), np.linspace(x2_min-0.1, x2_max+0.1, 100))
-    x_grid = np.stack([x1_grid.reshape(-1), x2_grid.reshape(-1)])
+    x_grid = np.stack([x1_grid.reshape(-1), x2_grid.reshape(-1)], axis=0)
     return source_X, target_X, source_y, target_y, x_grid, x1_grid, x2_grid
 
 
