@@ -247,7 +247,6 @@ def visualize_tSNE(target_feature_eval, source_X, feature_extractor):
 
     target_feature_tsne = tsne.fit_transform(target_feature_eval)
     source_feature_tsne = tsne.fit_transform(source_feature)
-    # TODO: Understand t-SNE Algo 
 
     plt.scatter(source_feature_tsne[:, 0], source_feature_tsne[:, 1], label="Source")
     plt.scatter(target_feature_tsne[:, 0], target_feature_tsne[:, 1], label="Target")
