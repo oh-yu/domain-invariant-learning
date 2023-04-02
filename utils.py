@@ -30,13 +30,13 @@ def get_source_target_from_make_moons(n_samples=100, noise=0.05, rotation_degree
 
     Returns
     -------
-    X : ndarray of shape(n_samples, 2)
+    source_X : ndarray of shape(n_samples, 2)
         The generated source feature.
-    X_rotated : ndarray of shape(n_samples, 2)
+    target_X : ndarray of shape(n_samples, 2)
         The generated target feature.
-    y : ndarray of shape(n_samples, )
+    source_y : ndarray of shape(n_samples, )
         The generated source label.
-    y_rotated : ndarray of shape(n_samples, )
+    target_y : ndarray of shape(n_samples, )
         The generated target label, this is not used for training.
     x_grid : ndarray of shape(2, 10000)
         Stacked meshgrid points, each row is each dimension.
@@ -45,19 +45,19 @@ def get_source_target_from_make_moons(n_samples=100, noise=0.05, rotation_degree
     x2_grid : ndarray of shape(100, 100)
         Feature's second dimentional Meshgrid points.
     """
-    X, y = make_moons(n_samples=n_samples, noise=noise)
-    X[:, 0] -= 0.5
+    source_X, source_y = make_moons(n_samples=n_samples, noise=noise)
+    source_X[:, 0] -= 0.5
     theta = np.radians(rotation_degree)
     cos, sin = np.cos(theta), np.sin(theta)
     rotate_matrix = np.array([[cos, -sin],[sin, cos]])
-    X_rotated = X.dot(rotate_matrix)
-    y_rotated = y
+    target_X = source_X.dot(rotate_matrix)
+    target_y = source_y
 
-    x1_min, x2_min = np.min([X.min(0), X_rotated.min(0)], 0)
-    x1_max, x2_max = np.max([X.max(0), X_rotated.max(0)], 0)
+    x1_min, x2_min = np.min([source_X.min(0), target_X.min(0)], 0)
+    x1_max, x2_max = np.max([source_X.max(0), target_X.max(0)], 0)
     x1_grid, x2_grid = np.meshgrid(np.linspace(x1_min-0.1, x1_max+0.1, 100), np.linspace(x2_min-0.1, x2_max+0.1, 100))
     x_grid = np.stack([x1_grid.reshape(-1), x2_grid.reshape(-1)])
-    return X, X_rotated, y, y_rotated, x_grid, x1_grid, x2_grid
+    return source_X, target_X, source_y, target_y, x_grid, x1_grid, x2_grid
 
 
 def get_loader(source_X, target_X, source_y_task, target_y_task, batch_size=34):
