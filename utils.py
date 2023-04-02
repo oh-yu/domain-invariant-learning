@@ -277,22 +277,20 @@ def fit_without_adaptation(source_loader, task_classifier, task_optimizer, crite
     return task_classifier
 
 
-def visualize_tSNE(target_feature_eval, source_X, feature_extractor):
+def visualize_tSNE(target_feature, source_feature):
     """
     Draw scatter plot including t-SNE encoded feature for source and target data.
     Small difference between them imply success of domain invarinat learning(only in the point of domain invariant).
 
     Parameters
     ----------
+    target_feature : ndarray of shape(N, D)
+        N is the number of samples, D is the number of features.
+    source_feature : ndarray of shape(N, D)
     """
     tsne = TSNE(n_components=2, learning_rate='auto', init='random', perplexity=3)
     # TODO: Understand Argumetns for t-SNE
-
-    target_feature_eval = target_feature_eval.cpu().detach().numpy()
-    source_feature = feature_extractor(source_X)
-    source_feature = source_feature.cpu().detach().numpy()
-
-    target_feature_tsne = tsne.fit_transform(target_feature_eval)
+    target_feature_tsne = tsne.fit_transform(target_feature)
     source_feature_tsne = tsne.fit_transform(source_feature)
 
     plt.scatter(source_feature_tsne[:, 0], source_feature_tsne[:, 1], label="Source")
