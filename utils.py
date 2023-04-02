@@ -14,19 +14,50 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 def get_source_target_from_make_moons(n_samples=100, noise=0.05, rotation_degree=-30):
-    Xs, ys = make_moons(n_samples=n_samples, noise=noise)
-    Xs[:, 0] -= 0.5
+    """
+    Get a svm instance with the best parameter, trained by GridSearchCV().
+    Current params were selected by evaluation on a wider grid and looking at the heatmap.
+
+    Parameters
+    ----------
+    n_samples : int
+        Represents the number of make_moons samples to be generated.
+    noise : int
+        Represents standard deviation of gaussian noise.
+    rotatin_degree : int
+        Represents degree to be rotated.
+        Used for generating unsupervised target data in domain adaptation problem.
+
+    Returns
+    -------
+    X : ndarray of shape(n_samples, 2)
+        The generated source feature.
+    X_rotated : ndarray of shape(n_samples, 2)
+        The generated target feature.
+    y : ndarray of shape(n_samples, )
+        The generated source label.
+    y_rotated : ndarray of shape(n_samples, )
+        The generated target label, this is not used for training.
+    x_grid : ndarray of shape(2, 10000)
+        Stacked meshgrid points, each row is each dimension.
+    x1_grid : ndarray of shape(100, 100)
+        Feature's first dimentional Meshgrid points.
+    x2_grid : ndarray of shape(100, 100)
+        Feature's second dimentional Meshgrid points.
+    """
+    X, y = make_moons(n_samples=n_samples, noise=noise)
+    X[:, 0] -= 0.5
     theta = np.radians(rotation_degree)
     cos, sin = np.cos(theta), np.sin(theta)
     rotate_matrix = np.array([[cos, -sin],[sin, cos]])
-    Xs_rotated = Xs.dot(rotate_matrix)
-    ys_rotated = ys
+    X_rotated = X.dot(rotate_matrix)
+    y_rotated = y
 
-    x1_min, x2_min = np.min([Xs.min(0), Xs_rotated.min(0)], 0)
-    x1_max, x2_max = np.max([Xs.max(0), Xs_rotated.max(0)], 0)
+    x1_min, x2_min = np.min([X.min(0), X_rotated.min(0)], 0)
+    x1_max, x2_max = np.max([X.max(0), X_rotated.max(0)], 0)
     x1_grid, x2_grid = np.meshgrid(np.linspace(x1_min-0.1, x1_max+0.1, 100), np.linspace(x2_min-0.1, x2_max+0.1, 100))
     x_grid = np.stack([x1_grid.reshape(-1), x2_grid.reshape(-1)])
-    return Xs, Xs_rotated, ys, ys_rotated, x_grid, x1_grid, x2_grid
+    return X, X_rotated, y, y_rotated, x_grid, x1_grid, x2_grid
 
 
 def get_loader(source_X, target_X, source_y_task, target_y_task, batch_size=34):
