@@ -11,6 +11,8 @@ from torch.utils.data import TensorDataset, DataLoader
 
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+COL_IDX_TASK = 0
+COL_IDX_DOMAIN = 1
 
 
 def get_source_target_from_make_moons(n_samples=100, noise=0.05, rotation_degree=-30):
@@ -141,8 +143,8 @@ def fit(source_loader, target_loader, target_X, target_y_task,
         for (source_X_batch, source_Y_batch), (target_X_batch, target_y_domain_batch) in zip(source_loader, target_loader):
             # 0. Data
             source_X_batch = source_X_batch
-            source_y_task_batch = source_Y_batch[:, 0]
-            source_y_domain_batch = source_Y_batch[:, 1]
+            source_y_task_batch = source_Y_batch[:, COL_IDX_TASK]
+            source_y_domain_batch = source_Y_batch[:, COL_IDX_DOMAIN]
             target_X_batch = target_X_batch
             target_y_domain_batch = target_y_domain_batch
 
@@ -221,7 +223,7 @@ def fit_without_adaptation(source_loader, task_classifier, task_optimizer, crite
         for source_X_batch, source_Y_batch in source_loader:
             # Prep Data
             source_X_batch = source_X_batch
-            source_y_task_batch = source_Y_batch[:, 0]
+            source_y_task_batch = source_Y_batch[:, COL_IDX_TASK]
 
             # Forward
             pred_y_task = task_classifier(source_X_batch)
