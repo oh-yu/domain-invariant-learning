@@ -24,8 +24,10 @@ def get_source_target_from_make_moons(n_samples=100, noise=0.05, rotation_degree
     ----------
     n_samples : int
         Represents the number of make_moons samples to be generated.
+
     noise : int
         Represents standard deviation of gaussian noise.
+
     rotatin_degree : int
         Represents degree to be rotated.
         Used for generating unsupervised target data in domain adaptation problem.
@@ -34,18 +36,22 @@ def get_source_target_from_make_moons(n_samples=100, noise=0.05, rotation_degree
     -------
     source_X : ndarray of shape(n_samples, 2)
         The generated source feature.
+
     target_X : ndarray of shape(n_samples, 2)
         The generated target feature.
 
     source_y : ndarray of shape(n_samples, )
         The generated source label.
+
     target_y : ndarray of shape(n_samples, )
         The generated target label, this is not used for ML model training.
 
     x_grid : ndarray of shape(2, 10000)
         Stacked meshgrid points, each row is each dimension, used for visualization.
+
     x1_grid : ndarray of shape(100, 100)
         The first dimentional Meshgrid points, used for visualization.
+
     x2_grid : ndarray of shape(100, 100)
         The second dimentional Meshgrid points, used for visualization.
     """
@@ -74,12 +80,16 @@ def get_loader(source_X, target_X, source_y_task, target_y_task, batch_size=34):
     source_X : ndarray of shape(N, D)
         N is the number of samples, D is the number of features.
         Supervised source's feature.
+
     target_X : ndarray of shape(N, D)
         Unsupervised target's feature.
+
     source_y_task : ndarray of shape(N, )
         Supervised source's task label.
+
     target_y_task : ndarray of shape(N, )
         Unsupervised target's task label, only used for evaluation.
+
     batch_size : int
         Batch size to be set in DataLoader.
 
@@ -87,18 +97,22 @@ def get_loader(source_X, target_X, source_y_task, target_y_task, batch_size=34):
     -------
     source_loader : torch.utils.data.DataLoader
         Contains source's feature, task label and domain label.
+
     target_loader : torch.utils.data.DataLoader
         Contains target's feature, domain label.
 
     source_y_task : ndarray of shape(N, 1)
         Source's task label.
         Not used for Training.
+
     source_X : torch.Tensor of shape(N, D)
         Source's feature instantiated as torch.Tensor,
         also sent to on GPU.
+
     target_X : torch.Tensor of shape(N, D)
         Target's feature instantiated as torch.Tensor,
         also sent to on GPU.
+
     target_y_task : torch.Tensor of shape(N, )
         Target's task label instantiated as torch.Tensor,
         also sent to on GPU.
@@ -167,6 +181,58 @@ class ReverseGradient(torch.autograd.Function):
 def fit(source_loader, target_loader, target_X, target_y_task,
         feature_extractor, domain_classifier, task_classifier, criterion,
         feature_optimizer, domain_optimizer, task_optimizer, num_epochs=1000, is_timeseries=False):
+    """
+    Fit Feature Extractor, Domain Classifier, Task Classifier by Domain Invarint Learning Algo.
+
+    Parameters
+    ----------
+    source_loader : torch.utils.data.DataLoader
+        Iterable containing batched source's feature, task label and domain label.
+
+    target_loader : torch.utils.data.DataLoader
+        Iterable containing batched target's feature, domain label.
+
+    target_X : torch.Tensor of shape(N, D)
+        Target's feature instantiated as torch.Tensor,
+        also sent to on GPU.
+
+    target_y_task : torch.Tensor of shape(N, )
+        Target's task label instantiated as torch.Tensor,
+        also sent to on GPU.
+
+    feature_extractor : subclass of torch.nn.Module
+        Feature Extractor to be optimized in both of adversarial direction,
+        against Domain Classifier and the same direction as Task Classifier.
+
+    domain_classifier : subclass of torch.nn.Module
+        Domain Classifier to be optimized in minimizing the loss of Domain Classification.
+
+    task_classifier : subclass of torch.nn.Module
+        Task Classifier to be optimized in minimizing the loss of Task Classification.
+
+    criterion : torch.nn.modules.loss.BCELoss
+        Instance calculating Binary Cross Entropy Loss.
+
+    feature_optimizer : subclass of torch.optim.Optimizer
+        Optimizer required instantiation with feature_extractor.parameters().
+
+    domain_optimizer : subclass of torch.optim.Optimizer
+        Optimizer required instantiation with domain_classifier.parameters().
+
+    task_optimizer : subclass of torch.optim.Optimizer
+        Optimizer required instantiation with task_classifier.parameters().
+
+    num_epochs : int
+    is_timeseries : bool
+
+    Returns
+    -------
+    feature_extractor : subclass of torch.nn.Module
+        Opitimized Feature Extractor.
+
+    task_classifier : subclass of torch.nn.Module
+        Opitimized Task Classifier.
+    """
     
     reverse_grad = ReverseGradient.apply
     # TODO: Understand torch.autograd.Function.apply
@@ -265,13 +331,17 @@ def fit_without_adaptation(source_loader, task_classifier, task_optimizer, crite
     source_loader : torch.utils.data.DataLoader
         Contains source's feature, task label and domain label.
         Domain Label is not used in this method.
+
     task_classifier : subclass of torch.nn.Module
         Target Deep Learning model.
         Currently it should output one dimensional prediction(only accept binary classification).
+
     task_optimizer : subclass of torch.optim.Optimizer
         Optimizer required instantiation with task_classifier.parameters().
+
     criterion : torch.nn.modules.loss.BCELoss
         Instance calculating Binary Cross Entropy Loss.
+
     num_epochs : int
     """
     for _ in range(num_epochs):
@@ -303,6 +373,7 @@ def visualize_tSNE(target_feature, source_feature):
     ----------
     target_feature : ndarray of shape(N, D)
         N is the number of samples, D is the number of features.
+
     source_feature : ndarray of shape(N, D)
     """
     tsne = TSNE(n_components=2, learning_rate='auto', init='random', perplexity=3)
