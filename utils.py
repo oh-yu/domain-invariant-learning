@@ -95,10 +95,10 @@ def get_loader(source_X, target_X, source_y_task, target_y_task, batch_size=34):
 
     Returns
     -------
-    source_loader : torch.utils.data.DataLoader
+    source_loader : torch.utils.data.dataloader.DataLoader
         Contains source's feature, task label and domain label.
 
-    target_loader : torch.utils.data.DataLoader
+    target_loader : torch.utils.data.dataloader.DataLoader
         Contains target's feature, domain label.
 
     source_y_task : ndarray of shape(N, 1)
@@ -186,10 +186,10 @@ def fit(source_loader, target_loader, target_X, target_y_task,
 
     Parameters
     ----------
-    source_loader : torch.utils.data.DataLoader
+    source_loader : torch.utils.data.dataloader.DataLoader
         Iterable containing batched source's feature, task label and domain label.
 
-    target_loader : torch.utils.data.DataLoader
+    target_loader : torch.utils.data.dataloader.DataLoader
         Iterable containing batched target's feature, domain label.
 
     target_X : torch.Tensor of shape(N, D)
