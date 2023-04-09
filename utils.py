@@ -1,11 +1,9 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from ray import tune
 from sklearn.datasets import make_moons
 from sklearn.manifold import TSNE
 import torch
 from torch import nn
-from torch import optim
 import torch.nn.functional as F
 from torch.utils.data import TensorDataset, DataLoader
 
@@ -65,7 +63,8 @@ def get_source_target_from_make_moons(n_samples=100, noise=0.05, rotation_degree
 
     x1_min, x2_min = np.min([source_X.min(0), target_X.min(0)], axis=0)
     x1_max, x2_max = np.max([source_X.max(0), target_X.max(0)], axis=0)
-    x1_grid, x2_grid = np.meshgrid(np.linspace(x1_min-0.1, x1_max+0.1, 100), np.linspace(x2_min-0.1, x2_max+0.1, 100))
+    x1_grid, x2_grid = np.meshgrid(np.linspace(x1_min-0.1, x1_max+0.1, 100),
+                                   np.linspace(x2_min-0.1, x2_max+0.1, 100))
     x_grid = np.stack([x1_grid.reshape(-1), x2_grid.reshape(-1)], axis=0)
     return source_X, target_X, source_y, target_y, x_grid, x1_grid, x2_grid
 
@@ -129,20 +128,20 @@ def get_loader(source_X, target_X, source_y_task, target_y_task, batch_size=34):
     target_X = torch.tensor(target_X, dtype=torch.float32)
     target_y_domain = torch.tensor(target_y_domain, dtype=torch.float32)
     target_y_task = torch.tensor(target_y_task, dtype=torch.float32)
-    
+
     # 3. To GPU
     source_X = source_X.to(DEVICE)
     source_Y = source_Y.to(DEVICE)
     target_X = target_X.to(DEVICE)
     target_y_domain = target_y_domain.to(DEVICE)
     target_y_task = target_y_task.to(DEVICE)
-    
+
     # 4. Instantiate DataLoader
     source_ds = TensorDataset(source_X, source_Y)
     target_ds = TensorDataset(target_X, target_y_domain)
     source_loader = DataLoader(source_ds, batch_size=batch_size, shuffle=True)
     target_loader = DataLoader(target_ds, batch_size=batch_size, shuffle=True)
-    
+
     return source_loader, target_loader, source_y_task, source_X, target_X, target_y_task
 
 
@@ -171,8 +170,8 @@ class Decoder(nn.Module):
 
 class ReverseGradient(torch.autograd.Function):
     @staticmethod
-    def forward(ctx, input):
-        return input
+    def forward(ctx, x):
+        return x
     @staticmethod
     def backward(ctx, grad_output):
         return grad_output * -1
@@ -233,7 +232,7 @@ def fit(source_loader, target_loader, target_X, target_y_task,
     task_classifier : subclass of torch.nn.Module
         Opitimized Task Classifier.
     """
-    
+
     reverse_grad = ReverseGradient.apply
     # TODO: Understand torch.autograd.Function.apply
     loss_domains = []
@@ -283,7 +282,7 @@ def fit(source_loader, target_loader, target_X, target_y_task,
             feature_optimizer.zero_grad()
 
             loss_domain.backward(retain_graph = True)
-            loss_task.backward() 
+            loss_task.backward()
 
             domain_optimizer.step()
             task_optimizer.step()
@@ -298,7 +297,9 @@ def fit(source_loader, target_loader, target_X, target_y_task,
 
             if is_timeseries:
                 n_days = target_feature_eval.shape[0]//16
-                target_feature_eval = target_feature_eval.reshape(n_days, 16, target_feature_eval.shape[1])
+                target_feature_eval = target_feature_eval.reshape(n_days,
+                                                                  16,
+                                                                  target_feature_eval.shape[1])
                 pred_y_task_eval = task_classifier(target_feature_eval, DEVICE)
             else:
                 pred_y_task_eval = task_classifier(target_feature_eval)
@@ -306,14 +307,14 @@ def fit(source_loader, target_loader, target_X, target_y_task,
             pred_y_task_eval = torch.sigmoid(pred_y_task_eval).reshape(-1)
             loss_task_eval =  criterion(pred_y_task_eval, target_y_task)
         loss_task_evals.append(loss_task_eval.item())
-    
+
     # 4. Trace Each Loss
     plt.plot(loss_domains, label="loss_domain")
     plt.plot(loss_tasks, label="loss_task")
     plt.xlabel("batch")
     plt.ylabel("binary cross entropy loss")
     plt.legend()
-    
+
     plt.figure()
     plt.plot(loss_task_evals, label="loss_task_eval")
     plt.xlabel("epoch")
@@ -322,7 +323,8 @@ def fit(source_loader, target_loader, target_X, target_y_task,
     return feature_extractor, task_classifier
 
 
-def fit_without_adaptation(source_loader, task_classifier, task_optimizer, criterion, num_epochs=1000):
+def fit_without_adaptation(source_loader, task_classifier,
+                           task_optimizer, criterion, num_epochs=1000):
     """
     Deep Learning model's fit method without domain adaptation.
 
@@ -367,7 +369,8 @@ def fit_without_adaptation(source_loader, task_classifier, task_optimizer, crite
 def visualize_tSNE(target_feature, source_feature):
     """
     Draw scatter plot including t-SNE encoded feature for source and target data.
-    Small difference between them imply success of domain invarinat learning(only in the point of domain invariant).
+    Small difference between them imply success of domain invarinat learning
+    (only in the point of domain invariant).
 
     Parameters
     ----------
