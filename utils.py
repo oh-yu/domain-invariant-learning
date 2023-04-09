@@ -125,6 +125,7 @@ def get_loader(source_X, target_X, source_y_task, target_y_task, batch_size=34):
     target_y_domain = np.ones_like(target_y_task)
 
     # 2. Instantiate torch.tensor
+    # TODO: E1102: torch.tensor is not callable (not-callable)
     source_X = torch.tensor(source_X, dtype=torch.float32)
     source_Y = torch.tensor(source_Y, dtype=torch.float32)
     target_X = torch.tensor(target_X, dtype=torch.float32)
