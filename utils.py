@@ -182,6 +182,8 @@ class ReverseGradient(torch.autograd.Function):
 def fit(source_loader, target_loader, target_X, target_y_task,
         feature_extractor, domain_classifier, task_classifier, criterion,
         feature_optimizer, domain_optimizer, task_optimizer, num_epochs=1000, is_timeseries=False):
+    # pylint: disable=too-many-arguments, too-many-locals
+    # It seems reasonable in this case, since this method needs all of that.
     """
     Fit Feature Extractor, Domain Classifier, Task Classifier by Domain Invarint Learning Algo.
 
