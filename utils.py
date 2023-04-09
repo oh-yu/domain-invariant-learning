@@ -247,11 +247,8 @@ def fit(source_loader, target_loader, target_X, target_y_task,
 
         for (source_X_batch, source_Y_batch), (target_X_batch, target_y_domain_batch) in zip(source_loader, target_loader):
             # 0. Data
-            source_X_batch = source_X_batch
             source_y_task_batch = source_Y_batch[:, COL_IDX_TASK]
             source_y_domain_batch = source_Y_batch[:, COL_IDX_DOMAIN]
-            target_X_batch = target_X_batch
-            target_y_domain_batch = target_y_domain_batch
 
             # 1. Forward
             # 1.1 Feature Extractor
@@ -355,7 +352,6 @@ def fit_without_adaptation(source_loader, task_classifier,
     for _ in range(num_epochs):
         for source_X_batch, source_Y_batch in source_loader:
             # Prep Data
-            source_X_batch = source_X_batch
             source_y_task_batch = source_Y_batch[:, COL_IDX_TASK]
 
             # Forward
