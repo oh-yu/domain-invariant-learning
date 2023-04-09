@@ -253,7 +253,8 @@ def fit(source_loader, target_loader, target_X, target_y_task,
 
             # 1. Forward
             # 1.1 Feature Extractor
-            source_X_batch, target_X_batch = feature_extractor(source_X_batch), feature_extractor(target_X_batch)
+            source_X_batch = feature_extractor(source_X_batch)
+            target_X_batch = feature_extractor(target_X_batch)
 
             # 1.2. Task Classifier
             if is_timeseries:
@@ -268,9 +269,12 @@ def fit(source_loader, target_loader, target_X, target_y_task,
             loss_tasks.append(loss_task.item())
 
             # 1.3. Domain Classifier
-            source_X_batch, target_X_batch = reverse_grad(source_X_batch), reverse_grad(target_X_batch)
-            pred_source_y_domain, pred_target_y_domain = domain_classifier(source_X_batch), domain_classifier(target_X_batch)
-            pred_source_y_domain, pred_target_y_domain = torch.sigmoid(pred_source_y_domain).reshape(-1), torch.sigmoid(pred_target_y_domain).reshape(-1)
+            source_X_batch = reverse_grad(source_X_batch)
+            target_X_batch = reverse_grad(target_X_batch)
+            pred_source_y_domain = domain_classifier(source_X_batch)
+            pred_target_y_domain = domain_classifier(target_X_batch)
+            pred_source_y_domain = torch.sigmoid(pred_source_y_domain).reshape(-1)
+            pred_target_y_domain = torch.sigmoid(pred_target_y_domain).reshape(-1)
 
             loss_domain = criterion(pred_source_y_domain, source_y_domain_batch)
             loss_domain += criterion(pred_target_y_domain, target_y_domain_batch)
