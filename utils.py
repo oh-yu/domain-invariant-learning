@@ -173,9 +173,13 @@ class Decoder(nn.Module):
 class ReverseGradient(torch.autograd.Function):
     @staticmethod
     def forward(ctx, x):
+    # pylint: disable=arguments-differ
+    # It seems better in this case, since this method need only one arg.
         return x
     @staticmethod
     def backward(ctx, grad_output):
+    # pylint: disable=arguments-differ
+    # It seems better in this case, since this method need only one arg.
         return grad_output * -1
 
 
