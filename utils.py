@@ -186,7 +186,7 @@ class ReverseGradient(torch.autograd.Function):
 
 def fit(source_loader, target_loader, target_X, target_y_task,
         feature_extractor, domain_classifier, task_classifier, criterion,
-        feature_optimizer, domain_optimizer, task_optimizer, num_epochs=1000):
+        feature_optimizer, domain_optimizer, task_optimizer, num_epochs=1000, is_timeseries=False):
     # pylint: disable=too-many-arguments, too-many-locals
     # It seems reasonable in this case, since this method needs all of that.
     """
@@ -231,6 +231,7 @@ def fit(source_loader, target_loader, target_X, target_y_task,
         Optimizer required instantiation with task_classifier.parameters().
 
     num_epochs : int
+    is_timeseries : bool
 
     Returns
     -------
@@ -262,7 +263,12 @@ def fit(source_loader, target_loader, target_X, target_y_task,
             target_X_batch = feature_extractor(target_X_batch)
 
             # 1.2. Task Classifier
-            pred_y_task = task_classifier(source_X_batch)
+            if is_timeseries:
+                n_days = source_X_batch.shape[0]//16
+                source_X_batch = source_X_batch.reshape(n_days, 16, source_X_batch.shape[1])
+                pred_y_task = task_classifier(source_X_batch, DEVICE)
+            else:
+                pred_y_task = task_classifier(source_X_batch)
 
             pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
             loss_task = criterion(pred_y_task, source_y_task_batch)
@@ -298,7 +304,14 @@ def fit(source_loader, target_loader, target_X, target_y_task,
 
         with torch.no_grad():
             target_feature_eval = feature_extractor(target_X)
-            pred_y_task_eval = task_classifier(target_feature_eval)
+            if is_timeseries:
+                n_days = target_feature_eval.shape[0]//16
+                target_feature_eval = target_feature_eval.reshape(n_days,
+                                                                  16,
+                                                                  target_feature_eval.shape[1])
+                pred_y_task_eval = task_classifier(target_feature_eval, DEVICE)
+            else:
+                pred_y_task_eval = task_classifier(target_feature_eval)
             pred_y_task_eval = torch.sigmoid(pred_y_task_eval).reshape(-1)
             loss_task_eval =  criterion(pred_y_task_eval, target_y_task)
         loss_task_evals.append(loss_task_eval.item())
@@ -383,3 +396,82 @@ def visualize_tSNE(target_feature, source_feature):
     plt.xlabel("tsne_X1")
     plt.ylabel("tsne_X2")
     plt.legend()
+
+
+def raytune_trainer(config, options):
+    # 1. Get Data from Options
+    source_loader, target_loader, source_X, target_X, target_y_task = options.values()
+
+    # 2. Instantiate Feature Extractor, Domain Classifier, Task Classifier
+    num_domains = 1
+    num_classes = 1
+    feature_extractor = Encoder(input_size=source_X.shape[1], output_size=config["hidden_size"]).to(DEVICE)
+    domain_classifier = Decoder(input_size=config["hidden_size"], output_size=num_domains,
+                                fc_sizes=[config["domain_fc1_size"], config["domain_fc2_size"]]).to(DEVICE)
+    task_classifier = Decoder(input_size=config["hidden_size"], output_size=num_classes,
+                              fc_sizes=[config["task_fc1_size"], config["task_fc2_size"]]).to(DEVICE)
+
+    # 3. Instantiate Criterion, Optimizer
+    criterion = nn.BCELoss()
+    feature_optimizer = optim.Adam(feature_extractor.parameters(), lr=config["feature_learning_rate"],
+                                   weight_decay=config["feature_weight_decay"], eps=config["feature_eps"])
+    domain_optimizer = optim.Adam(domain_classifier.parameters(), lr=config["domain_learning_rate"],
+                                  weight_decay=config["domain_weight_decay"], eps=config["domain_eps"])
+    task_optimizer = optim.Adam(task_classifier.parameters(), lr=config["task_learning_rate"],
+                                weight_decay=config["task_weight_decay"], eps=config["task_eps"])
+
+    # 4. Domain Invariant Learning
+    # TODO: Refactoring, Mostly Duplicated with "fit"
+    reverse_grad = ReverseGradient.apply
+    # TODO: Understand torch.autograd.Function.apply
+    for _ in range(1000):
+        feature_extractor.train()
+        task_classifier.train()
+
+        for (source_X_batch, source_Y_batch), (target_X_batch, target_y_domain_batch) in zip(source_loader, target_loader):
+            # 4.0. Data
+            source_X_batch = source_X_batch
+            source_y_task_batch = source_Y_batch[:, 0]
+            source_y_domain_batch = source_Y_batch[:, 1]
+            target_X_batch = target_X_batch
+            target_y_domain_batch = target_y_domain_batch
+
+            # 4.1. Forward
+            # 4.1.1 Feature Extractor
+            source_X_batch, target_X_batch = feature_extractor(source_X_batch), feature_extractor(target_X_batch)
+
+            # 4.1.2. Task Classifier
+            pred_y_task = task_classifier(source_X_batch)
+            pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
+            loss_task = criterion(pred_y_task, source_y_task_batch)
+
+            # 4.1.3. Domain Classifier
+            source_X_batch, target_X_batch = reverse_grad(source_X_batch), reverse_grad(target_X_batch)
+            pred_source_y_domain, pred_target_y_domain = domain_classifier(source_X_batch), domain_classifier(target_X_batch)
+            pred_source_y_domain, pred_target_y_domain = torch.sigmoid(pred_source_y_domain).reshape(-1), torch.sigmoid(pred_target_y_domain).reshape(-1)
+
+            loss_domain = criterion(pred_source_y_domain, source_y_domain_batch)
+            loss_domain += criterion(pred_target_y_domain, target_y_domain_batch)
+
+            # 4.2. Backward, Update Params
+            domain_optimizer.zero_grad()
+            task_optimizer.zero_grad()
+            feature_optimizer.zero_grad()
+
+            loss_domain.backward(retain_graph = True)
+            loss_task.backward() 
+
+            domain_optimizer.step()
+            task_optimizer.step()
+            feature_optimizer.step()
+
+        # 4.3. Evaluation
+        feature_extractor.eval()
+        task_classifier.eval()
+
+        with torch.no_grad():
+            target_feature_eval = feature_extractor(target_X)
+            pred_y_task_eval = task_classifier(target_feature_eval)
+            pred_y_task_eval = torch.sigmoid(pred_y_task_eval).reshape(-1)
+            loss_task_eval =  criterion(pred_y_task_eval, target_y_task)
+        tune.report(loss=loss_task_eval.item())
