@@ -210,9 +210,9 @@ class Conv1d(nn.Module):
     # TODO: Understand nn.Conv1d doumentation
     def __init__(self, input_size):
         super().__init__()
-        self.conv1 = nn.Conv1d(in_channels=input_size, out_channels=128, kernel_size=5, stride=1)
+        self.conv1 = nn.Conv1d(in_channels=input_size, out_channels=128, kernel_size=3, stride=1, padding=1)
         self.bn1 = nn.BatchNorm1d(128)
-        self.conv2 = nn.Conv1d(in_channels=128, out_channels=128, kernel_size=3, stride=1)
+        self.conv2 = nn.Conv1d(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1)
         self.bn2 = nn.BatchNorm1d(128)
     def forward(self, x):
         x = x.reshape(x.shape[0], x.shape[2], x.shape[1])
