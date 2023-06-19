@@ -202,6 +202,7 @@ class ManyToOneRNN(nn.Module):
         self.rnn = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True)
     def forward(self, x):
         _, (x, _) = self.rnn(x)
+        x = x.squeeze(0)
         return x
 
 
