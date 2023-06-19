@@ -220,6 +220,7 @@ class Conv1d(nn.Module):
         x = F.relu(self.bn1(x))
         x = self.conv2(x)
         x = F.relu(self.bn2(x))
+        x = torch.mean(x, dim=2)
         return x
 
 
