@@ -196,6 +196,15 @@ class Decoder(nn.Module):
         return x
 
 
+class ManyToOneRNN(nn.Module):
+    def __init__(self, input_size, hidden_size, num_layers):
+        super().__init__()
+        self.rnn = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True)
+    def forward(self, x):
+        _, (x, _) = self.rnn(x)
+        return x
+
+
 class ReverseGradient(torch.autograd.Function):
     @staticmethod
     def forward(ctx, x):
