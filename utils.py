@@ -164,13 +164,13 @@ def apply_sliding_window(X, y, filter_len=3):
 def train_val_test_split(X, y):
     len_partition = X.shape[0] // 3
 
-    train_X = X[:len_partition].tolist()
-    val_X = X[len_partition:len_partition*2].tolist()
-    test_X = X[len_partition*2:].tolist()
+    train_X = X[:len_partition]
+    val_X = X[len_partition:len_partition*2]
+    test_X = X[len_partition*2:]
 
-    train_y = y[:len_partition].tolist()
-    val_y = y[len_partition:len_partition*2].tolist()
-    test_y = y[len_partition*2:].tolist()
+    train_y = y[:len_partition]
+    val_y = y[len_partition:len_partition*2]
+    test_y = y[len_partition*2:]
     return train_X, val_X, test_X, train_y, val_y, test_y
 
 class Encoder(nn.Module):
