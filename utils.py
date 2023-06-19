@@ -148,6 +148,19 @@ def get_loader(source_X, target_X, source_y_task, target_y_task, batch_size=34):
     return source_loader, target_loader, source_y_task, source_X, target_X, target_y_task
 
 
+def apply_sliding_window(X, y, filter_len=3):
+    len_data, H = X.shape
+    N = len_data - filter_len + 1
+    filtered_X = np.zeros((N, filter_len, H))
+    for i in range(0, N):
+        # print(f"(Start, End) = {i, i+filter_len-1}")
+        start = i
+        end = i+filter_len
+        filtered_X[i] = X[start:end]
+    filtered_y = y[filter_len-1:]
+    return filtered_X, filtered_y
+
+
 class Encoder(nn.Module):
     def __init__(self, input_size, output_size):
         super().__init__()
