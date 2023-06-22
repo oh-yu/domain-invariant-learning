@@ -226,15 +226,20 @@ class Conv1d(nn.Module):
 
 class ReverseGradient(torch.autograd.Function):
     @staticmethod
-    def forward(ctx, x):
+    def forward(ctx, x, step, num_steps):
     # pylint: disable=arguments-differ
     # It seems better in this case, since this method need only one arg.
+        ctx.save_for_backward(step, num_steps)
         return x
     @staticmethod
     def backward(ctx, grad_output):
     # pylint: disable=arguments-differ
     # It seems better in this case, since this method need only one arg.
-        return grad_output * -1
+        step, num_steps, = ctx.saved_tensors
+        scheduler = 2 / (1 + torch.exp(-10 * (step/(num_steps+1)))) - 1
+
+        # TODO: Check speficiation about correspondence between input for forward and return for backward.
+        return grad_output * -1 * scheduler, None, None
 
 
 def fit(source_loader, target_loader, target_X, target_y_task,
@@ -300,8 +305,10 @@ def fit(source_loader, target_loader, target_X, target_y_task,
     loss_domains = []
     loss_tasks = []
     loss_task_evals = []
+    num_epochs = torch.tensor(num_epochs, dtype=torch.int32).to(DEVICE)
 
-    for _ in range(num_epochs):
+    for epoch in range(num_epochs.item()):
+        epoch = torch.tensor(epoch, dtype=torch.float32).to(DEVICE)
         feature_extractor.train()
         task_classifier.train()
 
@@ -328,8 +335,8 @@ def fit(source_loader, target_loader, target_X, target_y_task,
             loss_tasks.append(loss_task.item())
 
             # 1.3. Domain Classifier
-            source_X_batch = reverse_grad(source_X_batch)
-            target_X_batch = reverse_grad(target_X_batch)
+            source_X_batch = reverse_grad(source_X_batch, epoch, num_epochs)
+            target_X_batch = reverse_grad(target_X_batch, epoch, num_epochs)
             pred_source_y_domain = domain_classifier(source_X_batch)
             pred_target_y_domain = domain_classifier(target_X_batch)
             pred_source_y_domain = torch.sigmoid(pred_source_y_domain).reshape(-1)
