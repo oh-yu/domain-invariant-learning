@@ -71,7 +71,7 @@ def get_source_target_from_make_moons(n_samples=100, noise=0.05, rotation_degree
     return source_X, target_X, source_y, target_y, x_grid, x1_grid, x2_grid
 
 
-def get_loader(source_X, target_X, source_y_task, target_y_task, batch_size=34):
+def get_loader(source_X, target_X, source_y_task, target_y_task, batch_size=34, shuffle=False):
     """
     Get instances of torch.utils.data.DataLoader for domain invariant learning,
     also return source and target data instantiated as torch.Tensor(except for source_y_task).
@@ -93,6 +93,9 @@ def get_loader(source_X, target_X, source_y_task, target_y_task, batch_size=34):
 
     batch_size : int
         Batch size to be set in DataLoader.
+
+    shuffle : boolean
+        shuffle or not.
 
     Returns
     -------
@@ -142,8 +145,8 @@ def get_loader(source_X, target_X, source_y_task, target_y_task, batch_size=34):
     # 4. Instantiate DataLoader
     source_ds = TensorDataset(source_X, source_Y)
     target_ds = TensorDataset(target_X, target_y_domain)
-    source_loader = DataLoader(source_ds, batch_size=batch_size, shuffle=True)
-    target_loader = DataLoader(target_ds, batch_size=batch_size, shuffle=True)
+    source_loader = DataLoader(source_ds, batch_size=batch_size, shuffle=shuffle)
+    target_loader = DataLoader(target_ds, batch_size=batch_size, shuffle=shuffle)
 
     return source_loader, target_loader, source_y_task, source_X, target_X, target_y_task
 
