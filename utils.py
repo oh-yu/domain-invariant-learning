@@ -449,7 +449,7 @@ def visualize_tSNE(target_feature, source_feature):
 
     source_feature : ndarray of shape(N, D)
     """
-    tsne = TSNE(n_components=2, learning_rate='auto', init='random', perplexity=3)
+    tsne = TSNE(n_components=2, learning_rate='auto', init='pca', perplexity=5)
     # TODO: Understand Argumetns for t-SNE
     target_feature_tsne = tsne.fit_transform(target_feature)
     source_feature_tsne = tsne.fit_transform(source_feature)
