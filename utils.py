@@ -186,7 +186,7 @@ class Encoder(nn.Module):
 
 
 class Decoder(nn.Module):
-    def __init__(self, input_size, output_size, fc1_size=10, fc2_size=10):
+    def __init__(self, input_size, output_size, fc1_size=50, fc2_size=10):
         super().__init__()
         self.fc1 = nn.Linear(input_size, fc1_size)
         self.fc2 = nn.Linear(fc1_size, fc2_size)
@@ -205,7 +205,7 @@ class ManyToOneRNN(nn.Module):
         self.rnn = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True)
     def forward(self, x):
         _, (x, _) = self.rnn(x)
-        x = x.squeeze(0)
+        x = x[-1, :, :]
         return x
 
 
