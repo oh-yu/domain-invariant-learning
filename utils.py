@@ -538,3 +538,19 @@ def raytune_trainer(config, options):
             pred_y_task_eval = torch.sigmoid(pred_y_task_eval).reshape(-1)
             loss_task_eval =  criterion(pred_y_task_eval, target_y_task)
         tune.report(loss=loss_task_eval.item())
+
+
+class PsuedoLabeler:
+    def __init__(self, positive_thr=0.75, negative_thr=0.30):
+        self.positive_thr = positive_thr
+        self.negative_thr = negative_thr
+    def __call__(self, pred_y_task):
+        psuedo_labels = []
+        for p in pred_y_task:
+            if p > self.positive_thr:
+                psuedo_labels.append(1)
+            elif p < self.negative_thr:
+                psuedo_labels.append(0)
+            else:
+                psuedo_labels.append(np.random.randint(0, 2))
+        return np.array(psuedo_labels, dtype=np.float32)
