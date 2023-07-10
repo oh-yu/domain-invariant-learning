@@ -342,8 +342,7 @@ def fit(source_loader, target_loader, target_X, target_y_task,
             pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
             
             target_weights = pred_source_y_domain / (1-pred_source_y_domain)
-            target_weights = target_weights.detach()
-            criterion_weight = nn.BCELoss(weight=weights)
+            criterion_weight = nn.BCELoss(weight=target_weights.detach())
             loss_task = criterion_weight(pred_y_task, source_y_task_batch)
             loss_tasks.append(loss_task.item())
 
