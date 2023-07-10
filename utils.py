@@ -340,7 +340,11 @@ def fit(source_loader, target_loader, target_X, target_y_task,
             # 1.3. Task Classifier
             pred_y_task = task_classifier(source_X_batch)
             pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
-            loss_task = criterion(pred_y_task, source_y_task_batch)
+            
+            target_weights = pred_source_y_domain / (1-pred_source_y_domain)
+            target_weights = target_weights.detach()
+            criterion_weight = nn.BCELoss(weight=weights)
+            loss_task = criterion_weight(pred_y_task, source_y_task_batch)
             loss_tasks.append(loss_task.item())
 
             # 2. Backward, Update Params
