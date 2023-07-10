@@ -325,22 +325,10 @@ def fit(source_loader, target_loader, target_X, target_y_task,
             source_X_batch = feature_extractor(source_X_batch)
             target_X_batch = feature_extractor(target_X_batch)
 
-            # 1.2. Task Classifier
-            if is_timeseries:
-                n_days = source_X_batch.shape[0]//16
-                source_X_batch = source_X_batch.reshape(n_days, 16, source_X_batch.shape[1])
-                pred_y_task = task_classifier(source_X_batch, DEVICE)
-            else:
-                pred_y_task = task_classifier(source_X_batch)
-
-            pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
-            loss_task = criterion(pred_y_task, source_y_task_batch)
-            loss_tasks.append(loss_task.item())
-
             # 1.3. Domain Classifier
-            source_X_batch = reverse_grad(source_X_batch, epoch, num_epochs)
+            source_X_batch_reversed_grad = reverse_grad(source_X_batch, epoch, num_epochs)
             target_X_batch = reverse_grad(target_X_batch, epoch, num_epochs)
-            pred_source_y_domain = domain_classifier(source_X_batch)
+            pred_source_y_domain = domain_classifier(source_X_batch_reversed_grad)
             pred_target_y_domain = domain_classifier(target_X_batch)
             pred_source_y_domain = torch.sigmoid(pred_source_y_domain).reshape(-1)
             pred_target_y_domain = torch.sigmoid(pred_target_y_domain).reshape(-1)
@@ -348,6 +336,12 @@ def fit(source_loader, target_loader, target_X, target_y_task,
             loss_domain = criterion(pred_source_y_domain, source_y_domain_batch)
             loss_domain += criterion(pred_target_y_domain, target_y_domain_batch)
             loss_domains.append(loss_domain.item())
+
+            # 1.2. Task Classifier
+            pred_y_task = task_classifier(source_X_batch)
+            pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
+            loss_task = criterion(pred_y_task, source_y_task_batch)
+            loss_tasks.append(loss_task.item())
 
             # 2. Backward, Update Params
             domain_optimizer.zero_grad()
