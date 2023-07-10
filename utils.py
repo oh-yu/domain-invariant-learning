@@ -325,7 +325,7 @@ def fit(source_loader, target_loader, target_X, target_y_task,
             source_X_batch = feature_extractor(source_X_batch)
             target_X_batch = feature_extractor(target_X_batch)
 
-            # 1.3. Domain Classifier
+            # 1.2. Domain Classifier
             source_X_batch_reversed_grad = reverse_grad(source_X_batch, epoch, num_epochs)
             target_X_batch = reverse_grad(target_X_batch, epoch, num_epochs)
             pred_source_y_domain = domain_classifier(source_X_batch_reversed_grad)
@@ -337,7 +337,7 @@ def fit(source_loader, target_loader, target_X, target_y_task,
             loss_domain += criterion(pred_target_y_domain, target_y_domain_batch)
             loss_domains.append(loss_domain.item())
 
-            # 1.2. Task Classifier
+            # 1.3. Task Classifier
             pred_y_task = task_classifier(source_X_batch)
             pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
             loss_task = criterion(pred_y_task, source_y_task_batch)
