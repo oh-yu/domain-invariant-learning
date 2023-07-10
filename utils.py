@@ -342,7 +342,10 @@ def fit(source_loader, target_loader, target_X, target_y_task,
             pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
             
             target_weights = pred_source_y_domain / (1-pred_source_y_domain)
-            criterion_weight = nn.BCELoss(weight=target_weights.detach())
+            class_weights = get_class_weights(source_y_task_batch)
+            weights = target_weights * class_weights
+
+            criterion_weight = nn.BCELoss(weight=weights.detach())
             loss_task = criterion_weight(pred_y_task, source_y_task_batch)
             loss_tasks.append(loss_task.item())
 
@@ -551,3 +554,15 @@ class PsuedoLabeler:
             else:
                 psuedo_labels.append(np.random.randint(0, 2))
         return np.array(psuedo_labels, dtype=np.float32)
+
+
+def get_class_weights(source_y_task_batch):
+    p_occupied = sum(source_y_task_batch) / source_y_task_batch.shape[0] 
+    p_unoccupied = 1 - p_occupied
+    class_weights = torch.zeros_like(source_y_task_batch)
+    for i, y in enumerate(source_y_task_batch):
+        if y == 1:
+            class_weights[i] = p_unoccupied
+        elif y == 0:
+            class_weights[i] = p_occupied
+    return class_weights
