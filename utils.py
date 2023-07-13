@@ -247,7 +247,7 @@ class ReverseGradient(torch.autograd.Function):
 
 def fit(source_loader, target_loader, target_X, target_y_task,
         feature_extractor, domain_classifier, task_classifier, criterion,
-        feature_optimizer, domain_optimizer, task_optimizer, num_epochs=1000, is_timeseries=False):
+        feature_optimizer, domain_optimizer, task_optimizer, num_epochs=1000, is_timeseries=False, is_target_weights=True, is_class_weights=False):
     # pylint: disable=too-many-arguments, too-many-locals
     # It seems reasonable in this case, since this method needs all of that.
     """
@@ -341,8 +341,14 @@ def fit(source_loader, target_loader, target_X, target_y_task,
             pred_y_task = task_classifier(source_X_batch)
             pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
             
-            target_weights = pred_source_y_domain / (1-pred_source_y_domain)
-            class_weights = get_class_weights(source_y_task_batch)
+            if is_target_weights:
+                target_weights = pred_source_y_domain / (1-pred_source_y_domain)
+            else:
+                target_weights = 1
+            if is_class_weights:
+                class_weights = get_class_weights(source_y_task_batch)
+            else:
+                class_weights = 1
             weights = target_weights * class_weights
 
             criterion_weight = nn.BCELoss(weight=weights.detach())
