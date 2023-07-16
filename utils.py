@@ -182,6 +182,7 @@ class Encoder(nn.Module):
         self.fc1 = nn.Linear(input_size, output_size)
 
     def forward(self, x):
+        x = torch.mean(x, dim=1)
         return F.relu(self.fc1(x))
 
 
