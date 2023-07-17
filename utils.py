@@ -311,6 +311,7 @@ def fit(source_loader, target_loader, target_X, target_y_task,
     loss_task_evals = []
     num_epochs = torch.tensor(num_epochs, dtype=torch.int32).to(DEVICE)
 
+    torch.manual_seed(111)
     for epoch in range(1, num_epochs.item()+1):
         epoch = torch.tensor(epoch, dtype=torch.float32).to(DEVICE)
         feature_extractor.train()
