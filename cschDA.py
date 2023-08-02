@@ -8,6 +8,7 @@ from torch import optim
 
 import utils
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+household_idxs = [1, 2, 3, 4, 5]
 
 
 def main(source_idx, target_idx, winter_idx, summer_idx):
@@ -108,9 +109,12 @@ def main(source_idx, target_idx, winter_idx, summer_idx):
     pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
     pred_y_task = pred_y_task > 0.5
     acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
-    print("Cross Domain, Cross Household Domain Adaptation Scores:")
-    print(classification_report(test_target_y_task.cpu().numpy(), pred_y_task.cpu().numpy()))
+    return acc
 
 
 if __name__ == "__main__":
-    main(source_idx=1, target_idx=2, winter_idx=0, summer_idx=1)
+    for i in household_idxs:
+        for j in household_idxs:
+            if i == j:
+                continue
+            main(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
