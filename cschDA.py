@@ -8,7 +8,7 @@ from torch import optim
 
 import utils
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-household_idxs = [1, 2, 3, 4, 5]
+HOUSEHOLD_IDXS = [1, 2, 3, 4, 5]
 
 
 def main(source_idx, target_idx, winter_idx, summer_idx):
@@ -113,8 +113,8 @@ def main(source_idx, target_idx, winter_idx, summer_idx):
 
 
 if __name__ == "__main__":
-    for i in household_idxs:
-        for j in household_idxs:
+    for i in HOUSEHOLD_IDXS:
+        for j in HOUSEHOLD_IDXS:
             if i == j:
                 continue
             main(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
