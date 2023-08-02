@@ -14,14 +14,14 @@ HOUSEHOLD_IDXS = [1, 2, 3, 4, 5]
 def main(source_idx, target_idx, winter_idx, summer_idx):
     # Cross Season Cross Household DA Once
     ## Prepare Data
-    train_source_X = pd.read_csv(f"./deep_occupancy_detection/data/{SOURCE_IDX}_X_train.csv")
-    target_X = pd.read_csv(f"./deep_occupancy_detection/data/{TARGET_IDX}_X_train.csv")
+    train_source_X = pd.read_csv(f"./deep_occupancy_detection/data/{source_idx}_X_train.csv")
+    target_X = pd.read_csv(f"./deep_occupancy_detection/data/{target_idx}_X_train.csv")
 
-    train_source_y_task = pd.read_csv(f"./deep_occupancy_detection/data/{SOURCE_IDX}_Y_train.csv")[train_source_X.Season==WINTER_IDX].values.reshape(-1)
-    target_y_task = pd.read_csv(f"./deep_occupancy_detection/data/{TARGET_IDX}_Y_train.csv")[target_X.Season==SUMMER_IDX].values.reshape(-1)
+    train_source_y_task = pd.read_csv(f"./deep_occupancy_detection/data/{source_idx}_Y_train.csv")[train_source_X.Season==winter_idx].values.reshape(-1)
+    target_y_task = pd.read_csv(f"./deep_occupancy_detection/data/{target_idx}_Y_train.csv")[target_X.Season==summer_idx].values.reshape(-1)
 
-    train_source_X = train_source_X[train_source_X.Season==WINTER_IDX]
-    target_X = target_X[target_X.Season==SUMMER_IDX]
+    train_source_X = train_source_X[train_source_X.Season==winter_idx]
+    target_X = target_X[target_X.Season==summer_idx]
 
     scaler = preprocessing.StandardScaler()
     train_source_X = scaler.fit_transform(train_source_X)
