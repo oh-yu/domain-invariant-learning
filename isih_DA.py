@@ -25,5 +25,13 @@ class IsihDanns:
             self.feature_optimizer, self.domain_optimizer_dim1, self.task_optimizer_dim1, num_epochs=self.num_epochs_dim1, is_timeseries=False
         )
 
-    def fit_2nd_dim():
+    def fit_2nd_dim(self):
         pass
+
+    def predict(self, X, is_1st_dim: bool) -> torch.Tensor:
+        if is_1st_dim:
+            out = self.task_classifier_dim1(self.feature_extractor(X))
+            out = torch.sigmoid(out).reshape(-1)
+            return out
+        else:
+            pass
