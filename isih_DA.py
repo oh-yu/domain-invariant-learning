@@ -18,7 +18,12 @@ class IsihDanns:
         self.criterion = nn.BCELoss()
         self.num_epochs_dim1 = num_epochs_dim1
 
-    def fit_1st_dim():
-        pass
+    def fit_1st_dim(self, source_loader, target_loader, test_target_X, test_target_y_task):
+        self.feature_extractor, self.task_classifier_dim1, _ = utils.fit(
+            source_loader, target_loader, test_target_X, test_target_y_task,
+            self.feature_extractor, self.domain_classifier_dim1, self.task_classifier_dim1, self.criterion,
+            self.feature_optimizer, self.domain_optimizer_dim1, self.task_optimizer_dim1, num_epochs=self.num_epochs_dim1, is_timeseries=False
+        )
+
     def fit_2nd_dim():
         pass
