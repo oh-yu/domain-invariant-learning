@@ -8,7 +8,7 @@ from torch import optim
 
 import utils
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-HOUSEHOLD_IDXS = [1, 2, 3, 4, 5]
+HOUSEHOLD_IDXS = [1, 2, 3]
 
 
 def main(source_idx, target_idx, winter_idx, summer_idx):
@@ -64,15 +64,13 @@ def main(source_idx, target_idx, winter_idx, summer_idx):
     
 
     # Algo2. Psuedo Labeling
-    psuedo_labeler = utils.PsuedoLabeler() 
     pred_y_task = task_classifier(feature_extractor(test_target_X))
     pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
-    psuedo_label = psuedo_labeler(pred_y_task)
 
     # Algo3. Cross Season DA
     ## Prepare Data
     train_source_X = target_X
-    train_source_y_task = psuedo_label
+    train_source_y_task = pred_y_task
 
     target_X = pd.read_csv(f"./deep_occupancy_detection/data/{target_idx}_X_train.csv")
     target_y_task = pd.read_csv(f"./deep_occupancy_detection/data/{target_idx}_Y_train.csv")[target_X.Season==summer_idx].values.reshape(-1)
@@ -113,8 +111,27 @@ def main(source_idx, target_idx, winter_idx, summer_idx):
 
 
 if __name__ == "__main__":
+    accs = []
     for i in HOUSEHOLD_IDXS:
         for j in HOUSEHOLD_IDXS:
+            running_acc = 0
             if i == j:
                 continue
-            main(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
+            for _ in range(10):
+                acc = main(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
+                running_acc += acc.item()
+            print(f"({i}, w) -> ({j}, s): {running_acc/10}")
+            accs.append(running_acc/10)
+    
+    for i in HOUSEHOLD_IDXS:
+        for j in HOUSEHOLD_IDXS:
+            running_acc = 0
+            if i == j:
+                continue
+            for _ in range(10):
+                acc = main(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0)
+                running_acc += acc.item()
+            print(f"({i}, s) -> ({j}, w): {running_acc/10}")
+            accs.append(running_acc/10)
+    
+    print(f"Average: {sum(accs)/len(accs)}")
