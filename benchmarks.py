@@ -8,7 +8,7 @@ from torch import optim
 
 import utils
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-HOUSEHOLD_IDXS = [1, 2, 3, 4, 5]
+HOUSEHOLD_IDXS = [1, 2, 3]
 
 
 def main(source_idx, target_idx, winter_idx, summer_idx):
@@ -55,7 +55,7 @@ def main(source_idx, target_idx, winter_idx, summer_idx):
     domain_optimizer = optim.Adam(domain_classifier.parameters(), lr=learning_rate)
     task_optimizer = optim.Adam(task_classifier.parameters(), lr=learning_rate)
 
-    num_epochs = 300
+    num_epochs = 275
     feature_extractor, task_classifier = utils.fit(source_loader, target_loader, test_target_X, test_target_y_task,
                                                    feature_extractor, domain_classifier, task_classifier, criterion,
                                                    feature_optimizer, domain_optimizer, task_optimizer, num_epochs=num_epochs, is_timeseries=False)
@@ -68,8 +68,27 @@ def main(source_idx, target_idx, winter_idx, summer_idx):
 
 
 if __name__ == "__main__":
+    accs = []
     for i in HOUSEHOLD_IDXS:
         for j in HOUSEHOLD_IDXS:
+            running_acc = 0
             if i == j:
                 continue
-            main(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
+            for _ in range(10):
+                acc = main(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
+                running_acc += acc.item()
+            print(f"({i}, w) -> ({j}, s): {running_acc/10}")
+            accs.append(running_acc/10)
+    
+    for i in HOUSEHOLD_IDXS:
+        for j in HOUSEHOLD_IDXS:
+            running_acc = 0
+            if i == j:
+                continue
+            for _ in range(10):
+                acc = main(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0)
+                running_acc += acc.item()
+            print(f"({i}, s) -> ({j}, w): {running_acc/10}")
+            accs.append(running_acc/10)
+    
+    print(f"Average: {sum(accs)/len(accs)}")
