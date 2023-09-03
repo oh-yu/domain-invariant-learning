@@ -248,7 +248,7 @@ class ReverseGradient(torch.autograd.Function):
 
 def fit(source_loader, target_loader, target_X, target_y_task,
         feature_extractor, domain_classifier, task_classifier, criterion,
-        feature_optimizer, domain_optimizer, task_optimizer, num_epochs=1000, is_timeseries=False, is_target_weights=True, is_class_weights=False):
+        feature_optimizer, domain_optimizer, task_optimizer, num_epochs=1000, is_timeseries=False, is_target_weights=True, is_class_weights=False, is_psuedo_weights=False):
     # pylint: disable=too-many-arguments, too-many-locals
     # It seems reasonable in this case, since this method needs all of that.
     """
@@ -319,7 +319,21 @@ def fit(source_loader, target_loader, target_X, target_y_task,
 
         for (source_X_batch, source_Y_batch), (target_X_batch, target_y_domain_batch) in zip(source_loader, target_loader):
             # 0. Data
-            source_y_task_batch = source_Y_batch[:, COL_IDX_TASK]
+            source_y_task_batch = source_Y_batch[:, COL_IDX_TASK] > 0.5
+            source_y_task_batch = source_y_task_batch.to(torch.float32)
+            psuedo_label_weights = source_Y_batch[:, COL_IDX_TASK]
+            tmp = []
+            for i in psuedo_label_weights:
+                if i > 0.75:
+                    tmp.append(1)
+                elif i < 0.25:
+                    tmp.append(1)
+                else:
+                    if i > 0.5:
+                        tmp.append(i + 0.25)
+                    else:
+                        tmp.append(1-i + 0.25)
+            psuedo_label_weights = torch.tensor(tmp, dtype=torch.float32).to(DEVICE)
             source_y_domain_batch = source_Y_batch[:, COL_IDX_DOMAIN]
 
             # 1. Forward
@@ -351,7 +365,10 @@ def fit(source_loader, target_loader, target_X, target_y_task,
                 class_weights = get_class_weights(source_y_task_batch)
             else:
                 class_weights = 1
-            weights = target_weights * class_weights
+            if is_psuedo_weights:
+                weights = target_weights * class_weights * psuedo_label_weights
+            else:
+                weights = target_weights * class_weights
 
             criterion_weight = nn.BCELoss(weight=weights.detach())
             loss_task = criterion_weight(pred_y_task, source_y_task_batch)
@@ -384,22 +401,11 @@ def fit(source_loader, target_loader, target_X, target_y_task,
             else:
                 pred_y_task_eval = task_classifier(target_feature_eval)
             pred_y_task_eval = torch.sigmoid(pred_y_task_eval).reshape(-1)
-            loss_task_eval =  criterion(pred_y_task_eval, target_y_task)
-        loss_task_evals.append(loss_task_eval.item())
+            pred_y_task_eval = pred_y_task_eval > 0.5
+            acc = sum(pred_y_task_eval == target_y_task) / target_y_task.shape[0]
+        loss_task_evals.append(acc.item())
 
-    # 4. Trace Each Loss
-    plt.plot(loss_domains, label="loss_domain")
-    plt.plot(loss_tasks, label="loss_task")
-    plt.xlabel("batch")
-    plt.ylabel("binary cross entropy loss")
-    plt.legend()
-
-    plt.figure()
-    plt.plot(loss_task_evals, label="loss_task_eval")
-    plt.xlabel("epoch")
-    plt.ylabel("binary cross entropy loss")
-    plt.legend()
-    return feature_extractor, task_classifier
+    return feature_extractor, task_classifier, loss_task_evals
 
 
 def fit_without_adaptation(source_loader, task_classifier,
@@ -546,22 +552,6 @@ def raytune_trainer(config, options):
             pred_y_task_eval = torch.sigmoid(pred_y_task_eval).reshape(-1)
             loss_task_eval =  criterion(pred_y_task_eval, target_y_task)
         tune.report(loss=loss_task_eval.item())
-
-
-class PsuedoLabeler:
-    def __init__(self, positive_thr=0.75, negative_thr=0.30):
-        self.positive_thr = positive_thr
-        self.negative_thr = negative_thr
-    def __call__(self, pred_y_task):
-        psuedo_labels = []
-        for p in pred_y_task:
-            if p > self.positive_thr:
-                psuedo_labels.append(1)
-            elif p < self.negative_thr:
-                psuedo_labels.append(0)
-            else:
-                psuedo_labels.append(np.random.randint(0, 2))
-        return np.array(psuedo_labels, dtype=np.float32)
 
 
 def get_class_weights(source_y_task_batch):
