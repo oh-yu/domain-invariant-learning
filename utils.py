@@ -317,6 +317,11 @@ def fit(source_loader, target_loader, target_X, target_y_task,
         feature_extractor.train()
         task_classifier.train()
 
+        if epoch > 200:
+            domain_optimizer.param_groups[0]["lr"] = 0.00005
+            feature_optimizer.param_groups[0]["lr"] = 0.00005
+            task_optimizer.param_groups[0]["lr"] = 0.00005
+
         for (source_X_batch, source_Y_batch), (target_X_batch, target_y_domain_batch) in zip(source_loader, target_loader):
             # 0. Data
             source_y_task_batch = source_Y_batch[:, COL_IDX_TASK] > 0.5
