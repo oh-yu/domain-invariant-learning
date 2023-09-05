@@ -37,7 +37,8 @@ def main(source_idx, target_idx, winter_idx, summer_idx):
     test_target_y_task = test_target_y_task.to(device)
 
     ## isih-DA fit, predict for 1st dimension
-    isih_dann = IsihDanns(input_size=train_source_X.shape[2], hidden_size=128, lr_dim1=0.0001, lr_dim2=0.00005, num_epochs_dim1=200)
+    isih_dann = IsihDanns(input_size=train_source_X.shape[2], hidden_size=128, lr_dim1=0.0001, lr_dim2=0.00005, 
+                          num_epochs_dim1=200, num_epochs_dim2=100)
     isih_dann.fit_1st_dim(source_loader, target_loader, test_target_X, test_target_y_task)
     pred_y_task = isih_dann.predict(test_target_X, is_1st_dim=True)
 
@@ -45,41 +46,25 @@ def main(source_idx, target_idx, winter_idx, summer_idx):
     ## Prepare Data
     train_source_X = target_X
     train_source_y_task = pred_y_task.cpu().detach().numpy()
-    
-
     target_X = pd.read_csv(f"./deep_occupancy_detection/data/{target_idx}_X_train.csv")
     target_y_task = pd.read_csv(f"./deep_occupancy_detection/data/{target_idx}_Y_train.csv")[target_X.Season==summer_idx].values.reshape(-1)
     target_X = target_X[target_X.Season==summer_idx].values
+
     target_X = scaler.fit_transform(target_X)
-
     target_X, target_y_task = utils.apply_sliding_window(target_X, target_y_task, filter_len=6)
-    train_target_X, test_target_X, train_target_y_task, test_target_y_task = train_test_split(target_X, target_y_task, test_size=0.5, shuffle=False)
 
+    train_target_X, test_target_X, train_target_y_task, test_target_y_task = train_test_split(target_X, target_y_task, test_size=0.5, shuffle=False)
     source_loader, target_loader, _, _, _, _ = utils.get_loader(train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True)
-    # TODO: Update utils.get_loader's docstring
 
     test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
     test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
     test_target_X = test_target_X.to(device)
     test_target_y_task = test_target_y_task.to(device)
+    ## isih-DA fit, predict for 2nd dimension
+    isih_dann.fit_2nd_dim(source_loader, target_loader, test_target_X, test_target_y_task)
+    pred_y_task = isih_dann.predict(test_target_X, is_1st_dim=False)
 
-    ## Instantiate Feature Extractor, Domain Classifier, Task Classifier
-    domain_classifier = utils.Decoder(input_size=hidden_size, output_size=num_domains).to(device)
-    task_classifier = utils.Decoder(input_size=hidden_size, output_size=num_classes).to(device)
-
-    learning_rate = 0.00005
-    feature_optimizer = optim.Adam(feature_extractor.parameters(), lr=learning_rate)
-    domain_optimizer = optim.Adam(domain_classifier.parameters(), lr=learning_rate)
-    task_optimizer = optim.Adam(task_classifier.parameters(), lr=learning_rate)
-
-    num_epochs = 100
-    feature_extractor, task_classifier, _ = utils.fit(source_loader, target_loader, test_target_X, test_target_y_task,
-                                                      feature_extractor, domain_classifier, task_classifier, criterion,
-                                                      feature_optimizer, domain_optimizer, task_optimizer, num_epochs=num_epochs, is_timeseries=False, is_psuedo_weights=True)
-
-    # Algo4. Evaluation
-    pred_y_task = task_classifier(feature_extractor(test_target_X))
-    pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
+    # Algo3. Evaluation
     pred_y_task = pred_y_task > 0.5
     acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
     return acc
