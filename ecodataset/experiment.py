@@ -14,10 +14,10 @@ HOUSEHOLD_IDXS = [1, 2, 3]
 def isih_da_house(source_idx, target_idx, winter_idx, summer_idx):
     # Algo1. Cross Household DA
     ## Prepare Data
-    train_source_X = pd.read_csv(f"./deep_occupancy_detection/data/{source_idx}_X_train.csv")
-    target_X = pd.read_csv(f"./deep_occupancy_detection/data/{target_idx}_X_train.csv")
-    train_source_y_task = pd.read_csv(f"./deep_occupancy_detection/data/{source_idx}_Y_train.csv")[train_source_X.Season==winter_idx].values.reshape(-1)
-    target_y_task = pd.read_csv(f"./deep_occupancy_detection/data/{target_idx}_Y_train.csv")[target_X.Season==winter_idx].values.reshape(-1)
+    train_source_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv")
+    target_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_X_train.csv")
+    train_source_y_task = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_Y_train.csv")[train_source_X.Season==winter_idx].values.reshape(-1)
+    target_y_task = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_Y_train.csv")[target_X.Season==winter_idx].values.reshape(-1)
     train_source_X = train_source_X[train_source_X.Season==winter_idx]
     target_X = target_X[target_X.Season==winter_idx]
 
@@ -46,8 +46,8 @@ def isih_da_house(source_idx, target_idx, winter_idx, summer_idx):
     ## Prepare Data
     train_source_X = target_X
     train_source_y_task = pred_y_task.cpu().detach().numpy()
-    target_X = pd.read_csv(f"./deep_occupancy_detection/data/{target_idx}_X_train.csv")
-    target_y_task = pd.read_csv(f"./deep_occupancy_detection/data/{target_idx}_Y_train.csv")[target_X.Season==summer_idx].values.reshape(-1)
+    target_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_X_train.csv")
+    target_y_task = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_Y_train.csv")[target_X.Season==summer_idx].values.reshape(-1)
     target_X = target_X[target_X.Season==summer_idx].values
 
     target_X = scaler.fit_transform(target_X)
@@ -73,10 +73,10 @@ def isih_da_house(source_idx, target_idx, winter_idx, summer_idx):
 def isih_da_season(source_idx, target_idx, winter_idx, summer_idx):
     # Algo1. Cross Household DA
     ## Prepare Data
-    train_source_X = pd.read_csv(f"./deep_occupancy_detection/data/{source_idx}_X_train.csv")
-    target_X = pd.read_csv(f"./deep_occupancy_detection/data/{source_idx}_X_train.csv")
-    train_source_y_task = pd.read_csv(f"./deep_occupancy_detection/data/{source_idx}_Y_train.csv")[train_source_X.Season==winter_idx].values.reshape(-1)
-    target_y_task = pd.read_csv(f"./deep_occupancy_detection/data/{source_idx}_Y_train.csv")[target_X.Season==summer_idx].values.reshape(-1)
+    train_source_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv")
+    target_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv")
+    train_source_y_task = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_Y_train.csv")[train_source_X.Season==winter_idx].values.reshape(-1)
+    target_y_task = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_Y_train.csv")[target_X.Season==summer_idx].values.reshape(-1)
     train_source_X = train_source_X[train_source_X.Season==winter_idx]
     target_X = target_X[target_X.Season==summer_idx]
 
@@ -105,8 +105,8 @@ def isih_da_season(source_idx, target_idx, winter_idx, summer_idx):
     ## Prepare Data
     train_source_X = target_X
     train_source_y_task = pred_y_task.cpu().detach().numpy()
-    target_X = pd.read_csv(f"./deep_occupancy_detection/data/{target_idx}_X_train.csv")
-    target_y_task = pd.read_csv(f"./deep_occupancy_detection/data/{target_idx}_Y_train.csv")[target_X.Season==summer_idx].values.reshape(-1)
+    target_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_X_train.csv")
+    target_y_task = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_Y_train.csv")[target_X.Season==summer_idx].values.reshape(-1)
     target_X = target_X[target_X.Season==summer_idx].values
 
     target_X = scaler.fit_transform(target_X)
@@ -132,11 +132,11 @@ def isih_da_season(source_idx, target_idx, winter_idx, summer_idx):
 def codats(source_idx, target_idx, winter_idx, summer_idx):
     # Cross Season Cross Household DA Once
     ## Prepare Data
-    train_source_X = pd.read_csv(f"./deep_occupancy_detection/data/{source_idx}_X_train.csv")
-    target_X = pd.read_csv(f"./deep_occupancy_detection/data/{target_idx}_X_train.csv")
+    train_source_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv")
+    target_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_X_train.csv")
 
-    train_source_y_task = pd.read_csv(f"./deep_occupancy_detection/data/{source_idx}_Y_train.csv")[train_source_X.Season==winter_idx].values.reshape(-1)
-    target_y_task = pd.read_csv(f"./deep_occupancy_detection/data/{target_idx}_Y_train.csv")[target_X.Season==summer_idx].values.reshape(-1)
+    train_source_y_task = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_Y_train.csv")[train_source_X.Season==winter_idx].values.reshape(-1)
+    target_y_task = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_Y_train.csv")[target_X.Season==summer_idx].values.reshape(-1)
 
     train_source_X = train_source_X[train_source_X.Season==winter_idx]
     target_X = target_X[target_X.Season==summer_idx]
