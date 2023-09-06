@@ -6,7 +6,7 @@ from torch import nn
 from torch import optim
 
 from ..utils import utils
-from ..models import IsihDanns
+from ..models import IsihDanns, Codats
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 HOUSEHOLD_IDXS = [1, 2, 3]
 
@@ -156,29 +156,11 @@ def codats(source_idx, target_idx, winter_idx, summer_idx):
     test_target_y_task = test_target_y_task.to(device)
 
 
-    ## Instantiate Feature Extractor, Domain Classifier, Task Classifier
-    hidden_size = 128
-    num_domains = 1
-    num_classes = 1
+    ## CoDATS fit, predict
+    codats = Codats(input_size=train_source_X.shape[2], hidden_size=128, lr=0.0001, num_epochs=300)
+    codats.fit(source_loader, target_loader, test_target_X, test_target_y_task)
+    pred_y_task = codats.predict(test_target_X)
 
-    feature_extractor = utils.Conv1d(input_size=train_source_X.shape[2]).to(device)
-    domain_classifier = utils.Decoder(input_size=hidden_size, output_size=num_domains).to(device)
-    task_classifier = utils.Decoder(input_size=hidden_size, output_size=num_classes).to(device)
-
-    learning_rate = 0.0001
-
-    criterion = nn.BCELoss()
-    feature_optimizer = optim.Adam(feature_extractor.parameters(), lr=learning_rate)
-    domain_optimizer = optim.Adam(domain_classifier.parameters(), lr=learning_rate)
-    task_optimizer = optim.Adam(task_classifier.parameters(), lr=learning_rate)
-
-    num_epochs = 300
-    feature_extractor, task_classifier, _ = utils.fit(source_loader, target_loader, test_target_X, test_target_y_task,
-                                                      feature_extractor, domain_classifier, task_classifier, criterion,
-                                                      feature_optimizer, domain_optimizer, task_optimizer, num_epochs=num_epochs, is_timeseries=False)
-    
-    pred_y_task = task_classifier(feature_extractor(test_target_X))
-    pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
     pred_y_task = pred_y_task > 0.5
     acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
     return acc
