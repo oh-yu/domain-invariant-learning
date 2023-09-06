@@ -2,7 +2,7 @@ import torch
 from torch import nn
 from torch import optim
 
-import utils
+from ..utils import utils
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
