@@ -5,8 +5,8 @@ import torch
 from torch import nn
 from torch import optim
 
-import utils
-from isih_DA import IsihDanns
+from ..utils import utils
+from ..models import IsihDanns
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 HOUSEHOLD_IDXS = [1, 2, 3]
 
