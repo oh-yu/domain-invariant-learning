@@ -73,6 +73,14 @@ def main():
     plt.show()
 
     # Without Adaptation
+    task_classifier = utils.Decoder(input_size=source_X.shape[1],
+                                    output_size=num_classes).to(device)
+    task_optimizer = optim.Adam(task_classifier.parameters(), lr=learning_rate)
+    task_classifier = utils.fit_without_adaptation(source_loader,
+                                                task_classifier,
+                                                task_optimizer,
+                                                criterion,
+                                                num_epochs)
 
 if __name__  == "__main__":
     main()
