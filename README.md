@@ -1,5 +1,8 @@
 # domain-invariant-learning
 
+## Python Version
+3.8.8
+
 ## Prep
 clone https://github.com/oh-yu/deep_occupancy_detection/tree/feature/icassp2024
 
