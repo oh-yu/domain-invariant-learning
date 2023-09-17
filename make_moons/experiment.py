@@ -81,6 +81,32 @@ def main():
                                                 task_optimizer,
                                                 criterion,
                                                 num_epochs)
+    pred_y_task = task_classifier(target_X.to(device))
+    pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
+    pred_y_task = pred_y_task > 0.5
+    acc = sum(pred_y_task == target_y_task) / target_y_task.shape[0]
+    print(f"Without Adaptation Accuracy:{acc}")
+
+    y_grid = task_classifier(x_grid.T)
+    y_grid = torch.sigmoid(y_grid)
+    y_grid = y_grid.cpu().detach().numpy()
+
+    plt.figure()
+    plt.title("Without Adaptation Boundary")
+    plt.xlabel("X1")
+    plt.ylabel("X2")
+    plt.scatter(source_X[:, 0], source_X[:, 1], c=source_y_task)
+    plt.scatter(target_X[:, 0], target_X[:, 1], c="black")
+    plt.contourf(x1_grid, x2_grid, y_grid.reshape(100, 100), alpha=0.3)
+    plt.colorbar()
+    plt.show()
+
+    # t-SNE Visualization for Extracted Feature
+    target_feature_eval = target_feature_eval.cpu().detach().numpy()
+    source_feature = feature_extractor(source_X.to(device))
+    source_feature = source_feature.cpu().detach().numpy()
+
+    utils.visualize_tSNE(target_feature_eval, source_feature)
 
 if __name__  == "__main__":
     main()

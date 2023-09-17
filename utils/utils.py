@@ -488,12 +488,13 @@ def visualize_tSNE(target_feature, source_feature):
     target_feature_tsne = tsne.fit_transform(target_feature)
     source_feature_tsne = tsne.fit_transform(source_feature)
 
+    plt.figure()
     plt.scatter(source_feature_tsne[:, 0], source_feature_tsne[:, 1], label="Source")
     plt.scatter(target_feature_tsne[:, 0], target_feature_tsne[:, 1], label="Target")
     plt.xlabel("tsne_X1")
     plt.ylabel("tsne_X2")
     plt.legend()
-
+    plt.show()
 
 def raytune_trainer(config, options):
     # 1. Get Data from Options
