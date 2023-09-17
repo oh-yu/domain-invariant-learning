@@ -247,7 +247,9 @@ class ReverseGradient(torch.autograd.Function):
 
 def fit(source_loader, target_loader, target_X, target_y_task,
         feature_extractor, domain_classifier, task_classifier, criterion,
-        feature_optimizer, domain_optimizer, task_optimizer, num_epochs=1000, is_timeseries=False, is_target_weights=True, is_class_weights=False, is_psuedo_weights=False):
+        feature_optimizer, domain_optimizer, task_optimizer, num_epochs=1000,
+        is_timeseries=False, is_target_weights=True, is_class_weights=False, is_psuedo_weights=False,
+        do_plot=False):
     # pylint: disable=too-many-arguments, too-many-locals
     # It seems reasonable in this case, since this method needs all of that.
     """
@@ -408,7 +410,21 @@ def fit(source_loader, target_loader, target_X, target_y_task,
             pred_y_task_eval = pred_y_task_eval > 0.5
             acc = sum(pred_y_task_eval == target_y_task) / target_y_task.shape[0]
         loss_task_evals.append(acc.item())
+    
+    if do_plot:
+        plt.figure()
+        plt.plot(loss_domains, label="loss_domain")
+        plt.plot(loss_tasks, label="loss_task")
+        plt.xlabel("batch")
+        plt.ylabel("binary cross entropy loss")
+        plt.legend()
 
+        plt.figure()
+        plt.plot(loss_task_evals, label="loss_task_eval")
+        plt.xlabel("epoch")
+        plt.ylabel("accuracy")
+        plt.legend()
+        plt.show()
     return feature_extractor, task_classifier, loss_task_evals
 
 

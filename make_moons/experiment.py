@@ -48,7 +48,8 @@ def main():
                                                       feature_optimizer,
                                                       domain_optimizer,
                                                       task_optimizer,
-                                                      num_epochs=num_epochs)
+                                                      num_epochs=num_epochs,
+                                                      do_plot=True)
 
 if __name__  == "__main__":
     main()
