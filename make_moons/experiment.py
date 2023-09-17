@@ -50,7 +50,14 @@ def main():
                                                          task_optimizer,
                                                          num_epochs=num_epochs,
                                                          do_plot=True)
-    print(f"Accuracy: {accs[-1]}")
+    target_feature_eval = feature_extractor(target_X)
+    pred_y_task = task_classifier(target_feature_eval)
+    pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
+    pred_y_task = pred_y_task > 0.5
+
+    acc = sum(pred_y_task == target_y_task) / target_y_task.shape[0]
+    print(f"Accuracy:{acc}")
+
     source_X = source_X.cpu()
     target_X = target_X.cpu()
 
