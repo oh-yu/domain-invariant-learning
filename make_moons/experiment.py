@@ -37,19 +37,42 @@ def main():
 
     # Domain Invariant Learning
     num_epochs = 1000
-    feature_extractor, task_classifier, _ = utils.fit(source_loader,
-                                                      target_loader,
-                                                      target_X,
-                                                      target_y_task,
-                                                      feature_extractor,
-                                                      domain_classifier,
-                                                      task_classifier,
-                                                      criterion,
-                                                      feature_optimizer,
-                                                      domain_optimizer,
-                                                      task_optimizer,
-                                                      num_epochs=num_epochs,
-                                                      do_plot=True)
+    feature_extractor, task_classifier, accs = utils.fit(source_loader,
+                                                         target_loader,
+                                                         target_X,
+                                                         target_y_task,
+                                                         feature_extractor,
+                                                         domain_classifier,
+                                                         task_classifier,
+                                                         criterion,
+                                                         feature_optimizer,
+                                                         domain_optimizer,
+                                                         task_optimizer,
+                                                         num_epochs=num_epochs,
+                                                         do_plot=True)
+    print(f"Accuracy: {accs[-1]}")
+    source_X = source_X.cpu()
+    target_X = target_X.cpu()
+
+    x_grid = torch.tensor(x_grid, dtype=torch.float32)
+    x_grid = x_grid.to(device)
+
+    x_grid_feature = feature_extractor(x_grid.T)
+    y_grid = task_classifier(x_grid_feature)
+    y_grid = torch.sigmoid(y_grid)
+    y_grid = y_grid.cpu().detach().numpy()
+
+    plt.figure()
+    plt.title("Domain Adaptation Boundary")
+    plt.xlabel("X1")
+    plt.ylabel("X2")
+    plt.scatter(source_X[:, 0], source_X[:, 1], c=source_y_task)
+    plt.scatter(target_X[:, 0], target_X[:, 1], c="black")
+    plt.contourf(x1_grid, x2_grid, y_grid.reshape(100, 100), alpha=0.3)
+    plt.colorbar()
+    plt.show()
+
+    # Without Adaptation
 
 if __name__  == "__main__":
     main()
