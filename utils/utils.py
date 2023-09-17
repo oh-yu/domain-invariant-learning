@@ -240,6 +240,7 @@ class ReverseGradient(torch.autograd.Function):
     # It seems better in this case, since this method need only one arg.
         step, num_steps, = ctx.saved_tensors
         scheduler = 2 / (1 + torch.exp(-10 * (step/(num_steps+1)))) - 1
+        # https://arxiv.org/pdf/1505.07818.pdf
 
         # TODO: Check speficiation about correspondence between input for forward and return for backward.
         return grad_output * -1 * scheduler, None, None
