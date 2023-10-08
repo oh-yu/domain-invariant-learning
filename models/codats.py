@@ -24,7 +24,7 @@ class Codats:
             source_loader, target_loader, test_target_X, test_target_y_task,
             self.feature_extractor, self.domain_classifier, self.task_classifier, self.criterion,
             self.feature_optimizer, self.domain_optimizer, self.task_optimizer,
-            num_epochs=self.num_epochs, is_timeseries=False
+            num_epochs=self.num_epochs
         )
 
     def predict(self, x):

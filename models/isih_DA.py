@@ -29,15 +29,14 @@ class IsihDanns:
         self.feature_extractor, self.task_classifier_dim1, _ = utils.fit(
             source_loader, target_loader, test_target_X, test_target_y_task,
             self.feature_extractor, self.domain_classifier_dim1, self.task_classifier_dim1, self.criterion,
-            self.feature_optimizer_dim1, self.domain_optimizer_dim1, self.task_optimizer_dim1, num_epochs=self.num_epochs_dim1, is_timeseries=False
+            self.feature_optimizer_dim1, self.domain_optimizer_dim1, self.task_optimizer_dim1, num_epochs=self.num_epochs_dim1
         )
 
     def fit_2nd_dim(self, source_loader, target_loader, test_target_X, test_target_y_task):
         self.feature_extractor, self.task_classifier_dim2, _ = utils.fit(
             source_loader, target_loader, test_target_X, test_target_y_task,
             self.feature_extractor, self.domain_classifier_dim2, self.task_classifier_dim2, self.criterion,
-            self.feature_optimizer_dim2, self.domain_optimizer_dim2, self.task_optimizer_dim2, num_epochs=self.num_epochs_dim2, is_timeseries=False,
-            is_psuedo_weights=True
+            self.feature_optimizer_dim2, self.domain_optimizer_dim2, self.task_optimizer_dim2, num_epochs=self.num_epochs_dim2, is_psuedo_weights=True
         )
 
     def predict(self, X, is_1st_dim: bool) -> torch.Tensor:
