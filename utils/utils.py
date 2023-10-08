@@ -228,7 +228,7 @@ class ReverseGradient(torch.autograd.Function):
         return grad_output * -1 * scheduler, None, None
 
 
-def _change_lr_during_dann_training(domain_optimizer: torch.optim.adam.Adam, feature_optimizer: torch.optim.adam.Adam, task_optimizer: torch.optim.adam.Adam,
+def _change_lr_during_dann_training(domain_optimizer: torch.optim.Adam, feature_optimizer: torch.optim.Adam, task_optimizer: torch.optim.Adam,
                                     epoch: torch.Tensor, epoch_thr: int = 200, lr: float = 0.00005):
     """
     Returns
