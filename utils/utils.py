@@ -6,7 +6,7 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 from torch.utils.data import TensorDataset, DataLoader
-
+from typing import List
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 COL_IDX_TASK = 0
@@ -307,7 +307,18 @@ def _get_terminal_weights(is_target_weights: bool, is_class_weights: bool, is_ps
     return weights
 
 
-def _plot_dann_loss(do_plot, loss_domains, loss_tasks, loss_task_evals):
+def _plot_dann_loss(do_plot: bool, loss_domains: List[float], loss_tasks: List[float], loss_task_evals: List[float]) -> None:
+    """
+    plot domain&task losses for source, task loss for target.
+
+    Parameters
+    ----------
+    do_plot: bool
+    loss_domains: list of float
+    loss_tasks: list of float
+    loss_tasks_evals: list of float
+    task loss for target data.
+    """
     if do_plot:
         plt.figure()
         plt.plot(loss_domains, label="loss_domain")
