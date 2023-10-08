@@ -271,7 +271,7 @@ def _get_terminal_weights(is_target_weights, is_class_weights, is_psuedo_weights
 def fit(source_loader, target_loader, target_X, target_y_task,
         feature_extractor, domain_classifier, task_classifier, criterion,
         feature_optimizer, domain_optimizer, task_optimizer, num_epochs=1000,
-        is_timeseries=False, is_target_weights=True, is_class_weights=False, is_psuedo_weights=False,
+        is_target_weights=True, is_class_weights=False, is_psuedo_weights=False,
         do_plot=False):
     # pylint: disable=too-many-arguments, too-many-locals
     # It seems reasonable in this case, since this method needs all of that.
@@ -300,7 +300,6 @@ def fit(source_loader, target_loader, target_X, target_y_task,
     domain_optimizer : subclass of torch.optim.Optimizer
     task_optimizer : subclass of torch.optim.Optimizer
     num_epochs : int
-    is_timeseries : bool
     is_target_weights: bool
     is_class_weights: bool
     is_psuedo_weights: bool
@@ -377,14 +376,7 @@ def fit(source_loader, target_loader, target_X, target_y_task,
 
         with torch.no_grad():
             target_feature_eval = feature_extractor(target_X)
-            if is_timeseries:
-                n_days = target_feature_eval.shape[0]//16
-                target_feature_eval = target_feature_eval.reshape(n_days,
-                                                                  16,
-                                                                  target_feature_eval.shape[1])
-                pred_y_task_eval = task_classifier(target_feature_eval, DEVICE)
-            else:
-                pred_y_task_eval = task_classifier(target_feature_eval)
+            pred_y_task_eval = task_classifier(target_feature_eval)
             pred_y_task_eval = torch.sigmoid(pred_y_task_eval).reshape(-1)
             pred_y_task_eval = pred_y_task_eval > 0.5
             acc = sum(pred_y_task_eval == target_y_task) / target_y_task.shape[0]
