@@ -11,7 +11,7 @@ class Codats:
     """
     CoDATS model https://arxiv.org/abs/2005.10996
     """
-    def __init__(self, input_size: int, hidden_size: int, lr: float, num_epochs: int, num_domains: int = 1, num_classes: int = 1):
+    def __init__(self, input_size: int, hidden_size: int, lr: float, num_epochs: int, num_domains: int = 1, num_classes: int = 1) -> None:
         self.feature_extractor = utils.Conv1d(input_size=input_size).to(DEVICE)
         self.domain_classifier = utils.Decoder(input_size=hidden_size, output_size=num_domains).to(DEVICE)
         self.task_classifier = utils.Decoder(input_size=hidden_size, output_size=num_classes).to(DEVICE)
@@ -23,7 +23,7 @@ class Codats:
         self.num_epochs = num_epochs
 
     def fit(self, source_loader: torch.utils.data.dataloader.DataLoader, target_loader: torch.utils.data.dataloader.DataLoader,
-            test_target_X: torch.Tensor, test_target_y_task: torch.Tensor):
+            test_target_X: torch.Tensor, test_target_y_task: torch.Tensor) -> None:
         self.feature_extractor, self.task_classifier, _ = utils.fit(
             source_loader, target_loader, test_target_X, test_target_y_task,
             self.feature_extractor, self.domain_classifier, self.task_classifier, self.criterion,
@@ -31,7 +31,7 @@ class Codats:
             num_epochs=self.num_epochs
         )
 
-    def predict(self, x: torch.Tensor):
+    def predict(self, x: torch.Tensor) -> torch.Tensor:
         pred_y_task = self.task_classifier(self.feature_extractor(x))
         pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
         return pred_y_task
