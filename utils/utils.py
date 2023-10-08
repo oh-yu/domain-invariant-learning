@@ -273,8 +273,25 @@ def _get_psuedo_label_weights(source_Y_batch: torch.Tensor, thr: float = 0.75) -
     return psuedo_label_weights
 
 
-def _get_terminal_weights(is_target_weights, is_class_weights, is_psuedo_weights,
-                         pred_source_y_domain, source_y_task_batch, psuedo_label_weights):
+def _get_terminal_weights(is_target_weights: bool, is_class_weights: bool, is_psuedo_weights: bool,
+                          pred_source_y_domain: torch.Tensor, source_y_task_batch: torch.Tensor, psuedo_label_weights: torch.Tensor) -> torch.Tensor:
+    """
+    # TODO: attach ICASSP2024 REF
+
+    Parameters
+    ----------
+    is_target_weights: bool
+    is_class_weights: bool
+    is_psuedo_weights: bool
+    pred_source_y_domain : torch.Tensor of shape(N, )
+    source_y_task_batch : torch.Tensor of shape(N, )
+    psuedo_label_weights : torch.Tensor of shape(N, )
+
+    Returns
+    -------
+    weights : torch.Tensor of shape(N, )
+    terminal sample weights for nn.BCELoss
+    """
     if is_target_weights:
         target_weights = pred_source_y_domain / (1-pred_source_y_domain)
     else:
