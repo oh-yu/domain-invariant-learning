@@ -233,6 +233,7 @@ def _change_lr_during_dann_training(domain_optimizer, feature_optimizer, task_op
         domain_optimizer.param_groups[0]["lr"] = lr
         feature_optimizer.param_groups[0]["lr"] = lr
         task_optimizer.param_groups[0]["lr"] = lr
+    return domain_optimizer, feature_optimizer, task_optimizer
 
 
 def _get_psuedo_label_weights(source_Y_batch, thr=0.75):
@@ -341,7 +342,7 @@ def fit(source_loader, target_loader, target_X, target_y_task,
         epoch = torch.tensor(epoch, dtype=torch.float32).to(DEVICE)
         feature_extractor.train()
         task_classifier.train()
-        _change_lr_during_dann_training(domain_optimizer, feature_optimizer, task_optimizer, epoch)
+        domain_optimizer, feature_optimizer, task_optimizer = _change_lr_during_dann_training(domain_optimizer, feature_optimizer, task_optimizer, epoch)
 
         for (source_X_batch, source_Y_batch), (target_X_batch, target_y_domain_batch) in zip(source_loader, target_loader):
             # 0. Data
