@@ -246,46 +246,31 @@ def fit(source_loader, target_loader, target_X, target_y_task,
     target_loader : torch.utils.data.dataloader.DataLoader
         Iterable containing batched target's feature, domain label.
 
-    target_X : torch.Tensor of shape(N, D)
-        Target's feature instantiated as torch.Tensor,
-        also sent to on GPU.
+    target_X : torch.Tensor of shape(N, D) or (N, T, D)
+        Sent to on GPU.
 
     target_y_task : torch.Tensor of shape(N, )
-        Target's task label instantiated as torch.Tensor,
-        also sent to on GPU.
+        Sent to on GPU.
 
     feature_extractor : subclass of torch.nn.Module
-        Feature Extractor to be optimized in both of adversarial direction,
-        against Domain Classifier and the same direction as Task Classifier.
-
     domain_classifier : subclass of torch.nn.Module
-        Domain Classifier to be optimized in minimizing the loss of Domain Classification.
-
     task_classifier : subclass of torch.nn.Module
-        Task Classifier to be optimized in minimizing the loss of Task Classification.
-
     criterion : torch.nn.modules.loss.BCELoss
-        Instance calculating Binary Cross Entropy Loss.
-
     feature_optimizer : subclass of torch.optim.Optimizer
-        Optimizer required instantiation with feature_extractor.parameters().
-
     domain_optimizer : subclass of torch.optim.Optimizer
-        Optimizer required instantiation with domain_classifier.parameters().
-
     task_optimizer : subclass of torch.optim.Optimizer
-        Optimizer required instantiation with task_classifier.parameters().
-
     num_epochs : int
     is_timeseries : bool
+    is_target_weights: bool
+    is_class_weights: bool
+    is_psuedo_weights: bool
+    do_plot: bool
 
     Returns
     -------
     feature_extractor : subclass of torch.nn.Module
-        Opitimized Feature Extractor.
-
     task_classifier : subclass of torch.nn.Module
-        Opitimized Task Classifier.
+    loss_task_evals : list of float
     """
 
     reverse_grad = ReverseGradient.apply
