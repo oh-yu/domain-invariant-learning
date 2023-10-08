@@ -155,18 +155,6 @@ def apply_sliding_window(X: np.ndarray, y: np.ndarray, filter_len: int = 3) -> (
     return filtered_X, filtered_y
 
 
-def train_val_test_split(X, y):
-    len_partition = X.shape[0] // 3
-
-    train_X = X[:len_partition]
-    val_X = X[len_partition:len_partition*2]
-    test_X = X[len_partition*2:]
-
-    train_y = y[:len_partition]
-    val_y = y[len_partition:len_partition*2]
-    test_y = y[len_partition*2:]
-    return train_X, val_X, test_X, train_y, val_y, test_y
-
 class Encoder(nn.Module):
     def __init__(self, input_size, output_size):
         super().__init__()
