@@ -71,7 +71,9 @@ def get_source_target_from_make_moons(n_samples=100, noise=0.05, rotation_degree
     return source_X, target_X, source_y, target_y, x_grid, x1_grid, x2_grid
 
 
-def get_loader(source_X, target_X, source_y_task, target_y_task, batch_size=34, shuffle=False):
+def get_loader(source_X: np.ndarray, target_X: np.ndarray,
+               source_y_task: np.ndarray, target_y_task: np.ndarray,
+               batch_size: int = 34, shuffle: bool = False):
     """
     Get instances of torch.utils.data.DataLoader for domain invariant learning,
     also return source and target data instantiated as torch.Tensor.
