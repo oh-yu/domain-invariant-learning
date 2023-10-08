@@ -207,15 +207,17 @@ class Conv1d(nn.Module):
 
 
 class ReverseGradient(torch.autograd.Function):
+    # https://pytorch.org/tutorials/beginner/examples_autograd/two_layer_net_custom_function.html
+
     @staticmethod
-    def forward(ctx, x, step, num_steps):
+    def forward(ctx, x: torch.Tensor, step: torch.Tensor, num_steps: torch.Tensor):
     # TODO: Refactor num_steps, should not pass iteratively.
     # pylint: disable=arguments-differ
     # It seems better in this case, since this method need only one arg.
         ctx.save_for_backward(step, num_steps)
         return x
     @staticmethod
-    def backward(ctx, grad_output):
+    def backward(ctx, grad_output: torch.Tensor):
     # pylint: disable=arguments-differ
     # It seems better in this case, since this method need only one arg.
         step, num_steps, = ctx.saved_tensors
