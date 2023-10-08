@@ -209,6 +209,7 @@ class Conv1d(nn.Module):
 class ReverseGradient(torch.autograd.Function):
     @staticmethod
     def forward(ctx, x, step, num_steps):
+    # TODO: Refactor num_steps, should not pass iteratively.
     # pylint: disable=arguments-differ
     # It seems better in this case, since this method need only one arg.
         ctx.save_for_backward(step, num_steps)
