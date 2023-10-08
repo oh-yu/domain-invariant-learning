@@ -129,7 +129,20 @@ def get_loader(source_X: np.ndarray, target_X: np.ndarray,
     return source_loader, target_loader, source_y_task, source_X, target_X, target_y_task
 
 
-def apply_sliding_window(X, y, filter_len=3):
+def apply_sliding_window(X: np.ndarray, y: np.ndarray, filter_len: int = 3) -> (np.ndarray, np.ndarray):
+    """
+    Parameters
+    ----------
+    X : ndarray of shape(N, H)
+    y : ndarray of shape(N, )
+    filter_len : int
+
+    Returns
+    -------
+    filtered_X : ndarray of shape(N', filter_len, H)
+    N' is N - filter_len + 1.
+    filtered_y : ndarray of shape(N', )
+    """
     len_data, H = X.shape
     N = len_data - filter_len + 1
     filtered_X = np.zeros((N, filter_len, H))
