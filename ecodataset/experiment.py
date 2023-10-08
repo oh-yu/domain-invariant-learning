@@ -7,7 +7,7 @@ from torch import optim
 
 from ..utils import utils
 from ..models import IsihDanns, Codats
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 HOUSEHOLD_IDXS = [1, 2, 3]
 
 
@@ -33,8 +33,8 @@ def isih_da_house(source_idx, target_idx, winter_idx, summer_idx):
 
     test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
     test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
-    test_target_X = test_target_X.to(device)
-    test_target_y_task = test_target_y_task.to(device)
+    test_target_X = test_target_X.to(DEVICE)
+    test_target_y_task = test_target_y_task.to(DEVICE)
 
     ## isih-DA fit, predict for 1st dimension
     isih_dann = IsihDanns(input_size=train_source_X.shape[2], hidden_size=128, lr_dim1=0.0001, lr_dim2=0.00005, 
@@ -58,8 +58,8 @@ def isih_da_house(source_idx, target_idx, winter_idx, summer_idx):
 
     test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
     test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
-    test_target_X = test_target_X.to(device)
-    test_target_y_task = test_target_y_task.to(device)
+    test_target_X = test_target_X.to(DEVICE)
+    test_target_y_task = test_target_y_task.to(DEVICE)
     ## isih-DA fit, predict for 2nd dimension
     isih_dann.fit_2nd_dim(source_loader, target_loader, test_target_X, test_target_y_task)
     pred_y_task = isih_dann.predict(test_target_X, is_1st_dim=False)
@@ -92,8 +92,8 @@ def isih_da_season(source_idx, target_idx, winter_idx, summer_idx):
 
     test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
     test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
-    test_target_X = test_target_X.to(device)
-    test_target_y_task = test_target_y_task.to(device)
+    test_target_X = test_target_X.to(DEVICE)
+    test_target_y_task = test_target_y_task.to(DEVICE)
 
     ## isih-DA fit, predict for 1st dimension
     isih_dann = IsihDanns(input_size=train_source_X.shape[2], hidden_size=128, lr_dim1=0.0001, lr_dim2=0.00005, 
@@ -117,8 +117,8 @@ def isih_da_season(source_idx, target_idx, winter_idx, summer_idx):
 
     test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
     test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
-    test_target_X = test_target_X.to(device)
-    test_target_y_task = test_target_y_task.to(device)
+    test_target_X = test_target_X.to(DEVICE)
+    test_target_y_task = test_target_y_task.to(DEVICE)
     ## isih-DA fit, predict for 2nd dimension
     isih_dann.fit_2nd_dim(source_loader, target_loader, test_target_X, test_target_y_task)
     pred_y_task = isih_dann.predict(test_target_X, is_1st_dim=False)
@@ -152,8 +152,8 @@ def codats(source_idx, target_idx, winter_idx, summer_idx):
 
     test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
     test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
-    test_target_X = test_target_X.to(device)
-    test_target_y_task = test_target_y_task.to(device)
+    test_target_X = test_target_X.to(DEVICE)
+    test_target_y_task = test_target_y_task.to(DEVICE)
 
 
     ## CoDATS fit, predict
