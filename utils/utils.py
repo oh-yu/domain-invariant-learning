@@ -228,14 +228,14 @@ class ReverseGradient(torch.autograd.Function):
         return grad_output * -1 * scheduler, None, None
 
 
-def change_lr_during_dann_training(domain_optimizer, feature_optimizer, task_optimizer, epoch, epoch_thr=200, lr=0.00005):
+def _change_lr_during_dann_training(domain_optimizer, feature_optimizer, task_optimizer, epoch, epoch_thr=200, lr=0.00005):
         if epoch == epoch_thr:
             domain_optimizer.param_groups[0]["lr"] = lr
             feature_optimizer.param_groups[0]["lr"] = lr
             task_optimizer.param_groups[0]["lr"] = lr
 
 
-def get_psuedo_label_weights(source_Y_batch, thr=0.75):
+def _get_psuedo_label_weights(source_Y_batch, thr=0.75):
         pred_y = source_Y_batch[:, COL_IDX_TASK]
         psuedo_label_weights = []
         for i in pred_y:
@@ -308,13 +308,13 @@ def fit(source_loader, target_loader, target_X, target_y_task,
         epoch = torch.tensor(epoch, dtype=torch.float32).to(DEVICE)
         feature_extractor.train()
         task_classifier.train()
-        change_lr_during_dann_training(domain_optimizer, feature_optimizer, task_optimizer, epoch)
+        _change_lr_during_dann_training(domain_optimizer, feature_optimizer, task_optimizer, epoch)
 
         for (source_X_batch, source_Y_batch), (target_X_batch, target_y_domain_batch) in zip(source_loader, target_loader):
             # 0. Data
             source_y_task_batch = source_Y_batch[:, COL_IDX_TASK] > 0.5
             source_y_task_batch = source_y_task_batch.to(torch.float32)
-            psuedo_label_weights = get_psuedo_label_weights(source_Y_batch)
+            psuedo_label_weights = _get_psuedo_label_weights(source_Y_batch)
             source_y_domain_batch = source_Y_batch[:, COL_IDX_DOMAIN]
 
             # 1. Forward
