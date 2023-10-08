@@ -244,7 +244,19 @@ def _change_lr_during_dann_training(domain_optimizer: torch.optim.adam.Adam, fea
     return domain_optimizer, feature_optimizer, task_optimizer
 
 
-def _get_psuedo_label_weights(source_Y_batch, thr=0.75):
+def _get_psuedo_label_weights(source_Y_batch: torch.Tensor, thr: float = 0.75) -> torch.Tensor:
+    """
+    # TODO: attach ICASSP2024 REF
+
+    Parameters
+    ----------
+    source_Y_batch : torch.Tensor of shape(N, 2)
+    thr : float
+
+    Returns
+    -------
+    psuedo_label_weights : torch.Tensor of shape(N, )
+    """
     pred_y = source_Y_batch[:, COL_IDX_TASK]
     psuedo_label_weights = []
     for i in pred_y:
