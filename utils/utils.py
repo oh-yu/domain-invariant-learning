@@ -229,28 +229,44 @@ class ReverseGradient(torch.autograd.Function):
 
 
 def _change_lr_during_dann_training(domain_optimizer, feature_optimizer, task_optimizer, epoch, epoch_thr=200, lr=0.00005):
-        if epoch == epoch_thr:
-            domain_optimizer.param_groups[0]["lr"] = lr
-            feature_optimizer.param_groups[0]["lr"] = lr
-            task_optimizer.param_groups[0]["lr"] = lr
+    if epoch == epoch_thr:
+        domain_optimizer.param_groups[0]["lr"] = lr
+        feature_optimizer.param_groups[0]["lr"] = lr
+        task_optimizer.param_groups[0]["lr"] = lr
 
 
 def _get_psuedo_label_weights(source_Y_batch, thr=0.75):
-        pred_y = source_Y_batch[:, COL_IDX_TASK]
-        psuedo_label_weights = []
-        for i in pred_y:
-            if i > thr:
-                psuedo_label_weights.append(1)
-            elif 1-i > thr:
-                psuedo_label_weights.append(1)
+    pred_y = source_Y_batch[:, COL_IDX_TASK]
+    psuedo_label_weights = []
+    for i in pred_y:
+        if i > thr:
+            psuedo_label_weights.append(1)
+        elif 1-i > thr:
+            psuedo_label_weights.append(1)
+        else:
+            if i > 0.5:
+                psuedo_label_weights.append(i+1-thr)
             else:
-                if i > 0.5:
-                    psuedo_label_weights.append(i+1-thr)
-                else:
-                    psuedo_label_weights.append(1-i+1-thr)
-        psuedo_label_weights = torch.tensor(psuedo_label_weights, dtype=torch.float32).to(DEVICE)
-        return psuedo_label_weights
+                psuedo_label_weights.append(1-i+1-thr)
+    psuedo_label_weights = torch.tensor(psuedo_label_weights, dtype=torch.float32).to(DEVICE)
+    return psuedo_label_weights
 
+
+def _get_terminal_weights(is_target_weights, is_class_weights, is_psuedo_weights,
+                         pred_source_y_domain, source_y_task_batch, psuedo_label_weights):
+    if is_target_weights:
+        target_weights = pred_source_y_domain / (1-pred_source_y_domain)
+    else:
+        target_weights = 1
+    if is_class_weights:
+        class_weights = get_class_weights(source_y_task_batch)
+    else:
+        class_weights = 1
+    if is_psuedo_weights:
+        weights = target_weights * class_weights * psuedo_label_weights
+    else:
+        weights = target_weights * class_weights
+    return weights
 
 def fit(source_loader, target_loader, target_X, target_y_task,
         feature_extractor, domain_classifier, task_classifier, criterion,
@@ -337,20 +353,8 @@ def fit(source_loader, target_loader, target_X, target_y_task,
             # 1.3. Task Classifier
             pred_y_task = task_classifier(source_X_batch)
             pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
-            
-            if is_target_weights:
-                target_weights = pred_source_y_domain / (1-pred_source_y_domain)
-            else:
-                target_weights = 1
-            if is_class_weights:
-                class_weights = get_class_weights(source_y_task_batch)
-            else:
-                class_weights = 1
-            if is_psuedo_weights:
-                weights = target_weights * class_weights * psuedo_label_weights
-            else:
-                weights = target_weights * class_weights
-
+            weights = _get_terminal_weights(is_target_weights, is_class_weights, is_psuedo_weights,
+                                            pred_source_y_domain, source_y_task_batch, psuedo_label_weights)
             criterion_weight = nn.BCELoss(weight=weights.detach())
             loss_task = criterion_weight(pred_y_task, source_y_task_batch)
             loss_tasks.append(loss_task.item())
