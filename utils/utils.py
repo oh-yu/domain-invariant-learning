@@ -235,6 +235,23 @@ def change_lr_during_dann_training(domain_optimizer, feature_optimizer, task_opt
             task_optimizer.param_groups[0]["lr"] = lr
 
 
+def get_psuedo_label_weights(source_Y_batch, thr=0.75):
+        pred_y = source_Y_batch[:, COL_IDX_TASK]
+        psuedo_label_weights = []
+        for i in pred_y:
+            if i > thr:
+                psuedo_label_weights.append(1)
+            elif 1-i > thr:
+                psuedo_label_weights.append(1)
+            else:
+                if i > 0.5:
+                    psuedo_label_weights.append(i+1-thr)
+                else:
+                    psuedo_label_weights.append(1-i+1-thr)
+        psuedo_label_weights = torch.tensor(psuedo_label_weights, dtype=torch.float32).to(DEVICE)
+        return psuedo_label_weights
+
+
 def fit(source_loader, target_loader, target_X, target_y_task,
         feature_extractor, domain_classifier, task_classifier, criterion,
         feature_optimizer, domain_optimizer, task_optimizer, num_epochs=1000,
@@ -297,19 +314,7 @@ def fit(source_loader, target_loader, target_X, target_y_task,
             # 0. Data
             source_y_task_batch = source_Y_batch[:, COL_IDX_TASK] > 0.5
             source_y_task_batch = source_y_task_batch.to(torch.float32)
-            psuedo_label_weights = source_Y_batch[:, COL_IDX_TASK]
-            tmp = []
-            for i in psuedo_label_weights:
-                if i > 0.75:
-                    tmp.append(1)
-                elif i < 0.25:
-                    tmp.append(1)
-                else:
-                    if i > 0.5:
-                        tmp.append(i + 0.25)
-                    else:
-                        tmp.append(1-i + 0.25)
-            psuedo_label_weights = torch.tensor(tmp, dtype=torch.float32).to(DEVICE)
+            psuedo_label_weights = get_psuedo_label_weights(source_Y_batch)
             source_y_domain_batch = source_Y_batch[:, COL_IDX_DOMAIN]
 
             # 1. Forward
