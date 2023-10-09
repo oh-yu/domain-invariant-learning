@@ -262,13 +262,13 @@ def _get_psuedo_label_weights(source_Y_batch: torch.Tensor, thr: float = 0.75) -
     for i in pred_y:
         if i > thr:
             psuedo_label_weights.append(1)
-        elif 1-i > thr:
+        elif i < 1-thr:
             psuedo_label_weights.append(1)
         else:
             if i > 0.5:
-                psuedo_label_weights.append(i+1-thr)
+                psuedo_label_weights.append(i + (1-thr))
             else:
-                psuedo_label_weights.append(1-i+1-thr)
+                psuedo_label_weights.append((1-i) + (1-thr))
     psuedo_label_weights = torch.tensor(psuedo_label_weights, dtype=torch.float32).to(DEVICE)
     return psuedo_label_weights
 
