@@ -16,7 +16,7 @@ def isih_da_house(source_idx: int, target_idx: int, winter_idx: int, summer_idx:
     Execute isih-DA (Household => Season) experiment.
     TODO: Attach ICASSP2024 REF
     """
-    # Algo1. Cross Household DA
+    # Algo1. Inter-Households DA
     ## Prepare Data
     train_source_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv")
     target_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_X_train.csv")
@@ -46,7 +46,7 @@ def isih_da_house(source_idx: int, target_idx: int, winter_idx: int, summer_idx:
     isih_dann.fit_1st_dim(source_loader, target_loader, test_target_X, test_target_y_task)
     pred_y_task = isih_dann.predict(test_target_X, is_1st_dim=True)
 
-    # Algo2. Cross Season DA
+    # Algo2. Inter-Seasons DA
     ## Prepare Data
     train_source_X = target_X
     train_source_y_task = pred_y_task.cpu().detach().numpy()
@@ -79,7 +79,7 @@ def isih_da_season(source_idx: int, target_idx: int, winter_idx: int, summer_idx
     Execute isih-DA (Season => Household) experiment.
     TODO: Attach ICASSP2024 REF
     """
-    # Algo1. Cross Household DA
+    # Algo1. Inter-Seasons DA
     ## Prepare Data
     train_source_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv")
     target_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv")
@@ -109,7 +109,7 @@ def isih_da_season(source_idx: int, target_idx: int, winter_idx: int, summer_idx
     isih_dann.fit_1st_dim(source_loader, target_loader, test_target_X, test_target_y_task)
     pred_y_task = isih_dann.predict(test_target_X, is_1st_dim=True)
 
-    # Algo2. Cross Season DA
+    # Algo2. Inter-Households DA
     ## Prepare Data
     train_source_X = target_X
     train_source_y_task = pred_y_task.cpu().detach().numpy()
@@ -142,7 +142,7 @@ def codats(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int) -
     Execute CoDATS experiment.
     TODO: Attach ICASSP2024 REF
     """
-    # Cross Season Cross Household DA Once
+    # Direct Inter-Seasons and Inter-Households DA
     ## Prepare Data
     train_source_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv")
     target_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_X_train.csv")
