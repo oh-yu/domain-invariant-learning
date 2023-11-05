@@ -11,7 +11,11 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 HOUSEHOLD_IDXS = [1, 2, 3]
 
 
-def isih_da_house(source_idx, target_idx, winter_idx, summer_idx):
+def isih_da_house(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int) -> torch.Tensor:
+    """
+    Execute isih-DA (Household => Season) experiment.
+    TODO: Attach ICASSP2024 REF
+    """
     # Algo1. Cross Household DA
     ## Prepare Data
     train_source_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv")
@@ -70,7 +74,11 @@ def isih_da_house(source_idx, target_idx, winter_idx, summer_idx):
     return acc
 
 
-def isih_da_season(source_idx, target_idx, winter_idx, summer_idx):
+def isih_da_season(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int) -> torch.Tensor:
+    """
+    Execute isih-DA (Season => Household) experiment.
+    TODO: Attach ICASSP2024 REF
+    """
     # Algo1. Cross Household DA
     ## Prepare Data
     train_source_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv")
@@ -129,7 +137,11 @@ def isih_da_season(source_idx, target_idx, winter_idx, summer_idx):
     return acc
 
 
-def codats(source_idx, target_idx, winter_idx, summer_idx):
+def codats(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int) -> torch.Tensor:
+    """
+    Execute CoDATS experiment.
+    TODO: Attach ICASSP2024 REF
+    """
     # Cross Season Cross Household DA Once
     ## Prepare Data
     train_source_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv")
