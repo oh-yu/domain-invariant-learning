@@ -246,7 +246,7 @@ def _change_lr_during_dann_training(domain_optimizer: torch.optim.Adam, feature_
 
 def _get_psuedo_label_weights(source_Y_batch: torch.Tensor, thr: float = 0.75) -> torch.Tensor:
     """
-    # TODO: attach ICASSP2024 REF
+    # TODO: attach paper
 
     Parameters
     ----------
@@ -276,7 +276,7 @@ def _get_psuedo_label_weights(source_Y_batch: torch.Tensor, thr: float = 0.75) -
 def _get_terminal_weights(is_target_weights: bool, is_class_weights: bool, is_psuedo_weights: bool,
                           pred_source_y_domain: torch.Tensor, source_y_task_batch: torch.Tensor, psuedo_label_weights: torch.Tensor) -> torch.Tensor:
     """
-    # TODO: attach ICASSP2024 REF
+    # TODO: attach paper
 
     Parameters
     ----------
