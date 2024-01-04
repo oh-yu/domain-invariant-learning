@@ -9,7 +9,7 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class IsihDanns:
     """
-    TODO: Attach ICASSP2024 REF
+    TODO: Attach paper
     """
     def __init__(self, input_size: int, hidden_size: int, lr_dim1: float, lr_dim2: float, num_epochs_dim1: int, num_epochs_dim2: int):
         self.feature_extractor = utils.Conv1d(input_size=input_size).to(DEVICE)

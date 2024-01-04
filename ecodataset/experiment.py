@@ -14,7 +14,7 @@ HOUSEHOLD_IDXS = [1, 2, 3]
 def isih_da_house(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int) -> torch.Tensor:
     """
     Execute isih-DA (Household => Season) experiment.
-    TODO: Attach ICASSP2024 REF
+    TODO: Attach paper
     """
     # Algo1. Inter-Households DA
     ## Prepare Data
@@ -77,7 +77,7 @@ def isih_da_house(source_idx: int, target_idx: int, winter_idx: int, summer_idx:
 def isih_da_season(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int) -> torch.Tensor:
     """
     Execute isih-DA (Season => Household) experiment.
-    TODO: Attach ICASSP2024 REF
+    TODO: Attach paper
     """
     # Algo1. Inter-Seasons DA
     ## Prepare Data
@@ -140,7 +140,7 @@ def isih_da_season(source_idx: int, target_idx: int, winter_idx: int, summer_idx
 def codats(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int) -> torch.Tensor:
     """
     Execute CoDATS experiment.
-    TODO: Attach ICASSP2024 REF
+    TODO: Attach paper
     """
     # Direct Inter-Seasons and Inter-Households DA
     ## Prepare Data
