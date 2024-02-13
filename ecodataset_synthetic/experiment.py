@@ -13,8 +13,8 @@ HOUSEHOLD_IDX = [0, 1, 2]
 SEASON_IDX = [0, 1]
 
 def isih_da(source_idx=2, season_idx=0):
-    train_source_X = pd.read_csv(f"./deep_occupancy_detection/data/{source_idx}_X_train.csv")
-    train_source_y_task = pd.read_csv(f"./deep_occupancy_detection/data/{source_idx}_Y_train.csv")[train_source_X.Season == season_idx]
+    train_source_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv")
+    train_source_y_task = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_Y_train.csv")[train_source_X.Season == season_idx]
     train_source_X = train_source_X[train_source_X.Season == season_idx]
 
     target_X = train_source_X.copy()
@@ -80,8 +80,8 @@ def isih_da(source_idx=2, season_idx=0):
     return acc
     
 def codats(source_idx=2, season_idx=0):
-    train_source_X = pd.read_csv(f"./deep_occupancy_detection/data/{source_idx}_X_train.csv")
-    train_source_y_task = pd.read_csv(f"./deep_occupancy_detection/data/{source_idx}_Y_train.csv")[train_source_X.Season == season_idx]
+    train_source_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv")
+    train_source_y_task = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_Y_train.csv")[train_source_X.Season == season_idx]
     train_source_X = train_source_X[train_source_X.Season == season_idx]
 
     target_prime_X = train_source_X.copy()
