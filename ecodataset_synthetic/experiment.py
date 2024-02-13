@@ -9,7 +9,7 @@ from torch import optim
 from ..utils import utils
 from ..models import IsihDanns, Codats
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-HOUSEHOLD_IDX = [0, 1, 2]
+HOUSEHOLD_IDX = [1, 2, 3]
 SEASON_IDX = [0, 1]
 
 def isih_da(source_idx=2, season_idx=0):
