@@ -138,7 +138,7 @@ def main():
     df["patterns"] = patterns
     df["accs_isih_da"] = accs_isih_da
     df["accs_codats"] = accs_codats
-    df.to_csv("ecodataset_synthetic_experiment.csv")
+    df.to_csv("ecodataset_synthetic_experiment.csv", index=False)
 
 if __name__ == "__main__":
     main()
