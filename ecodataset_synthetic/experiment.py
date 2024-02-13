@@ -51,7 +51,7 @@ def isih_da(source_idx=2, season_idx=0):
     test_target_y_task = test_target_y_task.to(DEVICE)
 
     isih_dann = IsihDanns(input_size=train_source_X.shape[2], hidden_size=128, lr_dim1=0.0001, lr_dim2=0.00005, 
-                          num_epochs_dim1=900, num_epochs_dim2=100)
+                          num_epochs_dim1=200, num_epochs_dim2=100)
     isih_dann.fit_1st_dim(source_loader, target_loader, test_target_X, test_target_y_task)
     pred_y_task = isih_dann.predict(test_target_X, is_1st_dim=True)
     pred_y_task = pred_y_task > 0.5
@@ -111,7 +111,7 @@ def codats(source_idx=2, season_idx=0):
 
 
     ## CoDATS fit, predict
-    codats = Codats(input_size=train_source_X.shape[2], hidden_size=128, lr=0.0001, num_epochs=1000)
+    codats = Codats(input_size=train_source_X.shape[2], hidden_size=128, lr=0.0001, num_epochs=300)
     codats.fit(source_loader, target_loader, test_target_X, test_target_y_task)
     pred_y_task = codats.predict(test_target_X)
 
