@@ -6,6 +6,7 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 from torch import optim
+from torch.utils.data import TensorDataset, DataLoader
 
 from ..utils import utils
 from ..models import IsihDanns, Codats
@@ -162,13 +163,65 @@ def without_adapt(source_idx=2, season_idx=0):
 
     ## Without Adapt fit, predict
     without_adapt = CoDATS_F_C(input_size=train_source_X.shape[2])
-    without_adapt_optimizer = optim.Adam(without_adapt.parameters(), lr=0.001)
+    without_adapt_optimizer = optim.Adam(without_adapt.parameters(), lr=0.0001)
     criterion = nn.BCELoss()
     without_adapt = utils.fit_without_adaptation(source_loader=source_loader, task_classifier=without_adapt,
-                                                 task_optimizer=without_adapt_optimizer, criterion=criterion)
+                                                 task_optimizer=without_adapt_optimizer, criterion=criterion, num_epochs=300)
     pred_y = without_adapt(test_target_X)
     pred_y = torch.sigmoid(pred_y).reshape(-1)
     acc = sum(pred_y == test_target_y_task) / pred_y.shape[0]
+    return acc
+
+
+def train_on_target(source_idx=2, season_idx=0):
+    train_source_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv")
+    train_source_y_task = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_Y_train.csv")[train_source_X.Season == season_idx]
+    train_source_X = train_source_X[train_source_X.Season == season_idx]
+
+    target_prime_X = train_source_X.copy()
+    tmp_list = [i for i in range(18, 44, 1)]
+    tmp_list += [12, 13, 14, 15, 16, 17]
+    tmp_list = tmp_list * int(train_source_X.shape[0]/32)
+    target_prime_X["Time"] = tmp_list
+    target_prime_y_task = train_source_y_task
+    target_prime_y_task = target_prime_y_task.values.reshape(-1)
+    
+    target_X, target_y_task = target_prime_X, target_prime_y_task
+    scaler = preprocessing.StandardScaler()
+    target_X = scaler.fit_transform(target_X)
+    target_X, target_y_task = utils.apply_sliding_window(target_X, target_y_task, filter_len=6)
+    train_target_X, test_target_X, train_target_y_task, test_target_y_task = train_test_split(target_X, target_y_task, test_size=0.5, shuffle=False)
+
+    test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
+    test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
+    test_target_X = test_target_X.to(DEVICE)
+    test_target_y_task = test_target_y_task.to(DEVICE)
+
+    train_target_X = torch.tensor(train_target_X, dtype=torch.float32)
+    train_target_y_task = torch.tensor(train_target_y_task, dtype=torch.float32)
+    train_target_X = train_target_X.to(DEVICE)
+    train_target_y_task = train_target_y_task.to(DEVICE)
+    target_ds = TensorDataset(train_target_X, train_target_y_task)
+    target_loader = DataLoader(target_ds, batch_size=32, shuffle=True)
+    ## Train on Target fit, predict
+    train_on_target = CoDATS_F_C(input_size=train_target_X.shape[2])
+    train_on_target_optimizer = optim.Adam(train_on_target.parameters(), lr=0.0001)
+    criterion = nn.BCELoss()
+    for _ in range(300):
+        for target_X_batch, target_y_task_batch in target_loader:
+            # Forward
+            pred_y_task = train_on_target(target_X_batch)
+            pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
+            loss_task = criterion(pred_y_task, target_y_task_batch)
+
+            # Backward
+            train_on_target_optimizer.zero_grad()
+            loss_task.backward()
+            # Update Params
+            train_on_target_optimizer.step()
+    pred_y_task = train_on_target(test_target_X)
+    pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
+    acc = sum(pred_y_task == test_target_y_task) / pred_y_task.shape[0]
     return acc
     
 
@@ -176,25 +229,30 @@ def main():
     accs_isih_da = []
     accs_codats = []
     accs_without_adapt = []
+    accs_train_on_target = []
     patterns = []
     for i in HOUSEHOLD_IDX:
         for j in SEASON_IDX:
             runnning_acc_isih_da = 0
             runnning_acc_codats = 0
             running_acc_without_adapt = 0
+            running_acc_train_on_target = 0
             for _ in range(10):
                 runnning_acc_isih_da += isih_da(source_idx=i, season_idx=j).item()
                 runnning_acc_codats += codats(source_idx=i, season_idx=j).item()
                 running_acc_without_adapt += without_adapt(source_idx=i, season_idx=j).item()
+                running_acc_train_on_target += train_on_target(source_idx=i, season_idx=j).item()
             accs_isih_da.append(runnning_acc_isih_da/10)
             accs_codats.append(runnning_acc_codats/10)
             accs_without_adapt.append(running_acc_without_adapt/10)
+            accs_train_on_target.append(running_acc_train_on_target/10)
             patterns.append(f"Household ID:{i}, Season:{j}")
     df = pd.DataFrame()
     df["patterns"] = patterns
     df["accs_isih_da"] = accs_isih_da
     df["accs_codats"] = accs_codats
     df["accs_without_adapt"] = accs_without_adapt
+    df["accs_train_on_target"] = accs_train_on_target
     df.to_csv("ecodataset_synthetic_experiment.csv", index=False)
 
 if __name__ == "__main__":
