@@ -169,6 +169,7 @@ def without_adapt(source_idx=2, season_idx=0):
                                                  task_optimizer=without_adapt_optimizer, criterion=criterion, num_epochs=300)
     pred_y = without_adapt(test_target_X)
     pred_y = torch.sigmoid(pred_y).reshape(-1)
+    pred_y_task = pred_y_task > 0.5
     acc = sum(pred_y == test_target_y_task) / pred_y.shape[0]
     return acc
 
@@ -221,6 +222,7 @@ def train_on_target(source_idx=2, season_idx=0):
             train_on_target_optimizer.step()
     pred_y_task = train_on_target(test_target_X)
     pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
+    pred_y_task = pred_y_task > 0.5
     acc = sum(pred_y_task == test_target_y_task) / pred_y_task.shape[0]
     return acc
     
