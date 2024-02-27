@@ -17,8 +17,8 @@ SEASON_IDX = [0, 1]
 class CoDATS_F_C(nn.Module):
     def __init__(self, input_size: int):
         super().__init__()
-        self.conv1d = utils.Conv1d(input_size=input_size)
-        self.decoder = utils.Decoder(input_size=128, output_size=1)
+        self.conv1d = utils.Conv1d(input_size=input_size).to(DEVICE)
+        self.decoder = utils.Decoder(input_size=128, output_size=1).to(DEVICE)
     def forward(self, x):
         return self.decoder(self.conv1d(x))
 
@@ -169,7 +169,7 @@ def without_adapt(source_idx=2, season_idx=0):
                                                  task_optimizer=without_adapt_optimizer, criterion=criterion, num_epochs=300)
     pred_y = without_adapt(test_target_X)
     pred_y = torch.sigmoid(pred_y).reshape(-1)
-    pred_y_task = pred_y_task > 0.5
+    pred_y = pred_y > 0.5
     acc = sum(pred_y == test_target_y_task) / pred_y.shape[0]
     return acc
 
