@@ -14,27 +14,12 @@ HOUSEHOLD_IDX = [1, 2, 3]
 SEASON_IDX = [0, 1]
 
 class CoDATS_F_C(nn.Module):
-    def __init__(self, input_size: int, out_channels1: int = 128, out_channels2: int = 128):
+    def __init__(self, input_size: int):
         super().__init__()
-        self.conv1 = nn.Conv1d(in_channels=input_size, out_channels=out_channels1, kernel_size=3, stride=1, padding=1)
-        self.bn1 = nn.BatchNorm1d(out_channels1)
-        self.conv2 = nn.Conv1d(in_channels=out_channels1, out_channels=out_channels2, kernel_size=2, stride=1, padding=0)
-        self.bn2 = nn.BatchNorm1d(out_channels2)
-        self.fc1 = nn.Linear(out_channels2, 50)
-        self.fc2 = nn.Linear(50, 10)
-        self.fc3 = nn.Linear(10, 1)
-
+        self.conv1d = utils.Conv1d(input_size=input_size)
+        self.decoder = utils.Decoder(input_size=128, output_size=1)
     def forward(self, x):
-        x = x.reshape(x.shape[0], x.shape[2], x.shape[1])
-        x = self.conv1(x)
-        x = F.relu(self.bn1(x))
-        x = self.conv2(x)
-        x = F.relu(self.bn2(x))
-        x = torch.mean(x, dim=2)
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-        x = self.fc3(x)
-        return x
+        return self.decoder(self.conv1d(x))
 
 def isih_da(source_idx=2, season_idx=0):
     train_source_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv")
