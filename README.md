@@ -9,4 +9,3 @@ python -m domain-invariant-learning.make_moons.experiment
 
 ## [ECO data set](https://vs.inf.ethz.ch/res/show.html?what=eco-data "ECO data set REF") Experiment
 python -m domain-invariant-learning.ecodataset.experiment
-![isih-DA](/isih-DA_schematic_fig.png)
