@@ -186,6 +186,8 @@ def main():
     isih_da_house_accs = []
     isih_da_season_accs = []
     codats_accs = []
+    df = pd.DataFrame()
+    patterns = []
 
     for i in HOUSEHOLD_IDXS:
         for j in HOUSEHOLD_IDXS:
@@ -216,6 +218,8 @@ def main():
             isih_da_house_accs.append(isih_da_house_running_acc/10)
             isih_da_season_accs.append(isih_da_season_running_acc/10)
             codats_accs.append(codats_running_acc/10)
+            patterns.append(f"({i}, w) -> ({j}, s)")
+            
     
     for i in HOUSEHOLD_IDXS:
         for j in HOUSEHOLD_IDXS:
@@ -243,10 +247,16 @@ def main():
             isih_da_house_accs.append(isih_da_house_running_acc/10)
             isih_da_season_accs.append(isih_da_season_running_acc/10)
             codats_accs.append(codats_running_acc/10)
+            patterns.append(f"({i}, s) -> ({j}, w)")
     
     print(f"isih-DA (Household => Season) Average: {sum(isih_da_house_accs)/len(isih_da_house_accs)}")
     print(f"isih-DA (Season => Household) Average: {sum(isih_da_season_accs)/len(isih_da_season_accs)}")
     print(f"CoDATS Average: {sum(codats_accs)/len(codats_accs)}")
+    df["PAT"] = patterns
+    df["isih-DA (Household => Season)"] = isih_da_house_accs
+    df["isih-DA (Season => Household)"] = isih_da_season_accs
+    df["CoDATS"] = codats_accs
+    df.to_csv("ecodataset_experiment.csv", index=False)
 
 if __name__ == "__main__":
     main()
