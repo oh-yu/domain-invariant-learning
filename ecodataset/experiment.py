@@ -1,6 +1,6 @@
 import pandas as pd
 from sklearn import preprocessing
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, KFold
 import torch
 from torch import nn
 from torch import optim
@@ -11,7 +11,7 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 HOUSEHOLD_IDXS = [1, 2, 3]
 
 
-def isih_da_house(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int) -> torch.Tensor:
+def isih_da_house(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, n_splits: int) -> torch.Tensor:
     """
     Execute isih-DA (Household => Season) experiment.
     TODO: Attach paper
@@ -57,21 +57,25 @@ def isih_da_house(source_idx: int, target_idx: int, winter_idx: int, summer_idx:
     target_X = scaler.fit_transform(target_X)
     target_X, target_y_task = utils.apply_sliding_window(target_X, target_y_task, filter_len=6)
 
-    train_target_X, test_target_X, train_target_y_task, test_target_y_task = train_test_split(target_X, target_y_task, test_size=0.5, shuffle=False)
-    source_loader, target_loader, _, _, _, _ = utils.get_loader(train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True)
+    kf = KFold(n_splits=n_splits, shuffle=False)
+    accs = []
+    for train_idx, test_idx in kf.split(target_X):
+        train_target_X, test_target_X, train_target_y_task, test_target_y_task = target_X[train_idx], target_X[test_idx], target_y_task[train_idx], target_y_task[test_idx]
+        source_loader, target_loader, _, _, _, _ = utils.get_loader(train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True)
 
-    test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
-    test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
-    test_target_X = test_target_X.to(DEVICE)
-    test_target_y_task = test_target_y_task.to(DEVICE)
-    ## isih-DA fit, predict for 2nd dimension
-    isih_dann.fit_2nd_dim(source_loader, target_loader, test_target_X, test_target_y_task)
-    pred_y_task = isih_dann.predict(test_target_X, is_1st_dim=False)
+        test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
+        test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
+        test_target_X = test_target_X.to(DEVICE)
+        test_target_y_task = test_target_y_task.to(DEVICE)
+        ## isih-DA fit, predict for 2nd dimension
+        isih_dann.fit_2nd_dim(source_loader, target_loader, test_target_X, test_target_y_task)
+        pred_y_task = isih_dann.predict(test_target_X, is_1st_dim=False)
 
-    # Algo3. Evaluation
-    pred_y_task = pred_y_task > 0.5
-    acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
-    return acc
+        # Algo3. Evaluation
+        pred_y_task = pred_y_task > 0.5
+        acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
+        accs.append(acc.item())
+    return sum(accs)/n_splits
 
 
 def isih_da_season(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int) -> torch.Tensor:
@@ -195,7 +199,7 @@ def main():
                 continue
             for _ in range(10):
                 isih_da_house_acc = isih_da_house(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
-                isih_da_house_running_acc += isih_da_house_acc.item()
+                isih_da_house_running_acc += isih_da_house_acc
 
                 isih_da_season_acc = isih_da_season(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
                 isih_da_season_running_acc += isih_da_season_acc.item()
