@@ -11,7 +11,7 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 HOUSEHOLD_IDXS = [1, 2, 3]
 
 
-def isih_da_house(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, n_splits: int) -> torch.Tensor:
+def isih_da_house(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, n_splits: int=5) -> torch.Tensor:
     """
     Execute isih-DA (Household => Season) experiment.
     TODO: Attach paper
@@ -227,7 +227,7 @@ def main():
                 continue
             for _ in range(10):
                 isih_da_house_acc = isih_da_house(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0)
-                isih_da_house_running_acc += isih_da_house_acc.item()
+                isih_da_house_running_acc += isih_da_house_acc
 
                 isih_da_season_acc = isih_da_season(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0)
                 isih_da_season_running_acc += isih_da_season_acc.item()
