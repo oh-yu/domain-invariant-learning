@@ -78,7 +78,7 @@ def isih_da_house(source_idx: int, target_idx: int, winter_idx: int, summer_idx:
     return sum(accs)/n_splits
 
 
-def isih_da_season(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int) -> torch.Tensor:
+def isih_da_season(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, n_splits: int=5) -> torch.Tensor:
     """
     Execute isih-DA (Season => Household) experiment.
     TODO: Attach paper
@@ -124,24 +124,28 @@ def isih_da_season(source_idx: int, target_idx: int, winter_idx: int, summer_idx
     target_X = scaler.fit_transform(target_X)
     target_X, target_y_task = utils.apply_sliding_window(target_X, target_y_task, filter_len=6)
 
-    train_target_X, test_target_X, train_target_y_task, test_target_y_task = train_test_split(target_X, target_y_task, test_size=0.5, shuffle=False)
-    source_loader, target_loader, _, _, _, _ = utils.get_loader(train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True)
+    kfold = KFold(n_splits=n_splits, shuffle=False)
+    accs = []
+    for train_idx, test_idx in kfold(target_X):
+        train_target_X, test_target_X, train_target_y_task, test_target_y_task = target_X[train_idx], target_X[test_idx], target_y_task[train_idx], target_y_task[test_idx]
+        source_loader, target_loader, _, _, _, _ = utils.get_loader(train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True)
 
-    test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
-    test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
-    test_target_X = test_target_X.to(DEVICE)
-    test_target_y_task = test_target_y_task.to(DEVICE)
-    ## isih-DA fit, predict for 2nd dimension
-    isih_dann.fit_2nd_dim(source_loader, target_loader, test_target_X, test_target_y_task)
-    pred_y_task = isih_dann.predict(test_target_X, is_1st_dim=False)
+        test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
+        test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
+        test_target_X = test_target_X.to(DEVICE)
+        test_target_y_task = test_target_y_task.to(DEVICE)
+        ## isih-DA fit, predict for 2nd dimension
+        isih_dann.fit_2nd_dim(source_loader, target_loader, test_target_X, test_target_y_task)
+        pred_y_task = isih_dann.predict(test_target_X, is_1st_dim=False)
 
-    # Algo3. Evaluation
-    pred_y_task = pred_y_task > 0.5
-    acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
-    return acc
+        # Algo3. Evaluation
+        pred_y_task = pred_y_task > 0.5
+        acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
+        accs.append(acc.item())
+    return sum(accs)/n_splits
 
 
-def codats(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int) -> torch.Tensor:
+def codats(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, n_splits: int=5) -> torch.Tensor:
     """
     Execute CoDATS experiment.
     TODO: Attach paper
@@ -162,24 +166,29 @@ def codats(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int) -
     target_X = scaler.fit_transform(target_X)
     train_source_X, train_source_y_task = utils.apply_sliding_window(train_source_X, train_source_y_task, filter_len=6)
     target_X, target_y_task = utils.apply_sliding_window(target_X, target_y_task, filter_len=6)
-    train_target_X, test_target_X, train_target_y_task, test_target_y_task = train_test_split(target_X, target_y_task, test_size=0.5, shuffle=False)
-    source_loader, target_loader, _, _, _, _ = utils.get_loader(train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True)
-    # TODO: Update utils.get_loader's docstring
 
-    test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
-    test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
-    test_target_X = test_target_X.to(DEVICE)
-    test_target_y_task = test_target_y_task.to(DEVICE)
+    kfold = KFold(n_splits=n_splits, shuffle=False)
+    accs = []
+    for train_idx, test_idx in kfold(target_X):
+        train_target_X, test_target_X, train_target_y_task, test_target_y_task = target_X[train_idx], target_X[test_idx], target_y_task[train_idx], target_y_task[test_idx]
+        source_loader, target_loader, _, _, _, _ = utils.get_loader(train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True)
+        # TODO: Update utils.get_loader's docstring
+
+        test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
+        test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
+        test_target_X = test_target_X.to(DEVICE)
+        test_target_y_task = test_target_y_task.to(DEVICE)
 
 
-    ## CoDATS fit, predict
-    codats = Codats(input_size=train_source_X.shape[2], hidden_size=128, lr=0.0001, num_epochs=300)
-    codats.fit(source_loader, target_loader, test_target_X, test_target_y_task)
-    pred_y_task = codats.predict(test_target_X)
+        ## CoDATS fit, predict
+        codats = Codats(input_size=train_source_X.shape[2], hidden_size=128, lr=0.0001, num_epochs=300)
+        codats.fit(source_loader, target_loader, test_target_X, test_target_y_task)
+        pred_y_task = codats.predict(test_target_X)
 
-    pred_y_task = pred_y_task > 0.5
-    acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
-    return acc
+        pred_y_task = pred_y_task > 0.5
+        acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
+        accs.append(acc.item())
+    return sum(accs)/n_splits
 
 
 def main():
@@ -204,10 +213,10 @@ def main():
                 isih_da_house_running_acc += isih_da_house_acc
 
                 isih_da_season_acc = isih_da_season(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
-                isih_da_season_running_acc += isih_da_season_acc.item()
+                isih_da_season_running_acc += isih_da_season_acc
 
                 codats_acc = codats(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
-                codats_running_acc += codats_acc.item()
+                codats_running_acc += codats_acc
 
 
             print(f"({i}, w) -> ({j}, s)")
@@ -234,10 +243,10 @@ def main():
                 isih_da_house_running_acc += isih_da_house_acc
 
                 isih_da_season_acc = isih_da_season(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0)
-                isih_da_season_running_acc += isih_da_season_acc.item()
+                isih_da_season_running_acc += isih_da_season_acc
 
                 codats_acc = codats(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0)
-                codats_running_acc += codats_acc.item()
+                codats_running_acc += codats_acc
 
             print(f"({i}, s) -> ({j}, w)")
             print(f"isih-DA (Household => Season)| {isih_da_house_running_acc/10}")
