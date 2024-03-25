@@ -200,62 +200,29 @@ def main():
 
     for i in HOUSEHOLD_IDXS:
         for j in HOUSEHOLD_IDXS:
-            isih_da_house_running_acc = 0
-            isih_da_season_running_acc = 0
-            codats_running_acc = 0
-            
-
 
             if i == j:
                 continue
-            for _ in range(10):
-                isih_da_house_acc = isih_da_house(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
-                isih_da_house_running_acc += isih_da_house_acc
-
-                isih_da_season_acc = isih_da_season(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
-                isih_da_season_running_acc += isih_da_season_acc
-
-                codats_acc = codats(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
-                codats_running_acc += codats_acc
-
-
-            print(f"({i}, w) -> ({j}, s)")
-            print(f"isih-DA (Household => Season)| {isih_da_house_running_acc/10}")
-            print(f"isih-DA (Season => Household)| {isih_da_season_running_acc/10}")
-            print(f"CoDATS| {codats_running_acc/10}")
+            isih_da_house_acc = isih_da_house(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
+            isih_da_season_acc = isih_da_season(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
+            codats_acc = codats(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
  
-            isih_da_house_accs.append(isih_da_house_running_acc/10)
-            isih_da_season_accs.append(isih_da_season_running_acc/10)
-            codats_accs.append(codats_running_acc/10)
-            patterns.append(f"({i}, w) -> ({j}, s)")
-            
+            isih_da_house_accs.append(isih_da_house_acc)
+            isih_da_season_accs.append(isih_da_season_acc)
+            codats_accs.append(codats_acc)
+            patterns.append(f"({i}, w) -> ({j}, s)")   
     
     for i in HOUSEHOLD_IDXS:
         for j in HOUSEHOLD_IDXS:
-            isih_da_house_running_acc = 0
-            isih_da_season_running_acc = 0
-            codats_running_acc = 0
-
             if i == j:
                 continue
-            for _ in range(10):
-                isih_da_house_acc = isih_da_house(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0)
-                isih_da_house_running_acc += isih_da_house_acc
+            isih_da_house_acc = isih_da_house(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0)
+            isih_da_season_acc = isih_da_season(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0)
+            codats_acc = codats(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0)
 
-                isih_da_season_acc = isih_da_season(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0)
-                isih_da_season_running_acc += isih_da_season_acc
-
-                codats_acc = codats(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0)
-                codats_running_acc += codats_acc
-
-            print(f"({i}, s) -> ({j}, w)")
-            print(f"isih-DA (Household => Season)| {isih_da_house_running_acc/10}")
-            print(f"isih-DA (Season => Household)| {isih_da_season_running_acc/10}")
-            print(f"CoDATS| {codats_running_acc/10}")
-
-            isih_da_house_accs.append(isih_da_house_running_acc/10)
-            isih_da_season_accs.append(isih_da_season_running_acc/10)
-            codats_accs.append(codats_running_acc/10)
+            isih_da_house_accs.append(isih_da_house_acc)
+            isih_da_season_accs.append(isih_da_season_acc)
+            codats_accs.append(codats_acc)
             patterns.append(f"({i}, s) -> ({j}, w)")
     
     print(f"isih-DA (Household => Season) Average: {sum(isih_da_house_accs)/len(isih_da_house_accs)}")
