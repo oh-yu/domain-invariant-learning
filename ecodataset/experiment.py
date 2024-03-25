@@ -126,7 +126,7 @@ def isih_da_season(source_idx: int, target_idx: int, winter_idx: int, summer_idx
 
     kfold = KFold(n_splits=n_splits, shuffle=False)
     accs = []
-    for train_idx, test_idx in kfold(target_X):
+    for train_idx, test_idx in kfold.split(target_X):
         train_target_X, test_target_X, train_target_y_task, test_target_y_task = target_X[train_idx], target_X[test_idx], target_y_task[train_idx], target_y_task[test_idx]
         source_loader, target_loader, _, _, _, _ = utils.get_loader(train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True)
 
@@ -169,7 +169,7 @@ def codats(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, n
 
     kfold = KFold(n_splits=n_splits, shuffle=False)
     accs = []
-    for train_idx, test_idx in kfold(target_X):
+    for train_idx, test_idx in kfold.split(target_X):
         train_target_X, test_target_X, train_target_y_task, test_target_y_task = target_X[train_idx], target_X[test_idx], target_y_task[train_idx], target_y_task[test_idx]
         source_loader, target_loader, _, _, _, _ = utils.get_loader(train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True)
         # TODO: Update utils.get_loader's docstring
