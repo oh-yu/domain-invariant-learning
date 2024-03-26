@@ -4,6 +4,7 @@ from sklearn.model_selection import train_test_split, KFold
 import torch
 from torch import nn
 from torch import optim
+from torch.utils.data import TensorDataset, DataLoader
 
 from ..utils import utils
 from ..models import IsihDanns, Codats, CoDATS_F_C
@@ -229,11 +230,61 @@ def without_adapt(source_idx: int, target_idx: int, winter_idx: int, summer_idx:
         accs.append(acc.item())
     return sum(accs)/n_splits
 
+
+def train_on_target(target_idx: int, summer_idx: int, n_splits: int=5) -> float:
+    target_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_X_train.csv")
+    target_y_task = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_Y_train.csv")[target_X.Season==summer_idx].values.reshape(-1)
+    target_X = target_X[target_X.Season==summer_idx]
+
+    scaler = preprocessing.StandardScaler()
+    target_X = scaler.fit_transform(target_X)
+    target_X, target_y_task = utils.apply_sliding_window(target_X, target_y_task, filter_len=6)
+
+    kfold = KFold(n_splits=n_splits, shuffle=False)
+    accs = []
+    for train_idx, test_idx in kfold.split(target_X):
+        train_target_X, test_target_X, train_target_y_task, test_target_y_task = target_X[train_idx], target_X[test_idx], target_y_task[train_idx], target_y_task[test_idx]
+        
+        
+        test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
+        test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
+        test_target_X = test_target_X.to(DEVICE)
+        test_target_y_task = test_target_y_task.to(DEVICE)
+
+        train_target_X = torch.tensor(train_target_X, dtype=torch.float32)
+        train_target_y_task = torch.tensor(train_target_y_task, dtype=torch.float32)
+        train_target_X = train_target_X.to(DEVICE)
+        train_target_y_task = train_target_y_task.to(DEVICE)
+        target_ds = TensorDataset(train_target_X, train_target_y_task)
+        target_loader = DataLoader(target_ds, batch_size=32, shuffle=True)
+        ## Train on Target fit, predict
+        train_on_target = CoDATS_F_C(input_size=train_target_X.shape[2])
+        train_on_target_optimizer = optim.Adam(train_on_target.parameters(), lr=0.0001)
+        criterion = nn.BCELoss()
+
+        for _ in range(300):
+            for target_X_batch, target_y_task_batch in target_loader:
+                pred_y_task = train_on_target(target_X_batch)
+                pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
+                loss = criterion(pred_y_task, target_y_task_batch)
+
+                train_on_target_optimizer.zero_grad()
+                loss.backward()
+                train_on_target_optimizer.step()
+        pred_y_task = train_on_target(test_target_X)
+        pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
+        pred_y_task = pred_y_task > 0.5
+        acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
+        accs.append(acc.item())
+    return sum(accs)/n_splits
+
+
 def main():
     isih_da_house_accs = []
     isih_da_season_accs = []
     codats_accs = []
     without_adapt_accs = []
+    train_on_target_accs = []
     df = pd.DataFrame()
     patterns = []
 
@@ -246,11 +297,13 @@ def main():
             isih_da_season_acc = isih_da_season(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
             codats_acc = codats(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
             without_adapt_acc = without_adapt(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
+            train_on_target_acc = train_on_target(target_idx=j, summer_idx=1)
  
             isih_da_house_accs.append(isih_da_house_acc)
             isih_da_season_accs.append(isih_da_season_acc)
             codats_accs.append(codats_acc)
             without_adapt_accs.append(without_adapt_acc)
+            train_on_target_accs.append(train_on_target_acc)
             patterns.append(f"({i}, w) -> ({j}, s)")   
     
     for i in HOUSEHOLD_IDXS:
@@ -261,22 +314,27 @@ def main():
             isih_da_season_acc = isih_da_season(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0)
             codats_acc = codats(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0)
             without_adapt_acc = without_adapt(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0)
+            train_on_target_acc = train_on_target(target_idx=j, summer_idx=0)
 
             isih_da_house_accs.append(isih_da_house_acc)
             isih_da_season_accs.append(isih_da_season_acc)
             codats_accs.append(codats_acc)
             without_adapt_accs.append(without_adapt_acc)
+            train_on_target_accs.append(train_on_target_acc)
             patterns.append(f"({i}, s) -> ({j}, w)")
     
     print(f"isih-DA (Household => Season) Average: {sum(isih_da_house_accs)/len(isih_da_house_accs)}")
     print(f"isih-DA (Season => Household) Average: {sum(isih_da_season_accs)/len(isih_da_season_accs)}")
     print(f"CoDATS Average: {sum(codats_accs)/len(codats_accs)}")
     print(f"Without Adapt Average: {sum(without_adapt_accs)/len(without_adapt_accs)}")
+    print(f"Train on Target Average: {sum(train_on_target_accs)/len(train_on_target_accs)}")
+
     df["PAT"] = patterns
     df["isih-DA (Household => Season)"] = isih_da_house_accs
     df["isih-DA (Season => Household)"] = isih_da_season_accs
     df["CoDATS"] = codats_accs
     df["Wtihout_Adapt"] = without_adapt_accs
+    df["Train_on_Target"] = train_on_target_accs
     df.to_csv("ecodataset_experiment.csv", index=False)
 
 if __name__ == "__main__":
