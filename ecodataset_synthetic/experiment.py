@@ -93,7 +93,7 @@ def isih_da(source_idx=2, season_idx=0, n_splits:int=5):
         accs.append(acc.item())
     return sum(accs)/n_splits
     
-def codats(source_idx=2, season_idx=0):
+def codats(source_idx=2, season_idx=0, n_splits:int=5):
     train_source_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv")
     train_source_y_task = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_Y_train.csv")[train_source_X.Season == season_idx]
     train_source_X = train_source_X[train_source_X.Season == season_idx]
@@ -114,24 +114,29 @@ def codats(source_idx=2, season_idx=0):
     target_X = scaler.fit_transform(target_X)
     train_source_X, train_source_y_task = utils.apply_sliding_window(train_source_X, train_source_y_task, filter_len=6)
     target_X, target_y_task = utils.apply_sliding_window(target_X, target_y_task, filter_len=6)
-    train_target_X, test_target_X, train_target_y_task, test_target_y_task = train_test_split(target_X, target_y_task, test_size=0.5, shuffle=False)
-    source_loader, target_loader, _, _, _, _ = utils.get_loader(train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True)
-    # TODO: Update utils.get_loader's docstring
 
-    test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
-    test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
-    test_target_X = test_target_X.to(DEVICE)
-    test_target_y_task = test_target_y_task.to(DEVICE)
+    kfold = KFold(n_splits=n_splits, shuffle=False)
+    accs = []
+    for train_idx, test_idx in kfold.split(target_X):
+        train_target_X, test_target_X, train_target_y_task, test_target_y_task = target_X[train_idx], target_X[test_idx], target_y_task[train_idx], target_y_task[test_idx]
+        source_loader, target_loader, _, _, _, _ = utils.get_loader(train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True)
+        # TODO: Update utils.get_loader's docstring
+
+        test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
+        test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
+        test_target_X = test_target_X.to(DEVICE)
+        test_target_y_task = test_target_y_task.to(DEVICE)
 
 
-    ## CoDATS fit, predict
-    codats = Codats(input_size=train_source_X.shape[2], hidden_size=128, lr=0.0001, num_epochs=300)
-    codats.fit(source_loader, target_loader, test_target_X, test_target_y_task)
-    pred_y_task = codats.predict(test_target_X)
+        ## CoDATS fit, predict
+        codats = Codats(input_size=train_source_X.shape[2], hidden_size=128, lr=0.0001, num_epochs=300)
+        codats.fit(source_loader, target_loader, test_target_X, test_target_y_task)
+        pred_y_task = codats.predict(test_target_X)
 
-    pred_y_task = pred_y_task > 0.5
-    acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
-    return acc
+        pred_y_task = pred_y_task > 0.5
+        acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
+        accs.append(acc.item())
+    return sum(accs)/n_splits
 
 
 def without_adapt(source_idx=2, season_idx=0):
