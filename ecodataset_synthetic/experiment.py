@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn import preprocessing
-from sklearn.model_selection import train_test_split, KFold()
+from sklearn.model_selection import train_test_split, KFold
 import torch
 from torch import nn
 import torch.nn.functional as F
