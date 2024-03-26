@@ -223,8 +223,8 @@ def without_adapt(source_idx: int, target_idx: int, winter_idx: int, summer_idx:
         without_adapt_optimizer = optim.Adam(without_adapt.parameters(), lr=0.0001)
         criterion = nn.BCELoss()
         without_adapt = utils.fit_without_adaptation(source_loader=source_loader, task_classifier=without_adapt, task_optimizer=without_adapt_optimizer, criterion=criterion, num_epochs=300)
-        pred_y = without_adapt(test_target_X)
-        pred_y = torch.sigmoid(pred_y).reshape(-1)
+        pred_y_task = without_adapt(test_target_X)
+        pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
         pred_y_task = pred_y_task > 0.5
         acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
         accs.append(acc.item())
