@@ -254,19 +254,14 @@ def main():
     patterns = []
     for i in HOUSEHOLD_IDX:
         for j in SEASON_IDX:
-            runnning_acc_isih_da = 0
-            runnning_acc_codats = 0
-            running_acc_without_adapt = 0
-            running_acc_train_on_target = 0
-            for _ in range(10):
-                runnning_acc_isih_da += isih_da(source_idx=i, season_idx=j).item()
-                runnning_acc_codats += codats(source_idx=i, season_idx=j).item()
-                running_acc_without_adapt += without_adapt(source_idx=i, season_idx=j).item()
-                running_acc_train_on_target += train_on_target(source_idx=i, season_idx=j).item()
-            accs_isih_da.append(runnning_acc_isih_da/10)
-            accs_codats.append(runnning_acc_codats/10)
-            accs_without_adapt.append(running_acc_without_adapt/10)
-            accs_train_on_target.append(running_acc_train_on_target/10)
+            acc_isih_da = isih_da(source_idx=i, season_idx=j)
+            acc_codats = codats(source_idx=i, season_idx=j)
+            acc_without_adapt = without_adapt(source_idx=i, season_idx=j)
+            acc_train_on_target = train_on_target(source_idx=i, season_idx=j)
+            accs_isih_da.append(acc_isih_da)
+            accs_codats.append(acc_codats)
+            accs_without_adapt.append(acc_without_adapt)
+            accs_train_on_target.append(acc_train_on_target)
             patterns.append(f"Household ID:{i}, Season:{j}")
     df = pd.DataFrame()
     df["patterns"] = patterns
