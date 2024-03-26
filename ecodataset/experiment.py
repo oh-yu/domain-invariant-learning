@@ -6,7 +6,7 @@ from torch import nn
 from torch import optim
 
 from ..utils import utils
-from ..models import IsihDanns, Codats
+from ..models import IsihDanns, Codats, CoDATS_F_C
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 HOUSEHOLD_IDXS = [1, 2, 3]
 
@@ -191,10 +191,49 @@ def codats(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, n
     return sum(accs)/n_splits
 
 
+def without_adapt(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, n_splits: int=5) -> float:
+    train_source_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv")
+    target_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_X_train.csv")
+
+    train_source_y_task = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_Y_train.csv")[train_source_X.Season==winter_idx].values.reshape(-1)
+    target_y_task = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_Y_train.csv")[target_X.Season==summer_idx].values.reshape(-1)
+
+    train_source_X = train_source_X[train_source_X.Season==winter_idx]
+    target_X = target_X[target_X.Season==summer_idx]
+
+    scaler = preprocessing.StandardScaler()
+    train_source_X = scaler.fit_transform(train_source_X)
+    target_X = scaler.fit_transform(target_X)
+    train_source_X, train_source_y_task = utils.apply_sliding_window(train_source_X, train_source_y_task, filter_len=6)
+    target_X, target_y_task = utils.apply_sliding_window(target_X, target_y_task, filter_len=6)
+
+    kfold = KFold(n_splits=n_splits, shuffle=False)
+    accs = []
+    for train_idx, test_idx in kfold.split(target_X):
+        train_target_X, test_target_X, train_target_y_task, test_target_y_task = target_X[train_idx], target_X[test_idx], target_y_task[train_idx], target_y_task[test_idx]
+        source_loader, _, _, _, _, _ = utils.get_loader(train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True)
+
+        test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
+        test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
+        test_target_X = test_target_X.to(DEVICE)
+        test_target_y_task = test_target_y_task.to(DEVICE)
+
+        without_adapt = CoDATS_F_C(input_size=train_source_X.shape[2])
+        without_adapt_optimizer = optim.Adam(without_adapt.parameters(), lr=0.0001)
+        criterion = nn.BCELoss()
+        without_adapt = utils.fit_without_adaptation(source_loader=source_loader, task_classifier=without_adapt, task_optimizer=without_adapt_optimizer, criterion=criterion, num_epochs=300)
+        pred_y = without_adapt(test_target_X)
+        pred_y = torch.sigmoid(pred_y).reshape(-1)
+        pred_y_task = pred_y_task > 0.5
+        acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
+        accs.append(acc.item())
+    return sum(accs)/n_splits
+
 def main():
     isih_da_house_accs = []
     isih_da_season_accs = []
     codats_accs = []
+    without_adapt_accs = []
     df = pd.DataFrame()
     patterns = []
 
@@ -206,10 +245,12 @@ def main():
             isih_da_house_acc = isih_da_house(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
             isih_da_season_acc = isih_da_season(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
             codats_acc = codats(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
+            without_adapt_acc = without_adapt(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
  
             isih_da_house_accs.append(isih_da_house_acc)
             isih_da_season_accs.append(isih_da_season_acc)
             codats_accs.append(codats_acc)
+            without_adapt_accs.append(without_adapt_acc)
             patterns.append(f"({i}, w) -> ({j}, s)")   
     
     for i in HOUSEHOLD_IDXS:
@@ -219,19 +260,23 @@ def main():
             isih_da_house_acc = isih_da_house(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0)
             isih_da_season_acc = isih_da_season(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0)
             codats_acc = codats(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0)
+            without_adapt_acc = without_adapt(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0)
 
             isih_da_house_accs.append(isih_da_house_acc)
             isih_da_season_accs.append(isih_da_season_acc)
             codats_accs.append(codats_acc)
+            without_adapt_accs.append(without_adapt_acc)
             patterns.append(f"({i}, s) -> ({j}, w)")
     
     print(f"isih-DA (Household => Season) Average: {sum(isih_da_house_accs)/len(isih_da_house_accs)}")
     print(f"isih-DA (Season => Household) Average: {sum(isih_da_season_accs)/len(isih_da_season_accs)}")
     print(f"CoDATS Average: {sum(codats_accs)/len(codats_accs)}")
+    print(f"Without Adapt Average: {sum(without_adapt_accs)/len(without_adapt_accs)}")
     df["PAT"] = patterns
     df["isih-DA (Household => Season)"] = isih_da_house_accs
     df["isih-DA (Season => Household)"] = isih_da_season_accs
     df["CoDATS"] = codats_accs
+    df["Wtihout_Adapt"] = without_adapt_accs
     df.to_csv("ecodataset_experiment.csv", index=False)
 
 if __name__ == "__main__":
