@@ -9,7 +9,7 @@ from torch.utils.data import TensorDataset, DataLoader
 from ..utils import utils
 from ..models import IsihDanns, Codats, CoDATS_F_C
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-HOUSEHOLD_IDXS = [1, 2, 3]
+HOUSEHOLD_IDXS = [1, 2, 3, 4, 5]
 
 
 def isih_da_house(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, n_splits: int=5, is_kfold_eval: bool=False, num_repeats:int=10) -> torch.Tensor:
@@ -413,9 +413,12 @@ def main():
 
     for i in HOUSEHOLD_IDXS:
         for j in HOUSEHOLD_IDXS:
-
             if i == j:
                 continue
+            elif i == 4:
+                j = 5
+            elif i == 5:
+                j = 4
             isih_da_house_acc = isih_da_house(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
             isih_da_season_acc = isih_da_season(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
             codats_acc = codats(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
@@ -427,12 +430,18 @@ def main():
             codats_accs.append(codats_acc)
             without_adapt_accs.append(without_adapt_acc)
             train_on_target_accs.append(train_on_target_acc)
-            patterns.append(f"({i}, w) -> ({j}, s)")   
-    
+            patterns.append(f"({i}, w) -> ({j}, s)") 
+            if (i == 4) or (i == 5):
+                break
+
     for i in HOUSEHOLD_IDXS:
         for j in HOUSEHOLD_IDXS:
             if i == j:
                 continue
+            elif i == 4:
+                j = 5
+            elif i == 5:
+                j = 4
             isih_da_house_acc = isih_da_house(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0)
             isih_da_season_acc = isih_da_season(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0)
             codats_acc = codats(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0)
@@ -445,6 +454,8 @@ def main():
             without_adapt_accs.append(without_adapt_acc)
             train_on_target_accs.append(train_on_target_acc)
             patterns.append(f"({i}, s) -> ({j}, w)")
+            if (i == 4) or (i == 5):
+                break
     
     print(f"isih-DA (Household => Season) Average: {sum(isih_da_house_accs)/len(isih_da_house_accs)}")
     print(f"isih-DA (Season => Household) Average: {sum(isih_da_season_accs)/len(isih_da_season_accs)}")
