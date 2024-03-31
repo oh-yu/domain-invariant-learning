@@ -22,7 +22,7 @@ class CoDATS_F_C(nn.Module):
     def forward(self, x):
         return self.decoder(self.conv1d(x))
 
-def isih_da(source_idx=2, season_idx=0, n_splits:int=5, is_kfold_eval: bool=False):
+def isih_da(source_idx=2, season_idx=0, n_splits:int=5, is_kfold_eval: bool=False, num_repeats:int=10):
     train_source_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv")
     train_source_y_task = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_Y_train.csv")[train_source_X.Season == season_idx]
     train_source_X = train_source_X[train_source_X.Season == season_idx]
