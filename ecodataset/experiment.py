@@ -143,7 +143,7 @@ def isih_da_season(source_idx: int, target_idx: int, winter_idx: int, summer_idx
     target_y_task = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_Y_train.csv")[target_X.Season==summer_idx].values.reshape(-1)
     target_X = target_X[target_X.Season==summer_idx].values
 
-    target_X = scaler.fit_transform(target_X)
+    target_X = scaler.transform(target_X)
     target_X, target_y_task = utils.apply_sliding_window(target_X, target_y_task, filter_len=6)
     if id_kfold_eval:
         kfold = KFold(n_splits=n_splits, shuffle=False)
