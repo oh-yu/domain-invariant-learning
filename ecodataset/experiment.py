@@ -12,7 +12,7 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 HOUSEHOLD_IDXS = [1, 2, 3]
 
 
-def isih_da_house(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, n_splits: int=5, is_kfold_eval: bool=False) -> torch.Tensor:
+def isih_da_house(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, n_splits: int=5, is_kfold_eval: bool=False, num_repeats:int=10) -> torch.Tensor:
     """
     Execute isih-DA (Household => Season) experiment.
     TODO: Attach paper
@@ -80,23 +80,26 @@ def isih_da_house(source_idx: int, target_idx: int, winter_idx: int, summer_idx:
             accs.append(acc.item())
         return sum(accs)/n_splits
     else:
-        train_target_X, test_target_X, train_target_y_task, test_target_y_task = train_test_split(target_X, target_y_task, test_size=0.5, shuffle=False)
-        source_loader, target_loader, _, _, _, _ = utils.get_loader(train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True)
+        accs = []
+        for _ in range(num_repeats):
+            train_target_X, test_target_X, train_target_y_task, test_target_y_task = train_test_split(target_X, target_y_task, test_size=0.5, shuffle=False)
+            source_loader, target_loader, _, _, _, _ = utils.get_loader(train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True)
 
-        test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
-        test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
-        test_target_X = test_target_X.to(DEVICE)
-        test_target_y_task = test_target_y_task.to(DEVICE)
-        ## isih-DA fit, predict for 2nd dimension
-        isih_dann.fit_2nd_dim(source_loader, target_loader, test_target_X, test_target_y_task)
-        pred_y_task = isih_dann.predict(test_target_X, is_1st_dim=False)
+            test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
+            test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
+            test_target_X = test_target_X.to(DEVICE)
+            test_target_y_task = test_target_y_task.to(DEVICE)
+            ## isih-DA fit, predict for 2nd dimension
+            isih_dann.fit_2nd_dim(source_loader, target_loader, test_target_X, test_target_y_task)
+            pred_y_task = isih_dann.predict(test_target_X, is_1st_dim=False)
 
-        # Algo3. Evaluation
-        pred_y_task = pred_y_task > 0.5
-        acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
-        return acc.item()
+            # Algo3. Evaluation
+            pred_y_task = pred_y_task > 0.5
+            acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
+            accs.append(acc.item())
+        return sum(accs)/num_repeats
 
-def isih_da_season(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, n_splits: int=5, id_kfold_eval: bool=False) -> torch.Tensor:
+def isih_da_season(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, n_splits: int=5, id_kfold_eval: bool=False, num_repeats:int=10) -> torch.Tensor:
     """
     Execute isih-DA (Season => Household) experiment.
     TODO: Attach paper
@@ -163,24 +166,27 @@ def isih_da_season(source_idx: int, target_idx: int, winter_idx: int, summer_idx
             accs.append(acc.item())
         return sum(accs)/n_splits
     else:
-        train_target_X, test_target_X, train_target_y_task, test_target_y_task = train_test_split(target_X, target_y_task, test_size=0.5, shuffle=False)
-        source_loader, target_loader, _, _, _, _ = utils.get_loader(train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True)
+        accs = []
+        for _ in range(num_repeats):
+            train_target_X, test_target_X, train_target_y_task, test_target_y_task = train_test_split(target_X, target_y_task, test_size=0.5, shuffle=False)
+            source_loader, target_loader, _, _, _, _ = utils.get_loader(train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True)
 
-        test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
-        test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
-        test_target_X = test_target_X.to(DEVICE)
-        test_target_y_task = test_target_y_task.to(DEVICE)
-        ## isih-DA fit, predict for 2nd dimension
-        isih_dann.fit_2nd_dim(source_loader, target_loader, test_target_X, test_target_y_task)
-        pred_y_task = isih_dann.predict(test_target_X, is_1st_dim=False)
+            test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
+            test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
+            test_target_X = test_target_X.to(DEVICE)
+            test_target_y_task = test_target_y_task.to(DEVICE)
+            ## isih-DA fit, predict for 2nd dimension
+            isih_dann.fit_2nd_dim(source_loader, target_loader, test_target_X, test_target_y_task)
+            pred_y_task = isih_dann.predict(test_target_X, is_1st_dim=False)
 
-        # Algo3. Evaluation
-        pred_y_task = pred_y_task > 0.5
-        acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
-        return acc.item()
+            # Algo3. Evaluation
+            pred_y_task = pred_y_task > 0.5
+            acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
+            accs.append(acc.item())
+        return sum(accs)/num_repeats
 
 
-def codats(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, n_splits: int=5, is_kfold_eval: bool=False) -> torch.Tensor:
+def codats(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, n_splits: int=5, is_kfold_eval: bool=False, num_repeats:int=10) -> torch.Tensor:
     """
     Execute CoDATS experiment.
     TODO: Attach paper
@@ -226,27 +232,30 @@ def codats(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, n
             accs.append(acc.item())
         return sum(accs)/n_splits
     else:
-        train_target_X, test_target_X, train_target_y_task, test_target_y_task = train_test_split(target_X, target_y_task, test_size=0.5, shuffle=False)
-        source_loader, target_loader, _, _, _, _ = utils.get_loader(train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True)
-        # TODO: Update utils.get_loader's docstring
+        accs = []
+        for _ in range(num_repeats):
+            train_target_X, test_target_X, train_target_y_task, test_target_y_task = train_test_split(target_X, target_y_task, test_size=0.5, shuffle=False)
+            source_loader, target_loader, _, _, _, _ = utils.get_loader(train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True)
+            # TODO: Update utils.get_loader's docstring
 
-        test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
-        test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
-        test_target_X = test_target_X.to(DEVICE)
-        test_target_y_task = test_target_y_task.to(DEVICE)
-
-
-        ## CoDATS fit, predict
-        codats = Codats(input_size=train_source_X.shape[2], hidden_size=128, lr=0.0001, num_epochs=300)
-        codats.fit(source_loader, target_loader, test_target_X, test_target_y_task)
-        pred_y_task = codats.predict(test_target_X)
-
-        pred_y_task = pred_y_task > 0.5
-        acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
-        return acc.item()
+            test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
+            test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
+            test_target_X = test_target_X.to(DEVICE)
+            test_target_y_task = test_target_y_task.to(DEVICE)
 
 
-def without_adapt(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, n_splits: int=5, is_kfold_eval: bool=False) -> float:
+            ## CoDATS fit, predict
+            codats = Codats(input_size=train_source_X.shape[2], hidden_size=128, lr=0.0001, num_epochs=300)
+            codats.fit(source_loader, target_loader, test_target_X, test_target_y_task)
+            pred_y_task = codats.predict(test_target_X)
+
+            pred_y_task = pred_y_task > 0.5
+            acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
+            accs.append(acc.item())
+        return sum(accs)/num_repeats
+
+
+def without_adapt(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, n_splits: int=5, is_kfold_eval: bool=False, num_repeats:int=10) -> float:
     train_source_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv")
     target_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_X_train.csv")
 
@@ -286,27 +295,30 @@ def without_adapt(source_idx: int, target_idx: int, winter_idx: int, summer_idx:
             accs.append(acc.item())
         return sum(accs)/n_splits
     else:
-        train_target_X, test_target_X, train_target_y_task, test_target_y_task = train_test_split(target_X, target_y_task, test_size=0.5, shuffle=False)
-        source_loader, _, _, _, _, _ = utils.get_loader(train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True)
+        accs = []
+        for _ in range(num_repeats):
+            train_target_X, test_target_X, train_target_y_task, test_target_y_task = train_test_split(target_X, target_y_task, test_size=0.5, shuffle=False)
+            source_loader, _, _, _, _, _ = utils.get_loader(train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True)
 
-        test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
-        test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
-        test_target_X = test_target_X.to(DEVICE)
-        test_target_y_task = test_target_y_task.to(DEVICE)
+            test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
+            test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
+            test_target_X = test_target_X.to(DEVICE)
+            test_target_y_task = test_target_y_task.to(DEVICE)
 
-        without_adapt = CoDATS_F_C(input_size=train_source_X.shape[2])
-        without_adapt_optimizer = optim.Adam(without_adapt.parameters(), lr=0.0001)
-        criterion = nn.BCELoss()
-        without_adapt = utils.fit_without_adaptation(source_loader=source_loader, task_classifier=without_adapt, task_optimizer=without_adapt_optimizer, criterion=criterion, num_epochs=300)
-        pred_y_task = without_adapt(test_target_X)
-        pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
-        pred_y_task = pred_y_task > 0.5
-        acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
-        return acc.item()
+            without_adapt = CoDATS_F_C(input_size=train_source_X.shape[2])
+            without_adapt_optimizer = optim.Adam(without_adapt.parameters(), lr=0.0001)
+            criterion = nn.BCELoss()
+            without_adapt = utils.fit_without_adaptation(source_loader=source_loader, task_classifier=without_adapt, task_optimizer=without_adapt_optimizer, criterion=criterion, num_epochs=300)
+            pred_y_task = without_adapt(test_target_X)
+            pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
+            pred_y_task = pred_y_task > 0.5
+            acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
+            accs.append(acc.item())
+        return sum(accs)/num_repeats
 
 
 
-def train_on_target(target_idx: int, summer_idx: int, n_splits: int=5, is_kfold_eval: bool=False) -> float:
+def train_on_target(target_idx: int, summer_idx: int, n_splits: int=5, is_kfold_eval: bool=False, num_repeats:int=10) -> float:
     target_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_X_train.csv")
     target_y_task = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_Y_train.csv")[target_X.Season==summer_idx].values.reshape(-1)
     target_X = target_X[target_X.Season==summer_idx]
@@ -353,39 +365,42 @@ def train_on_target(target_idx: int, summer_idx: int, n_splits: int=5, is_kfold_
             accs.append(acc.item())
         return sum(accs)/n_splits
     else:
-        train_target_X, test_target_X, train_target_y_task, test_target_y_task = train_test_split(target_X, target_y_task, test_size=0.5, shuffle=False)
-        
-        
-        test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
-        test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
-        test_target_X = test_target_X.to(DEVICE)
-        test_target_y_task = test_target_y_task.to(DEVICE)
+        accs = []
+        for _ in range(num_repeats):
+            train_target_X, test_target_X, train_target_y_task, test_target_y_task = train_test_split(target_X, target_y_task, test_size=0.5, shuffle=False)
+            
+            
+            test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
+            test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
+            test_target_X = test_target_X.to(DEVICE)
+            test_target_y_task = test_target_y_task.to(DEVICE)
 
-        train_target_X = torch.tensor(train_target_X, dtype=torch.float32)
-        train_target_y_task = torch.tensor(train_target_y_task, dtype=torch.float32)
-        train_target_X = train_target_X.to(DEVICE)
-        train_target_y_task = train_target_y_task.to(DEVICE)
-        target_ds = TensorDataset(train_target_X, train_target_y_task)
-        target_loader = DataLoader(target_ds, batch_size=32, shuffle=True)
-        ## Train on Target fit, predict
-        train_on_target = CoDATS_F_C(input_size=train_target_X.shape[2])
-        train_on_target_optimizer = optim.Adam(train_on_target.parameters(), lr=0.0001)
-        criterion = nn.BCELoss()
+            train_target_X = torch.tensor(train_target_X, dtype=torch.float32)
+            train_target_y_task = torch.tensor(train_target_y_task, dtype=torch.float32)
+            train_target_X = train_target_X.to(DEVICE)
+            train_target_y_task = train_target_y_task.to(DEVICE)
+            target_ds = TensorDataset(train_target_X, train_target_y_task)
+            target_loader = DataLoader(target_ds, batch_size=32, shuffle=True)
+            ## Train on Target fit, predict
+            train_on_target = CoDATS_F_C(input_size=train_target_X.shape[2])
+            train_on_target_optimizer = optim.Adam(train_on_target.parameters(), lr=0.0001)
+            criterion = nn.BCELoss()
 
-        for _ in range(300):
-            for target_X_batch, target_y_task_batch in target_loader:
-                pred_y_task = train_on_target(target_X_batch)
-                pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
-                loss = criterion(pred_y_task, target_y_task_batch)
+            for _ in range(300):
+                for target_X_batch, target_y_task_batch in target_loader:
+                    pred_y_task = train_on_target(target_X_batch)
+                    pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
+                    loss = criterion(pred_y_task, target_y_task_batch)
 
-                train_on_target_optimizer.zero_grad()
-                loss.backward()
-                train_on_target_optimizer.step()
-        pred_y_task = train_on_target(test_target_X)
-        pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
-        pred_y_task = pred_y_task > 0.5
-        acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
-        return acc.item()
+                    train_on_target_optimizer.zero_grad()
+                    loss.backward()
+                    train_on_target_optimizer.step()
+            pred_y_task = train_on_target(test_target_X)
+            pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
+            pred_y_task = pred_y_task > 0.5
+            acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
+            accs.append(acc.item())
+        return sum(accs)/num_repeats
 
 def main():
     isih_da_house_accs = []
