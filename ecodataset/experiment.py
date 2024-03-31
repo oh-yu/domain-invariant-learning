@@ -401,7 +401,7 @@ def train_on_target(target_idx: int, summer_idx: int, n_splits: int=5, is_kfold_
             acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
             accs.append(acc.item())
             ground_truth_ratio = sum(test_target_y_task) / test_target_y_task.shape[0]
-        return sum(accs)/num_repeats, ground_truth_ratio
+        return sum(accs)/num_repeats, ground_truth_ratio.item()
 
 def main():
     isih_da_house_accs = []
