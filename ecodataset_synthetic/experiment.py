@@ -11,7 +11,7 @@ from torch.utils.data import TensorDataset, DataLoader
 from ..utils import utils
 from ..models import IsihDanns, Codats
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-HOUSEHOLD_IDX = [1, 2, 3]
+HOUSEHOLD_IDX = [1, 2, 3, 4, 5]
 SEASON_IDX = [0, 1]
 
 class CoDATS_F_C(nn.Module):
