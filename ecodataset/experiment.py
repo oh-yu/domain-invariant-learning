@@ -400,7 +400,8 @@ def train_on_target(target_idx: int, summer_idx: int, n_splits: int=5, is_kfold_
             pred_y_task = pred_y_task > 0.5
             acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
             accs.append(acc.item())
-        return sum(accs)/num_repeats
+            ground_truth_ratio = sum(test_target_y_task) / test_target_y_task.shape[0]
+        return sum(accs)/num_repeats, ground_truth_ratio
 
 def main():
     isih_da_house_accs = []
@@ -408,6 +409,7 @@ def main():
     codats_accs = []
     without_adapt_accs = []
     train_on_target_accs = []
+    ground_truth_ratios = []
     df = pd.DataFrame()
     patterns = []
 
@@ -426,13 +428,14 @@ def main():
             isih_da_season_acc = isih_da_season(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
             codats_acc = codats(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
             without_adapt_acc = without_adapt(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
-            train_on_target_acc = train_on_target(target_idx=j, summer_idx=1)
+            train_on_target_acc, ground_truth_ratio = train_on_target(target_idx=j, summer_idx=1)
  
             isih_da_house_accs.append(isih_da_house_acc)
             isih_da_season_accs.append(isih_da_season_acc)
             codats_accs.append(codats_acc)
             without_adapt_accs.append(without_adapt_acc)
             train_on_target_accs.append(train_on_target_acc)
+            ground_truth_ratios.append(ground_truth_ratio)
             patterns.append(f"({i}, w) -> ({j}, s)") 
             if (i == 4) or (i == 5):
                 break
@@ -452,13 +455,14 @@ def main():
             isih_da_season_acc = isih_da_season(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0)
             codats_acc = codats(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0)
             without_adapt_acc = without_adapt(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0)
-            train_on_target_acc = train_on_target(target_idx=j, summer_idx=0)
+            train_on_target_acc, ground_truth_ratio = train_on_target(target_idx=j, summer_idx=0)
 
             isih_da_house_accs.append(isih_da_house_acc)
             isih_da_season_accs.append(isih_da_season_acc)
             codats_accs.append(codats_acc)
             without_adapt_accs.append(without_adapt_acc)
             train_on_target_accs.append(train_on_target_acc)
+            ground_truth_ratios.append(ground_truth_ratio)
             patterns.append(f"({i}, s) -> ({j}, w)")
             if (i == 4) or (i == 5):
                 break
@@ -475,6 +479,7 @@ def main():
     df["CoDATS"] = codats_accs
     df["Wtihout_Adapt"] = without_adapt_accs
     df["Train_on_Target"] = train_on_target_accs
+    df["Ground Truth Ratio"] = ground_truth_ratios
     df.to_csv("ecodataset_experiment.csv", index=False)
 
 if __name__ == "__main__":
