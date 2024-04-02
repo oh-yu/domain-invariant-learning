@@ -105,6 +105,7 @@ def isih_da(source_idx=2, season_idx=0, n_splits:int=5, is_kfold_eval: bool=Fals
             test_target_y_task = test_target_y_task.to(DEVICE)
             ## isih-DA fit, predict for 2nd dimension
             isih_dann.fit_2nd_dim(source_loader, target_loader, test_target_X, test_target_y_task)
+            isih_dann.set_eval()
             pred_y_task = isih_dann.predict(test_target_X, is_1st_dim=False)
 
             # Algo3. Evaluation
@@ -153,6 +154,7 @@ def codats(source_idx=2, season_idx=0, n_splits:int=5, is_kfold_eval:bool=False,
             ## CoDATS fit, predict
             codats = Codats(input_size=train_source_X.shape[2], hidden_size=128, lr=0.0001, num_epochs=300)
             codats.fit(source_loader, target_loader, test_target_X, test_target_y_task)
+            codats.set_eval()
             pred_y_task = codats.predict(test_target_X)
 
             pred_y_task = pred_y_task > 0.5
@@ -227,6 +229,7 @@ def without_adapt(source_idx=2, season_idx=0, n_splits:int=5, is_kfold_eval:bool
             criterion = nn.BCELoss()
             without_adapt = utils.fit_without_adaptation(source_loader=source_loader, task_classifier=without_adapt,
                                                         task_optimizer=without_adapt_optimizer, criterion=criterion, num_epochs=300)
+            without_adapt.eval()
             pred_y = without_adapt(test_target_X)
             pred_y = torch.sigmoid(pred_y).reshape(-1)
             pred_y = pred_y > 0.5
@@ -349,6 +352,7 @@ def train_on_target(source_idx=2, season_idx=0, n_splits:int=5, is_kfold_eval:bo
                     loss_task.backward()
                     # Update Params
                     train_on_target_optimizer.step()
+            train_on_target.eval()
             pred_y_task = train_on_target(test_target_X)
             pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
             pred_y_task = pred_y_task > 0.5
