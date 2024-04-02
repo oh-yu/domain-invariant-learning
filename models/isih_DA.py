@@ -51,3 +51,7 @@ class IsihDanns:
             out = self.task_classifier_dim2(self.feature_extractor(X))
             out = torch.sigmoid(out).reshape(-1)
             return out
+
+    def set_eval(self):
+        self.task_classifier_dim2.eval()
+        self.feature_extractor.eval()

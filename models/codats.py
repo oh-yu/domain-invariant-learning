@@ -35,3 +35,7 @@ class Codats:
         pred_y_task = self.task_classifier(self.feature_extractor(x))
         pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
         return pred_y_task
+
+    def set_eval(self):
+        self.task_classifier.eval()
+        self.feature_extractor.eval()
