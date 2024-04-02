@@ -151,6 +151,8 @@ def isih_da_season(source_idx: int, target_idx: int, winter_idx: int, summer_idx
 
     target_X = scaler.transform(target_X)
     target_X, target_y_task = utils.apply_sliding_window(target_X, target_y_task, filter_len=6)
+    with open("isih_dann_tmp.pickle", mode="wb") as f:
+        pickle.dump(isih_dann, f)
     if id_kfold_eval:
         kfold = KFold(n_splits=n_splits, shuffle=False)
         accs = []
@@ -182,8 +184,10 @@ def isih_da_season(source_idx: int, target_idx: int, winter_idx: int, summer_idx
             test_target_X = test_target_X.to(DEVICE)
             test_target_y_task = test_target_y_task.to(DEVICE)
             ## isih-DA fit, predict for 2nd dimension
-            isih_dann.fit_2nd_dim(source_loader, target_loader, test_target_X, test_target_y_task)
-            pred_y_task = isih_dann.predict(test_target_X, is_1st_dim=False)
+            with open("isih_dann_tmp.pickle", mode="rb") as f:
+                isih_dann_tmp = pickle.load(f)
+            isih_dann_tmp.fit_2nd_dim(source_loader, target_loader, test_target_X, test_target_y_task)
+            pred_y_task = isih_dann_tmp.predict(test_target_X, is_1st_dim=False)
 
             # Algo3. Evaluation
             pred_y_task = pred_y_task > 0.5
