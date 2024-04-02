@@ -97,6 +97,7 @@ def isih_da_house(source_idx: int, target_idx: int, winter_idx: int, summer_idx:
             with open("isih_dann_tmp.pickle", mode="rb") as f:
                 isih_dann_tmp = pickle.load(f)
             isih_dann_tmp.fit_2nd_dim(source_loader, target_loader, test_target_X, test_target_y_task)
+            isih_dann_tmp.set_eval()
             pred_y_task = isih_dann_tmp.predict(test_target_X, is_1st_dim=False)
 
             # Algo3. Evaluation
@@ -187,6 +188,7 @@ def isih_da_season(source_idx: int, target_idx: int, winter_idx: int, summer_idx
             with open("isih_dann_tmp.pickle", mode="rb") as f:
                 isih_dann_tmp = pickle.load(f)
             isih_dann_tmp.fit_2nd_dim(source_loader, target_loader, test_target_X, test_target_y_task)
+            isih_dann_tmp.set_eval()
             pred_y_task = isih_dann_tmp.predict(test_target_X, is_1st_dim=False)
 
             # Algo3. Evaluation
