@@ -143,9 +143,7 @@ def codats(source_idx=2, season_idx=0, n_splits:int=5, is_kfold_eval:bool=False,
     scaler = preprocessing.StandardScaler()
     scaler.fit(train_source_X)
     train_source_X = scaler.transform(train_source_X)
-    target_X = scaler.transform(target_X)
     train_source_X, train_source_y_task = utils.apply_sliding_window(train_source_X, train_source_y_task, filter_len=6)
-    target_X, target_y_task = utils.apply_sliding_window(target_X, target_y_task, filter_len=6)
 
     if is_kfold_eval:
         kfold = KFold(n_splits=n_splits, shuffle=False)
@@ -174,6 +172,12 @@ def codats(source_idx=2, season_idx=0, n_splits:int=5, is_kfold_eval:bool=False,
         accs = []
         for _ in range(num_repeats):
             train_target_X, test_target_X, train_target_y_task, test_target_y_task = train_test_split(target_X, target_y_task, test_size=0.5, shuffle=False)
+            scaler.fit(train_target_X)
+            train_target_X = scaler.transform(train_target_X)
+            test_target_X = scaler.transform(test_target_X)
+            train_target_X, train_target_y_task = utils.apply_sliding_window(train_target_X, train_target_y_task, filter_len=6)
+            test_target_X, test_target_y_task = utils.apply_sliding_window(test_target_X, test_target_y_task, filter_len=6)
+
             source_loader, target_loader, _, _, _, _ = utils.get_loader(train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True)
             # TODO: Update utils.get_loader's docstring
 
