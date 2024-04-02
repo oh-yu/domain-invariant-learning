@@ -154,7 +154,6 @@ def codats(source_idx=2, season_idx=0, n_splits:int=5, is_kfold_eval:bool=False,
             ## CoDATS fit, predict
             codats = Codats(input_size=train_source_X.shape[2], hidden_size=128, lr=0.0001, num_epochs=300)
             codats.fit(source_loader, target_loader, test_target_X, test_target_y_task)
-            codats.set_eval()
             pred_y_task = codats.predict(test_target_X)
 
             pred_y_task = pred_y_task > 0.5
@@ -177,6 +176,7 @@ def codats(source_idx=2, season_idx=0, n_splits:int=5, is_kfold_eval:bool=False,
             ## CoDATS fit, predict
             codats = Codats(input_size=train_source_X.shape[2], hidden_size=128, lr=0.0001, num_epochs=300)
             codats.fit(source_loader, target_loader, test_target_X, test_target_y_task)
+            codats.set_eval()
             pred_y_task = codats.predict(test_target_X)
 
             pred_y_task = pred_y_task > 0.5
@@ -229,7 +229,6 @@ def without_adapt(source_idx=2, season_idx=0, n_splits:int=5, is_kfold_eval:bool
             criterion = nn.BCELoss()
             without_adapt = utils.fit_without_adaptation(source_loader=source_loader, task_classifier=without_adapt,
                                                         task_optimizer=without_adapt_optimizer, criterion=criterion, num_epochs=300)
-            without_adapt.eval()
             pred_y = without_adapt(test_target_X)
             pred_y = torch.sigmoid(pred_y).reshape(-1)
             pred_y = pred_y > 0.5
@@ -255,6 +254,7 @@ def without_adapt(source_idx=2, season_idx=0, n_splits:int=5, is_kfold_eval:bool
             criterion = nn.BCELoss()
             without_adapt = utils.fit_without_adaptation(source_loader=source_loader, task_classifier=without_adapt,
                                                         task_optimizer=without_adapt_optimizer, criterion=criterion, num_epochs=300)
+            without_adapt.eval()
             pred_y = without_adapt(test_target_X)
             pred_y = torch.sigmoid(pred_y).reshape(-1)
             pred_y = pred_y > 0.5
