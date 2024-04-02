@@ -73,8 +73,7 @@ def isih_da(source_idx=2, season_idx=0, n_splits:int=5, is_kfold_eval: bool=Fals
     target_X = target_prime_X
     target_y_task = target_prime_y_task
 
-    target_X = scaler.transform(target_X)
-    target_X, target_y_task = utils.apply_sliding_window(target_X, target_y_task, filter_len=6)
+    
     with open("isih_dann_tmp.pickle", mode="wb") as f:
         pickle.dump(isih_dann, f)
     if is_kfold_eval:
@@ -101,6 +100,11 @@ def isih_da(source_idx=2, season_idx=0, n_splits:int=5, is_kfold_eval: bool=Fals
         accs = []
         for _ in range(num_repeats):
             train_target_X, test_target_X, train_target_y_task, test_target_y_task = train_test_split(target_X, target_y_task, test_size=0.5, shuffle=False)
+            scaler.fit(train_target_X)
+            train_target_X = scaler.transform(train_target_X)
+            test_target_X = scaler.transform(test_target_X)
+            train_target_X, train_target_y_task = utils.apply_sliding_window(train_target_X, train_target_y_task, filter_len=6)
+            test_target_X, test_target_y_task = utils.apply_sliding_window(test_target_X, test_target_y_task, filter_len=6)
             source_loader, target_loader, _, _, _, _ = utils.get_loader(train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True)
 
             test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
