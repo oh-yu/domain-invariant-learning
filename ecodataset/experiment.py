@@ -58,8 +58,8 @@ def isih_da_house(source_idx: int, target_idx: int, winter_idx: int, summer_idx:
     target_y_task = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_Y_train.csv")[target_X.Season==summer_idx].values.reshape(-1)
     target_X = target_X[target_X.Season==summer_idx].values
 
-    target_X = scaler.transform(target_X)
-    target_X, target_y_task = utils.apply_sliding_window(target_X, target_y_task, filter_len=6)
+    # target_X = scaler.transform(target_X)
+    
     with open("isih_dann_tmp.pickle", mode="wb") as f:
         pickle.dump(isih_dann, f)
 
@@ -87,6 +87,11 @@ def isih_da_house(source_idx: int, target_idx: int, winter_idx: int, summer_idx:
         accs = []
         for _ in range(num_repeats):
             train_target_X, test_target_X, train_target_y_task, test_target_y_task = train_test_split(target_X, target_y_task, test_size=0.5, shuffle=False)
+            scaler.fit(train_target_X)
+            train_target_X = scaler.transform(train_target_X)
+            test_target_X = scaler.transform(test_target_X)
+            train_target_X, train_target_y_task = utils.apply_sliding_window(train_target_X, train_target_y_task, filter_len=6)
+            test_target_X, test_target_y_task = utils.apply_sliding_window(test_target_X, test_target_y_task, filter_len=6)
             source_loader, target_loader, _, _, _, _ = utils.get_loader(train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True)
 
             test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
@@ -150,8 +155,7 @@ def isih_da_season(source_idx: int, target_idx: int, winter_idx: int, summer_idx
     target_y_task = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_Y_train.csv")[target_X.Season==summer_idx].values.reshape(-1)
     target_X = target_X[target_X.Season==summer_idx].values
 
-    target_X = scaler.transform(target_X)
-    target_X, target_y_task = utils.apply_sliding_window(target_X, target_y_task, filter_len=6)
+
     with open("isih_dann_tmp.pickle", mode="wb") as f:
         pickle.dump(isih_dann, f)
     if id_kfold_eval:
@@ -178,6 +182,11 @@ def isih_da_season(source_idx: int, target_idx: int, winter_idx: int, summer_idx
         accs = []
         for _ in range(num_repeats):
             train_target_X, test_target_X, train_target_y_task, test_target_y_task = train_test_split(target_X, target_y_task, test_size=0.5, shuffle=False)
+            scaler.fit(train_target_X)
+            train_target_X = scaler.transform(train_target_X)
+            test_target_X = scaler.transform(test_target_X)
+            test_target_X, test_target_y_task = utils.apply_sliding_window(test_target_X, test_target_y_task, filter_len=6)
+            train_target_X, train_target_y_task = utils.apply_sliding_window(train_target_X, train_target_y_task, filter_len=6)
             source_loader, target_loader, _, _, _, _ = utils.get_loader(train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True)
 
             test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
@@ -217,9 +226,8 @@ def codats(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, n
     scaler = preprocessing.StandardScaler()
     scaler.fit(train_source_X)
     train_source_X = scaler.transform(train_source_X)
-    target_X = scaler.transform(target_X)
     train_source_X, train_source_y_task = utils.apply_sliding_window(train_source_X, train_source_y_task, filter_len=6)
-    target_X, target_y_task = utils.apply_sliding_window(target_X, target_y_task, filter_len=6)
+
     if is_kfold_eval:
         kfold = KFold(n_splits=n_splits, shuffle=False)
         accs = []
@@ -247,6 +255,11 @@ def codats(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, n
         accs = []
         for _ in range(num_repeats):
             train_target_X, test_target_X, train_target_y_task, test_target_y_task = train_test_split(target_X, target_y_task, test_size=0.5, shuffle=False)
+            scaler.fit(train_target_X)
+            train_target_X = scaler.transform(train_target_X)
+            test_target_X = scaler.transform(test_target_X)
+            train_target_X, train_target_y_task = utils.apply_sliding_window(train_target_X, train_target_y_task, filter_len=6)
+            test_target_X, test_target_y_task = utils.apply_sliding_window(test_target_X, test_target_y_task, filter_len=6)
             source_loader, target_loader, _, _, _, _ = utils.get_loader(train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True)
             # TODO: Update utils.get_loader's docstring
 
@@ -281,9 +294,8 @@ def without_adapt(source_idx: int, target_idx: int, winter_idx: int, summer_idx:
     scaler = preprocessing.StandardScaler()
     scaler.fit(train_source_X)
     train_source_X = scaler.transform(train_source_X)
-    target_X = scaler.transform(target_X)
     train_source_X, train_source_y_task = utils.apply_sliding_window(train_source_X, train_source_y_task, filter_len=6)
-    target_X, target_y_task = utils.apply_sliding_window(target_X, target_y_task, filter_len=6)
+    
 
     if is_kfold_eval:
         kfold = KFold(n_splits=n_splits, shuffle=False)
@@ -311,6 +323,12 @@ def without_adapt(source_idx: int, target_idx: int, winter_idx: int, summer_idx:
         accs = []
         for _ in range(num_repeats):
             train_target_X, test_target_X, train_target_y_task, test_target_y_task = train_test_split(target_X, target_y_task, test_size=0.5, shuffle=False)
+            scaler.fit(train_target_X)
+            train_target_X = scaler.transform(train_target_X)
+            test_target_X = scaler.transform(test_target_X)
+
+            train_target_X, train_target_y_task = utils.apply_sliding_window(train_target_X, train_target_y_task, filter_len=6)
+            test_target_X, test_target_y_task = utils.apply_sliding_window(test_target_X, test_target_y_task, filter_len=6)
             source_loader, _, _, _, _, _ = utils.get_loader(train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True)
 
             test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
