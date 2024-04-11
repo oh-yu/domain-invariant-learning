@@ -2,10 +2,9 @@ import matplotlib.pyplot as plt
 import torch
 from torch import nn, optim
 
-from ..networks import Encoder
-from ..networks import Decoder
-from ..algo import algo
-from ..utils import utils
+from ...networks import Encoder, Decoder
+from ...algo import algo
+from ...utils import utils
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

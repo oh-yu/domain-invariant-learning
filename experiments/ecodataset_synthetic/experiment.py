@@ -10,8 +10,8 @@ import torch.nn.functional as F
 from torch import optim
 from torch.utils.data import TensorDataset, DataLoader
 
-from ..utils import utils
-from ..networks import IsihDanns, Codats, CoDATS_F_C
+from ...utils import utils
+from ...networks import IsihDanns, Codats, CoDATS_F_C
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 HOUSEHOLD_IDX = [1, 2, 3, 4, 5]
 SEASON_IDX = [0, 1]
