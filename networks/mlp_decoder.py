@@ -1,6 +1,7 @@
 from torch import nn
 import torch.nn.functional as F
 
+
 class Decoder(nn.Module):
     def __init__(self, input_size, output_size, fc1_size=50, fc2_size=10):
         super().__init__()

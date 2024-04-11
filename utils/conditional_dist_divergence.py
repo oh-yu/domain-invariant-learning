@@ -35,13 +35,14 @@ def conditional_dist_divergence(source_loader, target_X, target_y_task):
             task_optimizer.step()
         if epoch % 50 == 0:
             print(f"Loss: {loss.item()}")
-    
+
     # 3. test on target data
     pred_y = task_classifier(feature_extractor(target_X))
     pred_y = torch.sigmoid(pred_y).reshape(-1)
     pred_y = pred_y > 0.5
     acc = sum(pred_y == target_y_task) / pred_y.shape[0]
     return acc
+
 
 if __name__ == "__main__":
     source_idx = 3
@@ -51,10 +52,14 @@ if __name__ == "__main__":
 
     train_source_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv")
     target_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_X_train.csv")
-    train_source_y_task = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_Y_train.csv")[train_source_X.Season==winter_idx].values.reshape(-1)
-    target_y_task = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_Y_train.csv")[target_X.Season==summer_idx].values.reshape(-1)
-    train_source_X = train_source_X[train_source_X.Season==winter_idx]
-    target_X = target_X[target_X.Season==summer_idx]
+    train_source_y_task = pd.read_csv(
+        f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_Y_train.csv"
+    )[train_source_X.Season == winter_idx].values.reshape(-1)
+    target_y_task = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_Y_train.csv")[
+        target_X.Season == summer_idx
+    ].values.reshape(-1)
+    train_source_X = train_source_X[train_source_X.Season == winter_idx]
+    target_X = target_X[target_X.Season == summer_idx]
 
     scaler = preprocessing.StandardScaler()
     scaler.fit(train_source_X)
@@ -63,9 +68,11 @@ if __name__ == "__main__":
 
     train_source_X, train_source_y_task = apply_sliding_window(train_source_X, train_source_y_task, filter_len=6)
     target_X, target_y_task = apply_sliding_window(target_X, target_y_task, filter_len=6)
-    source_loader, _, _, _, target_X, target_y_task = get_loader(train_source_X, target_X, train_source_y_task, target_y_task, shuffle=True)
+    source_loader, _, _, _, target_X, target_y_task = get_loader(
+        train_source_X, target_X, train_source_y_task, target_y_task, shuffle=True
+    )
 
-    test_thr = int(target_X.shape[0]/2)
+    test_thr = int(target_X.shape[0] / 2)
     test_target_X = target_X[test_thr:]
     test_target_y_task = target_y_task[test_thr:]
 

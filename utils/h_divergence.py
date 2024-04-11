@@ -5,8 +5,8 @@ from torch import optim
 
 from .utils import *
 from ..networks import Conv1d, Decoder
-DEVICE = DEVICE
 
+DEVICE = DEVICE
 
 
 def h_divergence(source_loader, target_loader, source_X, target_X):
@@ -42,22 +42,23 @@ def h_divergence(source_loader, target_loader, source_X, target_X):
             domain_optimizer.step()
         if epoch % 10 == 0:
             print(f"Loss: {loss.item()}")
-    
+
     # 3. Compute H-divergence
     pred_y = domain_classifier(feature_extractor(source_X))
     pred_y = torch.sigmoid(pred_y).reshape(-1)
     pred_y = pred_y > 0.5
     source_y = torch.zeros_like(pred_y)
     acc_source = sum(pred_y == source_y) / pred_y.shape[0]
-    err_source = 1-acc_source
+    err_source = 1 - acc_source
 
     pred_y = domain_classifier(feature_extractor(target_X))
     pred_y = torch.sigmoid(pred_y).reshape(-1)
     pred_y = pred_y > 0.5
     target_y = torch.ones_like(pred_y)
     acc_target = sum(pred_y == target_y) / pred_y.shape[0]
-    err_target = 1-acc_target
-    return 2*(1- (err_source+err_target))
+    err_target = 1 - acc_target
+    return 2 * (1 - (err_source + err_target))
+
 
 if __name__ == "__main__":
     source_idx = 1
@@ -66,11 +67,14 @@ if __name__ == "__main__":
 
     train_source_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv")
     target_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_X_train.csv")
-    train_source_y_task = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_Y_train.csv")[train_source_X.Season==winter_idx].values.reshape(-1)
-    target_y_task = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_Y_train.csv")[target_X.Season==winter_idx].values.reshape(-1)
-    train_source_X = train_source_X[train_source_X.Season==winter_idx]
-    target_X = target_X[target_X.Season==winter_idx]
-
+    train_source_y_task = pd.read_csv(
+        f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_Y_train.csv"
+    )[train_source_X.Season == winter_idx].values.reshape(-1)
+    target_y_task = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_Y_train.csv")[
+        target_X.Season == winter_idx
+    ].values.reshape(-1)
+    train_source_X = train_source_X[train_source_X.Season == winter_idx]
+    target_X = target_X[target_X.Season == winter_idx]
 
     scaler = preprocessing.StandardScaler()
     scaler.fit(train_source_X)
@@ -80,6 +84,7 @@ if __name__ == "__main__":
     train_source_X, train_source_y_task = apply_sliding_window(train_source_X, train_source_y_task, filter_len=6)
     target_X, target_y_task = apply_sliding_window(target_X, target_y_task, filter_len=6)
 
-
-    source_loader, target_loader, _, source_X, target_X, _ = get_loader(train_source_X, target_X, train_source_y_task, target_y_task, shuffle=True)
+    source_loader, target_loader, _, source_X, target_X, _ = get_loader(
+        train_source_X, target_X, train_source_y_task, target_y_task, shuffle=True
+    )
     print(h_divergence(source_loader, target_loader, source_X, target_X))

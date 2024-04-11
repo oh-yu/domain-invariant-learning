@@ -59,21 +59,27 @@ def get_source_target_from_make_moons(n_samples=100, noise=0.05, rotation_degree
     source_X[:, 0] -= 0.5
     theta = np.radians(rotation_degree)
     cos, sin = np.cos(theta), np.sin(theta)
-    rotate_matrix = np.array([[cos, -sin],[sin, cos]])
+    rotate_matrix = np.array([[cos, -sin], [sin, cos]])
     target_X = source_X.dot(rotate_matrix)
     target_y = source_y
 
     x1_min, x2_min = np.min([source_X.min(0), target_X.min(0)], axis=0)
     x1_max, x2_max = np.max([source_X.max(0), target_X.max(0)], axis=0)
-    x1_grid, x2_grid = np.meshgrid(np.linspace(x1_min-0.1, x1_max+0.1, 100),
-                                   np.linspace(x2_min-0.1, x2_max+0.1, 100))
+    x1_grid, x2_grid = np.meshgrid(
+        np.linspace(x1_min - 0.1, x1_max + 0.1, 100), np.linspace(x2_min - 0.1, x2_max + 0.1, 100)
+    )
     x_grid = np.stack([x1_grid.reshape(-1), x2_grid.reshape(-1)], axis=0)
     return source_X, target_X, source_y, target_y, x_grid, x1_grid, x2_grid
 
 
-def get_loader(source_X: np.ndarray, target_X: np.ndarray,
-               source_y_task: np.ndarray, target_y_task: np.ndarray,
-               batch_size: int = 34, shuffle: bool = False):
+def get_loader(
+    source_X: np.ndarray,
+    target_X: np.ndarray,
+    source_y_task: np.ndarray,
+    target_y_task: np.ndarray,
+    batch_size: int = 34,
+    shuffle: bool = False,
+):
     """
     Get instances of torch.utils.data.DataLoader for domain invariant learning,
     also return source and target data instantiated as torch.Tensor.
@@ -149,14 +155,20 @@ def apply_sliding_window(X: np.ndarray, y: np.ndarray, filter_len: int = 3) -> (
     for i in range(0, N):
         # print(f"(Start, End) = {i, i+filter_len-1}")
         start = i
-        end = i+filter_len
+        end = i + filter_len
         filtered_X[i] = X[start:end]
-    filtered_y = y[filter_len-1:]
+    filtered_y = y[filter_len - 1 :]
     return filtered_X, filtered_y
 
 
-def _change_lr_during_dann_training(domain_optimizer: torch.optim.Adam, feature_optimizer: torch.optim.Adam, task_optimizer: torch.optim.Adam,
-                                    epoch: torch.Tensor, epoch_thr: int = 200, lr: float = 0.00005):
+def _change_lr_during_dann_training(
+    domain_optimizer: torch.optim.Adam,
+    feature_optimizer: torch.optim.Adam,
+    task_optimizer: torch.optim.Adam,
+    epoch: torch.Tensor,
+    epoch_thr: int = 200,
+    lr: float = 0.00005,
+):
     """
     Returns
     -------
@@ -189,19 +201,25 @@ def _get_psuedo_label_weights(source_Y_batch: torch.Tensor, thr: float = 0.75) -
     for i in pred_y:
         if i > thr:
             psuedo_label_weights.append(1)
-        elif i < 1-thr:
+        elif i < 1 - thr:
             psuedo_label_weights.append(1)
         else:
             if i > 0.5:
-                psuedo_label_weights.append(i + (1-thr))
+                psuedo_label_weights.append(i + (1 - thr))
             else:
-                psuedo_label_weights.append((1-i) + (1-thr))
+                psuedo_label_weights.append((1 - i) + (1 - thr))
     psuedo_label_weights = torch.tensor(psuedo_label_weights, dtype=torch.float32).to(DEVICE)
     return psuedo_label_weights
 
 
-def _get_terminal_weights(is_target_weights: bool, is_class_weights: bool, is_psuedo_weights: bool,
-                          pred_source_y_domain: torch.Tensor, source_y_task_batch: torch.Tensor, psuedo_label_weights: torch.Tensor) -> torch.Tensor:
+def _get_terminal_weights(
+    is_target_weights: bool,
+    is_class_weights: bool,
+    is_psuedo_weights: bool,
+    pred_source_y_domain: torch.Tensor,
+    source_y_task_batch: torch.Tensor,
+    psuedo_label_weights: torch.Tensor,
+) -> torch.Tensor:
     """
     # TODO: attach paper
 
@@ -220,7 +238,7 @@ def _get_terminal_weights(is_target_weights: bool, is_class_weights: bool, is_ps
     terminal sample weights for nn.BCELoss
     """
     if is_target_weights:
-        target_weights = pred_source_y_domain / (1-pred_source_y_domain)
+        target_weights = pred_source_y_domain / (1 - pred_source_y_domain)
     else:
         target_weights = 1
     if is_class_weights:
@@ -234,7 +252,9 @@ def _get_terminal_weights(is_target_weights: bool, is_class_weights: bool, is_ps
     return weights
 
 
-def _plot_dann_loss(do_plot: bool, loss_domains: List[float], loss_tasks: List[float], loss_task_evals: List[float]) -> None:
+def _plot_dann_loss(
+    do_plot: bool, loss_domains: List[float], loss_tasks: List[float], loss_task_evals: List[float]
+) -> None:
     """
     plot domain&task losses for source, task loss for target.
 
@@ -262,8 +282,7 @@ def _plot_dann_loss(do_plot: bool, loss_domains: List[float], loss_tasks: List[f
         plt.show()
 
 
-def fit_without_adaptation(source_loader, task_classifier,
-                           task_optimizer, criterion, num_epochs=1000):
+def fit_without_adaptation(source_loader, task_classifier, task_optimizer, criterion, num_epochs=1000):
     """
     Deep Learning model's fit method without domain adaptation.
 
@@ -317,7 +336,7 @@ def visualize_tSNE(target_feature, source_feature):
 
     source_feature : ndarray of shape(N, D)
     """
-    tsne = TSNE(n_components=2, learning_rate='auto', init='pca', perplexity=5)
+    tsne = TSNE(n_components=2, learning_rate="auto", init="pca", perplexity=5)
     # TODO: Understand Argumetns for t-SNE
     target_feature_tsne = tsne.fit_transform(target_feature)
     source_feature_tsne = tsne.fit_transform(source_feature)
@@ -332,7 +351,7 @@ def visualize_tSNE(target_feature, source_feature):
 
 
 def get_class_weights(source_y_task_batch):
-    p_occupied = sum(source_y_task_batch) / source_y_task_batch.shape[0] 
+    p_occupied = sum(source_y_task_batch) / source_y_task_batch.shape[0]
     p_unoccupied = 1 - p_occupied
     class_weights = torch.zeros_like(source_y_task_batch)
     for i, y in enumerate(source_y_task_batch):

@@ -8,24 +8,39 @@ class ReverseGradient(torch.autograd.Function):
     """
     https://arxiv.org/abs/1505.07818
     """
+
     @staticmethod
     def forward(ctx, x: torch.Tensor, step: torch.Tensor, num_steps: torch.Tensor):
-    # TODO: Refactor num_steps, should not pass iteratively.
+        # TODO: Refactor num_steps, should not pass iteratively.
         ctx.save_for_backward(step, num_steps)
         return x
+
     @staticmethod
     def backward(ctx, grad_output: torch.Tensor):
         step, num_steps, = ctx.saved_tensors
-        scheduler = 2 / (1 + torch.exp(-10 * (step/(num_steps+1)))) - 1
+        scheduler = 2 / (1 + torch.exp(-10 * (step / (num_steps + 1)))) - 1
         # https://arxiv.org/pdf/1505.07818.pdf
         return grad_output * -1 * scheduler, None, None
 
 
-def fit(source_loader, target_loader, target_X, target_y_task,
-        feature_extractor, domain_classifier, task_classifier, criterion,
-        feature_optimizer, domain_optimizer, task_optimizer, num_epochs=1000,
-        is_target_weights=True, is_class_weights=False, is_psuedo_weights=False,
-        do_plot=False):
+def fit(
+    source_loader,
+    target_loader,
+    target_X,
+    target_y_task,
+    feature_extractor,
+    domain_classifier,
+    task_classifier,
+    criterion,
+    feature_optimizer,
+    domain_optimizer,
+    task_optimizer,
+    num_epochs=1000,
+    is_target_weights=True,
+    is_class_weights=False,
+    is_psuedo_weights=False,
+    do_plot=False,
+):
     # pylint: disable=too-many-arguments, too-many-locals
     # It seems reasonable in this case, since this method needs all of that.
     """
@@ -73,13 +88,17 @@ def fit(source_loader, target_loader, target_X, target_y_task,
     loss_task_evals = []
     num_epochs = torch.tensor(num_epochs, dtype=torch.int32).to(utils.DEVICE)
 
-    for epoch in range(1, num_epochs.item()+1):
+    for epoch in range(1, num_epochs.item() + 1):
         epoch = torch.tensor(epoch, dtype=torch.float32).to(utils.DEVICE)
         feature_extractor.train()
         task_classifier.train()
-        domain_optimizer, feature_optimizer, task_optimizer = utils._change_lr_during_dann_training(domain_optimizer, feature_optimizer, task_optimizer, epoch)
+        domain_optimizer, feature_optimizer, task_optimizer = utils._change_lr_during_dann_training(
+            domain_optimizer, feature_optimizer, task_optimizer, epoch
+        )
 
-        for (source_X_batch, source_Y_batch), (target_X_batch, target_y_domain_batch) in zip(source_loader, target_loader):
+        for (source_X_batch, source_Y_batch), (target_X_batch, target_y_domain_batch) in zip(
+            source_loader, target_loader
+        ):
             # 0. Data
             source_y_task_batch = source_Y_batch[:, utils.COL_IDX_TASK] > 0.5
             source_y_task_batch = source_y_task_batch.to(torch.float32)
@@ -106,8 +125,14 @@ def fit(source_loader, target_loader, target_X, target_y_task,
             # 1.3. Task Classifier
             pred_y_task = task_classifier(source_X_batch)
             pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
-            weights = utils._get_terminal_weights(is_target_weights, is_class_weights, is_psuedo_weights,
-                                            pred_source_y_domain, source_y_task_batch, psuedo_label_weights)
+            weights = utils._get_terminal_weights(
+                is_target_weights,
+                is_class_weights,
+                is_psuedo_weights,
+                pred_source_y_domain,
+                source_y_task_batch,
+                psuedo_label_weights,
+            )
             criterion_weight = nn.BCELoss(weight=weights.detach())
             loss_task = criterion_weight(pred_y_task, source_y_task_batch)
             loss_tasks.append(loss_task.item())
@@ -117,7 +142,7 @@ def fit(source_loader, target_loader, target_X, target_y_task,
             task_optimizer.zero_grad()
             feature_optimizer.zero_grad()
 
-            loss_domain.backward(retain_graph = True)
+            loss_domain.backward(retain_graph=True)
             loss_task.backward()
 
             domain_optimizer.step()
