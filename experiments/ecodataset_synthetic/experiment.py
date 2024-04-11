@@ -1,5 +1,6 @@
 import pickle
 
+from absl import app
 from absl import flags
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -410,4 +411,4 @@ def main(argv):
     df.to_csv("ecodataset_synthetic_experiment.csv", index=False)
 
 if __name__ == "__main__":
-    main()
+    app.run(main)
