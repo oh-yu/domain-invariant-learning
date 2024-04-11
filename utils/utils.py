@@ -1,12 +1,13 @@
+from typing import List
+
 import matplotlib.pyplot as plt
 import numpy as np
+import torch
+import torch.nn.functional as F
 from sklearn.datasets import make_moons
 from sklearn.manifold import TSNE
-import torch
 from torch import nn
-import torch.nn.functional as F
-from torch.utils.data import TensorDataset, DataLoader
-from typing import List
+from torch.utils.data import DataLoader, TensorDataset
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 COL_IDX_TASK = 0

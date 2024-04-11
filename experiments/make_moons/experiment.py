@@ -1,11 +1,10 @@
-from absl import app
-from absl import flags
 import matplotlib.pyplot as plt
 import torch
+from absl import app, flags
 from torch import nn, optim
 
-from ...networks import Encoder, Decoder
 from ...algo import algo
+from ...networks import Decoder, Encoder
 from ...utils import utils
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

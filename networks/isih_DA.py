@@ -1,10 +1,9 @@
 import torch
-from torch import nn
-from torch import optim
+from torch import nn, optim
 
+from ..algo import algo
 from .conv1d import Conv1d
 from .mlp_decoder import Decoder
-from ..algo import algo
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

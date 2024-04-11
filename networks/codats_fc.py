@@ -4,7 +4,6 @@ from torch import nn
 from .conv1d import Conv1d
 from .mlp_decoder import Decoder
 
-
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 

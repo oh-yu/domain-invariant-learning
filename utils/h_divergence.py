@@ -1,10 +1,10 @@
 import pandas as pd
-from sklearn import preprocessing
 import torch
+from sklearn import preprocessing
 from torch import optim
 
-from .utils import *
 from ..networks import Conv1d, Decoder
+from .utils import *
 
 DEVICE = DEVICE
 

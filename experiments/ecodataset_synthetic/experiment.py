@@ -1,20 +1,18 @@
 import pickle
 
-from absl import app
-from absl import flags
 import matplotlib.pyplot as plt
 import pandas as pd
-from sklearn import preprocessing
-from sklearn.model_selection import train_test_split, KFold
 import torch
-from torch import nn
 import torch.nn.functional as F
-from torch import optim
-from torch.utils.data import TensorDataset, DataLoader
+from absl import app, flags
+from sklearn import preprocessing
+from sklearn.model_selection import KFold, train_test_split
+from torch import nn, optim
+from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 
+from ...networks import Codats, CoDATS_F_C, IsihDanns
 from ...utils import utils
-from ...networks import IsihDanns, Codats, CoDATS_F_C
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 HOUSEHOLD_IDX = [1, 2, 3, 4, 5]
