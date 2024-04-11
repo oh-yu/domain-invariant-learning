@@ -2,7 +2,8 @@ import torch
 from torch import nn
 from torch import optim
 
-from ..utils import utils
+from rnn import ManyToOneRNN
+from mlp_decoder import Decoder
 from ..algo import algo
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -14,9 +15,9 @@ class Rdann:
     """
     def __init__(self, input_size: int, hidden_size: int, lr: float, num_epochs: int, num_layers: int = 3,
                  num_domains: int = 1, num_classes: int = 1) -> None:
-        self.feature_extractor = utils.ManyToOneRNN(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers).to(DEVICE)
-        self.domain_classifier = utils.Decoder(input_size=hidden_size, output_size=num_domains).to(DEVICE)
-        self.task_classifier = utils.Decoder(input_size=hidden_size, output_size=num_classes).to(DEVICE)
+        self.feature_extractor = ManyToOneRNN(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers).to(DEVICE)
+        self.domain_classifier = Decoder(input_size=hidden_size, output_size=num_domains).to(DEVICE)
+        self.task_classifier = Decoder(input_size=hidden_size, output_size=num_classes).to(DEVICE)
         self.criterion = nn.BCELoss()
 
         self.feature_optimizer = optim.Adam(self.feature_extractor.parameters(), lr=lr)

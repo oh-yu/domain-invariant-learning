@@ -2,8 +2,10 @@ import matplotlib.pyplot as plt
 import torch
 from torch import nn, optim
 
-from ..utils import utils
+from ..networks.mlp_encoder import Encoder
+from ..networks.mlp_decoder import Decoder
 from ..algo import algo
+from ..utils import utils
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -21,12 +23,12 @@ def main():
     num_classes = 1
     dropout_ratio = 0.5
 
-    feature_extractor = utils.Encoder(input_size=source_X.shape[1],
+    feature_extractor = Encoder(input_size=source_X.shape[1],
                                     output_size=hidden_size).to(device)
-    domain_classifier = utils.Decoder(input_size=hidden_size,
+    domain_classifier = Decoder(input_size=hidden_size,
                                     output_size=num_domains).to(device)
-    task_classifier = utils.Decoder(input_size=hidden_size,
-                                    output_size=num_classes).to(device)
+    task_classifier = Decoder(input_size=hidden_size,
+                              output_size=num_classes).to(device)
     learning_rate = 0.001
 
     criterion = nn.BCELoss()
@@ -80,7 +82,7 @@ def main():
     plt.show()
 
     # Without Adaptation
-    task_classifier = utils.Decoder(input_size=source_X.shape[1],
+    task_classifier = Decoder(input_size=source_X.shape[1],
                                     output_size=num_classes).to(device)
     task_optimizer = optim.Adam(task_classifier.parameters(), lr=learning_rate)
     task_classifier = utils.fit_without_adaptation(source_loader,
