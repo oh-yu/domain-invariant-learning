@@ -3,6 +3,7 @@ from torch import nn
 from torch import optim
 
 from ..utils import utils
+from ..algo import algo
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -29,14 +30,14 @@ class IsihDanns:
         self.num_epochs_dim2 = num_epochs_dim2
 
     def fit_1st_dim(self, source_loader, target_loader, test_target_X: torch.Tensor, test_target_y_task: torch.Tensor):
-        self.feature_extractor, self.task_classifier_dim1, _ = utils.fit(
+        self.feature_extractor, self.task_classifier_dim1, _ = algo.fit(
             source_loader, target_loader, test_target_X, test_target_y_task,
             self.feature_extractor, self.domain_classifier_dim1, self.task_classifier_dim1, self.criterion,
             self.feature_optimizer_dim1, self.domain_optimizer_dim1, self.task_optimizer_dim1, num_epochs=self.num_epochs_dim1
         )
 
     def fit_2nd_dim(self, source_loader, target_loader, test_target_X: torch.Tensor, test_target_y_task: torch.Tensor):
-        self.feature_extractor, self.task_classifier_dim2, _ = utils.fit(
+        self.feature_extractor, self.task_classifier_dim2, _ = algo.fit(
             source_loader, target_loader, test_target_X, test_target_y_task,
             self.feature_extractor, self.domain_classifier_dim2, self.task_classifier_dim2, self.criterion,
             self.feature_optimizer_dim2, self.domain_optimizer_dim2, self.task_optimizer_dim2, num_epochs=self.num_epochs_dim2, is_psuedo_weights=True

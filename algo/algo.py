@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 
-from utils import utils
+from ..utils import utils
 
 
 class ReverseGradient(torch.autograd.Function):
