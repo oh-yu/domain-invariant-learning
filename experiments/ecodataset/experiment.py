@@ -7,6 +7,7 @@ import torch
 from torch import nn
 from torch import optim
 from torch.utils.data import TensorDataset, DataLoader
+from tqdm import tqdm
 
 from ...utils import utils
 from ...networks import IsihDanns, Codats, CoDATS_F_C
@@ -446,7 +447,7 @@ def main():
     df = pd.DataFrame()
     patterns = []
 
-    for i in HOUSEHOLD_IDXS:
+    for i in tqdm(HOUSEHOLD_IDXS):
         for j in HOUSEHOLD_IDXS:
             if i == j:
                 continue
@@ -473,7 +474,7 @@ def main():
             if (i == 4) or (i == 5):
                 break
 
-    for i in HOUSEHOLD_IDXS:
+    for i in tqdm(HOUSEHOLD_IDXS):
         for j in HOUSEHOLD_IDXS:
             if i == j:
                 continue
