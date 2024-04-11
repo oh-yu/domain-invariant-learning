@@ -3,7 +3,7 @@ line-length=120
 
 [tool.flake8]
 max-line-length=120
-
+exclude=".ipynb_checkpoints"
 
 [tool.isort]
 line_length = 120
