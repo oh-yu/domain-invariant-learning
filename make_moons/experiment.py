@@ -3,6 +3,7 @@ import torch
 from torch import nn, optim
 
 from ..utils import utils
+from ..algo import algo
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -36,7 +37,7 @@ def main():
 
     # Domain Invariant Learning
     num_epochs = 1000
-    feature_extractor, task_classifier, accs = utils.fit(source_loader,
+    feature_extractor, task_classifier, accs = algo.fit(source_loader,
                                                          target_loader,
                                                          target_X,
                                                          target_y_task,
