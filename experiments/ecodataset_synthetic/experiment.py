@@ -11,6 +11,7 @@ from torch import nn
 import torch.nn.functional as F
 from torch import optim
 from torch.utils.data import TensorDataset, DataLoader
+from tqdm import tqdm
 
 from ...utils import utils
 from ...networks import IsihDanns, Codats, CoDATS_F_C
@@ -391,7 +392,7 @@ def main(argv):
     accs_without_adapt = []
     accs_train_on_target = []
     patterns = []
-    for i in HOUSEHOLD_IDX:
+    for i in tqdm(HOUSEHOLD_IDX):
         for j in SEASON_IDX:
             acc_isih_da = isih_da(source_idx=i, season_idx=j)
             acc_codats = codats(source_idx=i, season_idx=j)

@@ -448,7 +448,7 @@ def main():
     patterns = []
 
     for i in tqdm(HOUSEHOLD_IDXS):
-        for j in tqdm(HOUSEHOLD_IDXS, leave=False):
+        for j in HOUSEHOLD_IDXS:
             if i == j:
                 continue
             elif i == 4:
@@ -475,7 +475,7 @@ def main():
                 break
 
     for i in tqdm(HOUSEHOLD_IDXS):
-        for j in tqdm(HOUSEHOLD_IDXS, leave=False):
+        for j in HOUSEHOLD_IDXS:
             if i == j:
                 continue
             elif i == 4:
