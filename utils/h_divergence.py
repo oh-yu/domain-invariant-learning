@@ -4,9 +4,7 @@ from sklearn import preprocessing
 from torch import optim
 
 from ..networks import Conv1d, Decoder
-from .utils import *
-
-DEVICE = DEVICE
+from .utils import DEVICE, apply_sliding_window, get_loader
 
 
 def h_divergence(source_loader, target_loader, source_X, target_X):
