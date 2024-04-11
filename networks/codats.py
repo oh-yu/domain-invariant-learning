@@ -14,9 +14,9 @@ class Codats:
     CoDATS model https://arxiv.org/abs/2005.10996
     """
     def __init__(self, input_size: int, hidden_size: int, lr: float, num_epochs: int, num_domains: int = 1, num_classes: int = 1) -> None:
-        self.feature_extractor = utils.Conv1d(input_size=input_size).to(DEVICE)
-        self.domain_classifier = utils.Decoder(input_size=hidden_size, output_size=num_domains).to(DEVICE)
-        self.task_classifier = utils.Decoder(input_size=hidden_size, output_size=num_classes).to(DEVICE)
+        self.feature_extractor = Conv1d(input_size=input_size).to(DEVICE)
+        self.domain_classifier = Decoder(input_size=hidden_size, output_size=num_domains).to(DEVICE)
+        self.task_classifier = Decoder(input_size=hidden_size, output_size=num_classes).to(DEVICE)
         self.criterion = nn.BCELoss()
 
         self.feature_optimizer = optim.Adam(self.feature_extractor.parameters(), lr=lr)
