@@ -1,5 +1,6 @@
 import pickle
 
+from absl import flags
 import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn import preprocessing
@@ -12,10 +13,23 @@ from torch.utils.data import TensorDataset, DataLoader
 
 from ...utils import utils
 from ...networks import IsihDanns, Codats, CoDATS_F_C
+
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 HOUSEHOLD_IDX = [1, 2, 3, 4, 5]
 SEASON_IDX = [0, 1]
-
+LAG_NUM_TO_TIME_LIST = {
+    1: [i for i in range(13, 44, 1)]+[12],
+    2: [i for i in range(14, 44, 1)]+[12, 13],
+    3: [i for i in range(15, 44, 1)]+[12, 13, 14],
+    4: [i for i in range(16, 44, 1)]+[12, 13, 14, 15],
+    5: [i for i in range(17, 44, 1)]+[12, 13, 14, 15, 16],
+    6: [i for i in range(18, 44, 1)]+[12, 13, 14, 15, 16, 17]
+}
+FLAGS = flags.FLAGS
+flags.DEFINE_integer("lag_1", 1, "time lag for intermediate domain")
+flags.DEFINE_integer("lag_2", 6, "time lag for terminal domain")
+flags.mark_flag_as_required("lag_1")
+flags.mark_flag_as_required("lag_2")
 
 def isih_da(source_idx=2, season_idx=0, n_splits:int=5, is_kfold_eval: bool=False, num_repeats:int=10):
     train_source_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv")
@@ -23,15 +37,13 @@ def isih_da(source_idx=2, season_idx=0, n_splits:int=5, is_kfold_eval: bool=Fals
     train_source_X = train_source_X[train_source_X.Season == season_idx]
 
     target_X = train_source_X.copy()
-    tmp_list = [i for i in range(16, 44, 1)]
-    tmp_list += [12, 13, 14, 15]
+    tmp_list = LAG_NUM_TO_TIME_LIST[4]
     tmp_list = tmp_list * int(train_source_X.shape[0]/32)
     target_X["Time"] = tmp_list
     target_y_task = train_source_y_task
 
     target_prime_X = train_source_X.copy()
-    tmp_list = [i for i in range(18, 44, 1)]
-    tmp_list += [12, 13, 14, 15, 16, 17]
+    tmp_list = LAG_NUM_TO_TIME_LIST[6]
     tmp_list = tmp_list * int(train_source_X.shape[0]/32)
     target_prime_X["Time"] = tmp_list
     target_prime_y_task = train_source_y_task
@@ -123,8 +135,7 @@ def codats(source_idx=2, season_idx=0, n_splits:int=5, is_kfold_eval:bool=False,
     train_source_X = train_source_X[train_source_X.Season == season_idx]
 
     target_prime_X = train_source_X.copy()
-    tmp_list = [i for i in range(18, 44, 1)]
-    tmp_list += [12, 13, 14, 15, 16, 17]
+    tmp_list = LAG_NUM_TO_TIME_LIST[6]
     tmp_list = tmp_list * int(train_source_X.shape[0]/32)
     target_prime_X["Time"] = tmp_list
     target_prime_y_task = train_source_y_task
@@ -199,8 +210,7 @@ def without_adapt(source_idx=2, season_idx=0, n_splits:int=5, is_kfold_eval:bool
     train_source_X = train_source_X[train_source_X.Season == season_idx]
 
     target_prime_X = train_source_X.copy()
-    tmp_list = [i for i in range(18, 44, 1)]
-    tmp_list += [12, 13, 14, 15, 16, 17]
+    tmp_list = LAG_NUM_TO_TIME_LIST[6]
     tmp_list = tmp_list * int(train_source_X.shape[0]/32)
     target_prime_X["Time"] = tmp_list
     target_prime_y_task = train_source_y_task
@@ -280,8 +290,7 @@ def train_on_target(source_idx=2, season_idx=0, n_splits:int=5, is_kfold_eval:bo
     train_source_X = train_source_X[train_source_X.Season == season_idx]
 
     target_prime_X = train_source_X.copy()
-    tmp_list = [i for i in range(18, 44, 1)]
-    tmp_list += [12, 13, 14, 15, 16, 17]
+    tmp_list = LAG_NUM_TO_TIME_LIST[6]
     tmp_list = tmp_list * int(train_source_X.shape[0]/32)
     target_prime_X["Time"] = tmp_list
     target_prime_y_task = train_source_y_task
@@ -373,7 +382,9 @@ def train_on_target(source_idx=2, season_idx=0, n_splits:int=5, is_kfold_eval:bo
 
     
 
-def main():
+def main(argv):
+    assert FLAGS.lag_1 in [1, 2, 3, 4, 5, 6]
+    assert (FLAGS.lag_2 in [1, 2, 3, 4, 5, 6]) and (FLAGS.lag_2 > FLAGS.lag_1)
     accs_isih_da = []
     accs_codats = []
     accs_without_adapt = []
