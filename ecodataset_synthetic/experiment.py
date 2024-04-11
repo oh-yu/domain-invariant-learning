@@ -11,18 +11,11 @@ from torch import optim
 from torch.utils.data import TensorDataset, DataLoader
 
 from ..utils import utils
-from ..models import IsihDanns, Codats
+from ..networks import IsihDanns, Codats, CoDATS_F_C
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 HOUSEHOLD_IDX = [1, 2, 3, 4, 5]
 SEASON_IDX = [0, 1]
 
-class CoDATS_F_C(nn.Module):
-    def __init__(self, input_size: int):
-        super().__init__()
-        self.conv1d = utils.Conv1d(input_size=input_size).to(DEVICE)
-        self.decoder = utils.Decoder(input_size=128, output_size=1).to(DEVICE)
-    def forward(self, x):
-        return self.decoder(self.conv1d(x))
 
 def isih_da(source_idx=2, season_idx=0, n_splits:int=5, is_kfold_eval: bool=False, num_repeats:int=10):
     train_source_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv")

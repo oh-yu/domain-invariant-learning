@@ -155,57 +155,6 @@ def apply_sliding_window(X: np.ndarray, y: np.ndarray, filter_len: int = 3) -> (
     return filtered_X, filtered_y
 
 
-class Encoder(nn.Module):
-    def __init__(self, input_size, output_size):
-        super().__init__()
-        self.fc1 = nn.Linear(input_size, output_size)
-
-    def forward(self, x):
-        return F.relu(self.fc1(x))
-
-
-class Decoder(nn.Module):
-    def __init__(self, input_size, output_size, fc1_size=50, fc2_size=10):
-        super().__init__()
-        self.fc1 = nn.Linear(input_size, fc1_size)
-        self.fc2 = nn.Linear(fc1_size, fc2_size)
-        self.fc3 = nn.Linear(fc2_size, output_size)
-
-    def forward(self, x):
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-        x = self.fc3(x)
-        return x
-
-
-class ManyToOneRNN(nn.Module):
-    def __init__(self, input_size, hidden_size, num_layers):
-        super().__init__()
-        self.rnn = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True)
-    def forward(self, x):
-        _, (x, _) = self.rnn(x)
-        x = x[-1, :, :]
-        return x
-
-
-class Conv1d(nn.Module):
-    # TODO: Understand nn.Conv1d doumentation
-    def __init__(self, input_size: int, out_channels1: int = 128, out_channels2: int = 128):
-        super().__init__()
-        self.conv1 = nn.Conv1d(in_channels=input_size, out_channels=out_channels1, kernel_size=3, stride=1, padding=1)
-        self.bn1 = nn.BatchNorm1d(out_channels1)
-        self.conv2 = nn.Conv1d(in_channels=out_channels1, out_channels=out_channels2, kernel_size=2, stride=1, padding=0)
-        self.bn2 = nn.BatchNorm1d(out_channels2)
-    def forward(self, x):
-        x = x.reshape(x.shape[0], x.shape[2], x.shape[1])
-        x = self.conv1(x)
-        x = F.relu(self.bn1(x))
-        x = self.conv2(x)
-        x = F.relu(self.bn2(x))
-        x = torch.mean(x, dim=2)
-        return x
-
-
 def _change_lr_during_dann_training(domain_optimizer: torch.optim.Adam, feature_optimizer: torch.optim.Adam, task_optimizer: torch.optim.Adam,
                                     epoch: torch.Tensor, epoch_thr: int = 200, lr: float = 0.00005):
     """

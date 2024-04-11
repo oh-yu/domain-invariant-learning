@@ -9,7 +9,7 @@ from torch import optim
 from torch.utils.data import TensorDataset, DataLoader
 
 from ..utils import utils
-from ..models import IsihDanns, Codats, CoDATS_F_C
+from ..networks import IsihDanns, Codats, CoDATS_F_C
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 HOUSEHOLD_IDXS = [1, 2, 3, 4, 5]
 
