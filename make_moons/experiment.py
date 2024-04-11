@@ -2,8 +2,8 @@ import matplotlib.pyplot as plt
 import torch
 from torch import nn, optim
 
-from ..networks.mlp_encoder import Encoder
-from ..networks.mlp_decoder import Decoder
+from ..networks import Encoder
+from ..networks import Decoder
 from ..algo import algo
 from ..utils import utils
 
