@@ -1,3 +1,5 @@
+from absl import app
+from absl import flags
 import matplotlib.pyplot as plt
 import torch
 from torch import nn, optim
@@ -7,12 +9,15 @@ from ...algo import algo
 from ...utils import utils
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+FLAGS = flags.FLAGS
+flags.DEFINE_integer("rotation_degree", -30, "rotation degree for target data")
+flags.mark_flag_as_required("rotation_degree")
 
 
-def main():
+def main(argv):
     # Prepare Data
     source_X, target_X, source_y_task, target_y_task, x_grid, x1_grid, x2_grid = \
-        utils.get_source_target_from_make_moons()
+        utils.get_source_target_from_make_moons(rotation_degree=FLAGS.rotation_degree)
     source_loader, target_loader, source_y_task, source_X, target_X, target_y_task\
         = utils.get_loader(source_X, target_X, source_y_task, target_y_task)
     
@@ -117,4 +122,4 @@ def main():
     utils.visualize_tSNE(target_feature_eval, source_feature)
 
 if __name__  == "__main__":
-    main()
+    app.run(main)
