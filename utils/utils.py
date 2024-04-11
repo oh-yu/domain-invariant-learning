@@ -3,10 +3,8 @@ from typing import List
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-import torch.nn.functional as F
 from sklearn.datasets import make_moons
 from sklearn.manifold import TSNE
-from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -158,7 +156,7 @@ def apply_sliding_window(X: np.ndarray, y: np.ndarray, filter_len: int = 3) -> (
         start = i
         end = i + filter_len
         filtered_X[i] = X[start:end]
-    filtered_y = y[filter_len - 1 :]
+    filtered_y = y[filter_len - 1:]
     return filtered_X, filtered_y
 
 

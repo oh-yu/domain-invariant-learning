@@ -32,7 +32,6 @@ def main(argv):
     hidden_size = 10
     num_domains = 1
     num_classes = 1
-    dropout_ratio = 0.5
 
     feature_extractor = Encoder(input_size=source_X.shape[1], output_size=hidden_size).to(device)
     domain_classifier = Decoder(input_size=hidden_size, output_size=num_domains).to(device)
