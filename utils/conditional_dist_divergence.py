@@ -8,6 +8,9 @@ from .utils import DEVICE, apply_sliding_window, get_loader
 
 
 def conditional_dist_divergence(source_loader, target_X, target_y_task):
+    """
+    TODO: Attach Paper
+    """
     # 1. Init Model
     feature_extractor = Conv1d(input_size=target_X.shape[2]).to(DEVICE)
     task_classifier = Decoder(input_size=128, output_size=1).to(DEVICE)

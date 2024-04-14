@@ -8,6 +8,10 @@ from .utils import DEVICE, apply_sliding_window, get_loader
 
 
 def h_divergence(source_loader, target_loader, source_X, target_X):
+    """
+    https://proceedings.neurips.cc/paper_files/paper/2006/file/b1b0432ceafb0ce714426e9114852ac7-Paper.pdf
+    http://www.springerlink.com/content/q6qk230685577n52/
+    """
     # 1. Initialize H
     feature_extractor = Conv1d(input_size=train_source_X.shape[2]).to(DEVICE)
     domain_classifier = Decoder(input_size=128, output_size=1).to(DEVICE)
