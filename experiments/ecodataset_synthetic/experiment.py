@@ -122,9 +122,11 @@ def isih_da(source_idx=2, season_idx=0, n_splits: int = 5, is_kfold_eval: bool =
             test_target_X = test_target_X.to(DEVICE)
             test_target_y_task = test_target_y_task.to(DEVICE)
             ## isih-DA fit, predict for 2nd dimension
-            isih_dann.fit_2nd_dim(source_loader, target_loader, test_target_X, test_target_y_task)
-            isih_dann.set_eval()
-            pred_y_task = isih_dann.predict(test_target_X, is_1st_dim=False)
+            with open("isih_dann_tmp.pickle", mode="rb") as f:
+                isih_dann_tmp = pickle.load(f)
+            isih_dann_tmp.fit_2nd_dim(source_loader, target_loader, test_target_X, test_target_y_task)
+            isih_dann_tmp.set_eval()
+            pred_y_task = isih_dann_tmp.predict(test_target_X, is_1st_dim=False)
 
             # Algo3. Evaluation
             pred_y_task = pred_y_task > 0.5
