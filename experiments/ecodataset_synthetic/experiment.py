@@ -26,6 +26,7 @@ LAG_NUM_TO_TIME_LIST = {
 FLAGS = flags.FLAGS
 flags.DEFINE_integer("lag_1", 1, "time lag for intermediate domain")
 flags.DEFINE_integer("lag_2", 6, "time lag for terminal domain")
+flags.DEFINE_boolean("is_kfold_eval", False, "use kfold cross validation,  otherwise use train-test split")
 flags.mark_flag_as_required("lag_1")
 flags.mark_flag_as_required("lag_2")
 
@@ -480,10 +481,10 @@ def main(argv):
     patterns = []
     for i in tqdm(HOUSEHOLD_IDX):
         for j in SEASON_IDX:
-            acc_isih_da = isih_da(source_idx=i, season_idx=j)
-            acc_codats = codats(source_idx=i, season_idx=j)
-            acc_without_adapt = without_adapt(source_idx=i, season_idx=j)
-            acc_train_on_target = train_on_target(source_idx=i, season_idx=j)
+            acc_isih_da = isih_da(source_idx=i, season_idx=j, is_kfold_eval=FLAGS.is_kfold_eval)
+            acc_codats = codats(source_idx=i, season_idx=j, is_kfold_eval=FLAGS.is_kfold_eval)
+            acc_without_adapt = without_adapt(source_idx=i, season_idx=j, is_kfold_eval=FLAGS.is_kfold_eval)
+            acc_train_on_target = train_on_target(source_idx=i, season_idx=j, is_kfold_eval=FLAGS.is_kfold_eval)
             accs_isih_da.append(acc_isih_da)
             accs_codats.append(acc_codats)
             accs_without_adapt.append(acc_without_adapt)
