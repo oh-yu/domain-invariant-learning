@@ -298,6 +298,15 @@ def without_adapt(source_idx=2, season_idx=0, n_splits: int = 5, is_kfold_eval: 
                 target_y_task[train_idx],
                 target_y_task[test_idx],
             )
+            scaler.fit(train_target_X)
+            train_target_X = scaler.transform(train_target_X)
+            test_target_X = scaler.transform(test_target_X)
+            train_target_X, train_target_y_task = utils.apply_sliding_window(
+                train_target_X, train_target_y_task, filter_len=6
+            )
+            test_target_X, test_target_y_task = utils.apply_sliding_window(
+                test_target_X, test_target_y_task, filter_len=6
+            )
             source_loader, _, _, _, _, _ = utils.get_loader(
                 train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True
             )
@@ -318,6 +327,7 @@ def without_adapt(source_idx=2, season_idx=0, n_splits: int = 5, is_kfold_eval: 
                 criterion=criterion,
                 num_epochs=300,
             )
+            without_adapt.eval()
             pred_y = without_adapt(test_target_X)
             pred_y = torch.sigmoid(pred_y).reshape(-1)
             pred_y = pred_y > 0.5
