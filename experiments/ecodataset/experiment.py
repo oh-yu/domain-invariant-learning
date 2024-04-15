@@ -641,7 +641,7 @@ def train_on_target(
         return sum(accs) / num_repeats, ground_truth_ratio.item()
 
 
-def main():
+def main(argv):
     isih_da_house_accs = []
     isih_da_season_accs = []
     codats_accs = []
