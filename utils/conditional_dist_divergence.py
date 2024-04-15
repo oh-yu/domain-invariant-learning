@@ -4,7 +4,7 @@ from sklearn import preprocessing
 from torch import optim
 
 from ..networks import Conv1d, Decoder
-from .utils import DEVICE, apply_sliding_window, get_loader
+from .utils import DEVICE, apply_sliding_window, get_loader, COL_IDX_TASK
 
 
 def conditional_dist_divergence(source_loader, target_X, target_y_task):
@@ -23,7 +23,7 @@ def conditional_dist_divergence(source_loader, target_X, target_y_task):
     for epoch in range(100):
         for source_data in source_loader:
             source_X, source_y = source_data
-            source_y_task = source_y[:, 0]
+            source_y_task = source_y[:, COL_IDX_TASK]
 
             source_feature = feature_extractor(source_X)
             source_output = task_classifier(source_feature)
