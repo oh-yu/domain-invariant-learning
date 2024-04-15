@@ -148,14 +148,14 @@ def isih_da(source_idx=2, season_idx=0, n_splits: int = 5, is_kfold_eval: bool =
         test_target_X, test_target_y_task = utils.apply_sliding_window(
             test_target_X, test_target_y_task, filter_len=6
         )
+        test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
+        test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
+        test_target_X = test_target_X.to(DEVICE)
+        test_target_y_task = test_target_y_task.to(DEVICE)
         for _ in range(num_repeats):
             source_loader, target_loader, _, _, _, _ = utils.get_loader(
                 train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True
             )
-            test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
-            test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
-            test_target_X = test_target_X.to(DEVICE)
-            test_target_y_task = test_target_y_task.to(DEVICE)
             ## isih-DA fit, predict for 2nd dimension
             with open("isih_dann_tmp.pickle", mode="rb") as f:
                 isih_dann_tmp = pickle.load(f)
@@ -244,16 +244,14 @@ def codats(source_idx=2, season_idx=0, n_splits: int = 5, is_kfold_eval: bool = 
         test_target_X, test_target_y_task = utils.apply_sliding_window(
             test_target_X, test_target_y_task, filter_len=6
         )
+        test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
+        test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
+        test_target_X = test_target_X.to(DEVICE)
+        test_target_y_task = test_target_y_task.to(DEVICE)
         for _ in range(num_repeats):
             source_loader, target_loader, _, _, _, _ = utils.get_loader(
                 train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True
             )
-
-            test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
-            test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
-            test_target_X = test_target_X.to(DEVICE)
-            test_target_y_task = test_target_y_task.to(DEVICE)
-
             ## CoDATS fit, predict
             codats = Codats(input_size=train_source_X.shape[2], hidden_size=128, lr=0.0001, num_epochs=300)
             codats.fit(source_loader, target_loader, test_target_X, test_target_y_task)
@@ -348,16 +346,14 @@ def without_adapt(source_idx=2, season_idx=0, n_splits: int = 5, is_kfold_eval: 
         test_target_X, test_target_y_task = utils.apply_sliding_window(
             test_target_X, test_target_y_task, filter_len=6
         )
+        test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
+        test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
+        test_target_X = test_target_X.to(DEVICE)
+        test_target_y_task = test_target_y_task.to(DEVICE)
         for _ in range(num_repeats):
             source_loader, _, _, _, _, _ = utils.get_loader(
                 train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True
             )
-
-            test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
-            test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
-            test_target_X = test_target_X.to(DEVICE)
-            test_target_y_task = test_target_y_task.to(DEVICE)
-
             ## Without Adapt fit, predict
             without_adapt = CoDATS_F_C(input_size=train_source_X.shape[2])
             without_adapt_optimizer = optim.Adam(without_adapt.parameters(), lr=0.0001)
