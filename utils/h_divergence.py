@@ -4,7 +4,7 @@ from sklearn import preprocessing
 from torch import optim
 
 from ..networks import Conv1d, Decoder
-from .utils import DEVICE, apply_sliding_window, get_loader
+from .utils import DEVICE, apply_sliding_window, get_loader, COL_IDX_DOMAIN
 
 
 def h_divergence(source_loader, target_loader, source_X, target_X):
@@ -24,7 +24,7 @@ def h_divergence(source_loader, target_loader, source_X, target_X):
     for epoch in range(30):
         for i, (source_data, target_data) in enumerate(zip(source_loader, target_loader)):
             source_X_tmp, source_y = source_data
-            source_y = source_y[:, 1]
+            source_y = source_y[:, COL_IDX_DOMAIN]
             target_X, target_y = target_data
 
             source_feature = feature_extractor(source_X_tmp)
