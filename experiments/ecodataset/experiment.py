@@ -176,7 +176,7 @@ def isih_da_season(
     winter_idx: int,
     summer_idx: int,
     n_splits: int = 5,
-    id_kfold_eval: bool = False,
+    is_kfold_eval: bool = False,
     num_repeats: int = 10,
 ) -> torch.Tensor:
     """
