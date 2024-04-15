@@ -1,5 +1,6 @@
 import pickle
 
+from absl import app, flags
 import pandas as pd
 import torch
 from sklearn import preprocessing
@@ -13,6 +14,8 @@ from ...utils import utils
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 HOUSEHOLD_IDXS = [1, 2, 3, 4, 5]
+FLAGS = flags.FLAGS
+flags.DEFINE_boolean("is_kfold_eval", False, "use kfold cross validation,  otherwise use train-test split")
 
 
 def isih_da_house(
@@ -659,11 +662,11 @@ def main():
             elif (i != 4) and (i != 5):
                 if (j == 4) or (j == 5):
                     continue
-            isih_da_house_acc = isih_da_house(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
-            isih_da_season_acc = isih_da_season(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
-            codats_acc = codats(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
-            without_adapt_acc = without_adapt(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
-            train_on_target_acc, ground_truth_ratio = train_on_target(target_idx=j, summer_idx=1)
+            isih_da_house_acc = isih_da_house(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1, is_kfold_eval=FALGS.is_kfold_eval)
+            isih_da_season_acc = isih_da_season(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1, is_kfold_eval=FALGS.is_kfold_eval)
+            codats_acc = codats(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1, is_kfold_eval=FALGS.is_kfold_eval)
+            without_adapt_acc = without_adapt(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1, is_kfold_eval=FALGS.is_kfold_eval)
+            train_on_target_acc, ground_truth_ratio = train_on_target(target_idx=j, summer_idx=1, is_kfold_eval=FALGS.is_kfold_eval)
 
             isih_da_house_accs.append(isih_da_house_acc)
             isih_da_season_accs.append(isih_da_season_acc)
@@ -686,11 +689,11 @@ def main():
             elif (i != 4) and (i != 5):
                 if (j == 4) or (j == 5):
                     continue
-            isih_da_house_acc = isih_da_house(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0)
-            isih_da_season_acc = isih_da_season(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0)
-            codats_acc = codats(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0)
-            without_adapt_acc = without_adapt(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0)
-            train_on_target_acc, ground_truth_ratio = train_on_target(target_idx=j, summer_idx=0)
+            isih_da_house_acc = isih_da_house(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0, is_kfold_eval=FALGS.is_kfold_eval)
+            isih_da_season_acc = isih_da_season(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0, is_kfold_eval=FALGS.is_kfold_eval)
+            codats_acc = codats(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0, is_kfold_eval=FALGS.is_kfold_eval)
+            without_adapt_acc = without_adapt(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0, is_kfold_eval=FALGS.is_kfold_eval)
+            train_on_target_acc, ground_truth_ratio = train_on_target(target_idx=j, summer_idx=0, is_kfold_eval=FALGS.is_kfold_eval)
 
             isih_da_house_accs.append(isih_da_house_acc)
             isih_da_season_accs.append(isih_da_season_acc)
@@ -719,4 +722,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    app.run(main)
