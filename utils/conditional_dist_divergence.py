@@ -74,9 +74,4 @@ if __name__ == "__main__":
     source_loader, _, _, _, target_X, target_y_task = get_loader(
         train_source_X, target_X, train_source_y_task, target_y_task, shuffle=True
     )
-
-    test_thr = int(target_X.shape[0] / 2)
-    test_target_X = target_X[test_thr:]
-    test_target_y_task = target_y_task[test_thr:]
-
     print(conditional_dist_divergence(source_loader, target_X, target_y_task))
