@@ -39,15 +39,15 @@ def isih_da(source_idx=2, season_idx=0, n_splits: int = 5, is_kfold_eval: bool =
     train_source_X = train_source_X[train_source_X.Season == season_idx]
 
     target_X = train_source_X.copy()
-    tmp_list = LAG_NUM_TO_TIME_LIST[FLAGS.lag_1]
-    tmp_list = tmp_list * int(train_source_X.shape[0] / 32)
-    target_X["Time"] = tmp_list
+    time_list = LAG_NUM_TO_TIME_LIST[FLAGS.lag_1]
+    time_list = time_list * int(train_source_X.shape[0] / 32)
+    target_X["Time"] = time_list
     target_y_task = train_source_y_task
 
     target_prime_X = train_source_X.copy()
-    tmp_list = LAG_NUM_TO_TIME_LIST[FLAGS.lag_2]
-    tmp_list = tmp_list * int(train_source_X.shape[0] / 32)
-    target_prime_X["Time"] = tmp_list
+    time_list = LAG_NUM_TO_TIME_LIST[FLAGS.lag_2]
+    time_list = time_list * int(train_source_X.shape[0] / 32)
+    target_prime_X["Time"] = time_list
     target_prime_y_task = train_source_y_task
 
     train_source_y_task = train_source_y_task.values.reshape(-1)
@@ -179,9 +179,9 @@ def codats(source_idx=2, season_idx=0, n_splits: int = 5, is_kfold_eval: bool = 
     train_source_X = train_source_X[train_source_X.Season == season_idx]
 
     target_prime_X = train_source_X.copy()
-    tmp_list = LAG_NUM_TO_TIME_LIST[FLAGS.lag_2]
-    tmp_list = tmp_list * int(train_source_X.shape[0] / 32)
-    target_prime_X["Time"] = tmp_list
+    time_list = LAG_NUM_TO_TIME_LIST[FLAGS.lag_2]
+    time_list = time_list * int(train_source_X.shape[0] / 32)
+    target_prime_X["Time"] = time_list
     target_prime_y_task = train_source_y_task
 
     train_source_y_task = train_source_y_task.values.reshape(-1)
@@ -268,9 +268,9 @@ def without_adapt(source_idx=2, season_idx=0, n_splits: int = 5, is_kfold_eval: 
     train_source_X = train_source_X[train_source_X.Season == season_idx]
 
     target_prime_X = train_source_X.copy()
-    tmp_list = LAG_NUM_TO_TIME_LIST[FLAGS.lag_2]
-    tmp_list = tmp_list * int(train_source_X.shape[0] / 32)
-    target_prime_X["Time"] = tmp_list
+    time_list = LAG_NUM_TO_TIME_LIST[FLAGS.lag_2]
+    time_list = time_list * int(train_source_X.shape[0] / 32)
+    target_prime_X["Time"] = time_list
     target_prime_y_task = train_source_y_task
 
     train_source_y_task = train_source_y_task.values.reshape(-1)
@@ -373,9 +373,9 @@ def train_on_target(source_idx=2, season_idx=0, n_splits: int = 5, is_kfold_eval
     train_source_X = train_source_X[train_source_X.Season == season_idx]
 
     target_prime_X = train_source_X.copy()
-    tmp_list = LAG_NUM_TO_TIME_LIST[FLAGS.lag_2]
-    tmp_list = tmp_list * int(train_source_X.shape[0] / 32)
-    target_prime_X["Time"] = tmp_list
+    time_list = LAG_NUM_TO_TIME_LIST[FLAGS.lag_2]
+    time_list = time_list * int(train_source_X.shape[0] / 32)
+    target_prime_X["Time"] = time_list
     target_prime_y_task = train_source_y_task
     target_prime_y_task = target_prime_y_task.values.reshape(-1)
 
