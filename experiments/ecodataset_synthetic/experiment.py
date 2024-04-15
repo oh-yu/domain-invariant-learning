@@ -284,7 +284,7 @@ def without_adapt(source_idx=2, season_idx=0, n_splits: int = 5, is_kfold_eval: 
     train_source_y_task = train_source_y_task.values.reshape(-1)
     target_prime_y_task = target_prime_y_task.values.reshape(-1)
 
-    target_X, target_y_task = target_prime_X, target_prime_y_task
+    target_X, target_y_task = target_prime_X.values, target_prime_y_task
     scaler = preprocessing.StandardScaler()
     scaler.fit(train_source_X)
     train_source_X = scaler.transform(train_source_X)
