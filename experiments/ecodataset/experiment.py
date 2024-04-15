@@ -359,6 +359,16 @@ def codats(
                 target_y_task[train_idx],
                 target_y_task[test_idx],
             )
+            scaler.fit(train_target_X)
+            train_target_X = scaler.transform(train_target_X)
+            test_target_X = scaler.transform(test_target_X)
+            train_target_X, train_target_y_task = utils.apply_sliding_window(
+                train_target_X, train_target_y_task, filter_len=6
+            )
+            test_target_X, test_target_y_task = utils.apply_sliding_window(
+                test_target_X, test_target_y_task, filter_len=6
+            )
+
             source_loader, target_loader, _, _, _, _ = utils.get_loader(
                 train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True
             )
@@ -371,6 +381,7 @@ def codats(
             ## CoDATS fit, predict
             codats = Codats(input_size=train_source_X.shape[2], hidden_size=128, lr=0.0001, num_epochs=300)
             codats.fit(source_loader, target_loader, test_target_X, test_target_y_task)
+            codats.set_eval()
             pred_y_task = codats.predict(test_target_X)
 
             pred_y_task = pred_y_task > 0.5
