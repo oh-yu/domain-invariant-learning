@@ -120,19 +120,19 @@ def isih_da_house(
         return sum(accs) / n_splits
     else:
         accs = []
+        train_target_X, test_target_X, train_target_y_task, test_target_y_task = train_test_split(
+            target_X, target_y_task, test_size=0.5, shuffle=False
+        )
+        scaler.fit(train_target_X)
+        train_target_X = scaler.transform(train_target_X)
+        test_target_X = scaler.transform(test_target_X)
+        train_target_X, train_target_y_task = utils.apply_sliding_window(
+            train_target_X, train_target_y_task, filter_len=6
+        )
+        test_target_X, test_target_y_task = utils.apply_sliding_window(
+            test_target_X, test_target_y_task, filter_len=6
+        )
         for _ in range(num_repeats):
-            train_target_X, test_target_X, train_target_y_task, test_target_y_task = train_test_split(
-                target_X, target_y_task, test_size=0.5, shuffle=False
-            )
-            scaler.fit(train_target_X)
-            train_target_X = scaler.transform(train_target_X)
-            test_target_X = scaler.transform(test_target_X)
-            train_target_X, train_target_y_task = utils.apply_sliding_window(
-                train_target_X, train_target_y_task, filter_len=6
-            )
-            test_target_X, test_target_y_task = utils.apply_sliding_window(
-                test_target_X, test_target_y_task, filter_len=6
-            )
             source_loader, target_loader, _, _, _, _ = utils.get_loader(
                 train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True
             )
@@ -257,19 +257,19 @@ def isih_da_season(
         return sum(accs) / n_splits
     else:
         accs = []
+        train_target_X, test_target_X, train_target_y_task, test_target_y_task = train_test_split(
+            target_X, target_y_task, test_size=0.5, shuffle=False
+        )
+        scaler.fit(train_target_X)
+        train_target_X = scaler.transform(train_target_X)
+        test_target_X = scaler.transform(test_target_X)
+        test_target_X, test_target_y_task = utils.apply_sliding_window(
+            test_target_X, test_target_y_task, filter_len=6
+        )
+        train_target_X, train_target_y_task = utils.apply_sliding_window(
+            train_target_X, train_target_y_task, filter_len=6
+        )
         for _ in range(num_repeats):
-            train_target_X, test_target_X, train_target_y_task, test_target_y_task = train_test_split(
-                target_X, target_y_task, test_size=0.5, shuffle=False
-            )
-            scaler.fit(train_target_X)
-            train_target_X = scaler.transform(train_target_X)
-            test_target_X = scaler.transform(test_target_X)
-            test_target_X, test_target_y_task = utils.apply_sliding_window(
-                test_target_X, test_target_y_task, filter_len=6
-            )
-            train_target_X, train_target_y_task = utils.apply_sliding_window(
-                train_target_X, train_target_y_task, filter_len=6
-            )
             source_loader, target_loader, _, _, _, _ = utils.get_loader(
                 train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True
             )
@@ -355,19 +355,19 @@ def codats(
         return sum(accs) / n_splits
     else:
         accs = []
+        train_target_X, test_target_X, train_target_y_task, test_target_y_task = train_test_split(
+            target_X, target_y_task, test_size=0.5, shuffle=False
+        )
+        scaler.fit(train_target_X)
+        train_target_X = scaler.transform(train_target_X)
+        test_target_X = scaler.transform(test_target_X)
+        train_target_X, train_target_y_task = utils.apply_sliding_window(
+            train_target_X, train_target_y_task, filter_len=6
+        )
+        test_target_X, test_target_y_task = utils.apply_sliding_window(
+            test_target_X, test_target_y_task, filter_len=6
+        )
         for _ in range(num_repeats):
-            train_target_X, test_target_X, train_target_y_task, test_target_y_task = train_test_split(
-                target_X, target_y_task, test_size=0.5, shuffle=False
-            )
-            scaler.fit(train_target_X)
-            train_target_X = scaler.transform(train_target_X)
-            test_target_X = scaler.transform(test_target_X)
-            train_target_X, train_target_y_task = utils.apply_sliding_window(
-                train_target_X, train_target_y_task, filter_len=6
-            )
-            test_target_X, test_target_y_task = utils.apply_sliding_window(
-                test_target_X, test_target_y_task, filter_len=6
-            )
             source_loader, target_loader, _, _, _, _ = utils.get_loader(
                 train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True
             )
@@ -453,20 +453,21 @@ def without_adapt(
         return sum(accs) / n_splits
     else:
         accs = []
-        for _ in range(num_repeats):
-            train_target_X, test_target_X, train_target_y_task, test_target_y_task = train_test_split(
-                target_X, target_y_task, test_size=0.5, shuffle=False
-            )
-            scaler.fit(train_target_X)
-            train_target_X = scaler.transform(train_target_X)
-            test_target_X = scaler.transform(test_target_X)
+        train_target_X, test_target_X, train_target_y_task, test_target_y_task = train_test_split(
+            target_X, target_y_task, test_size=0.5, shuffle=False
+        )
+        scaler.fit(train_target_X)
+        train_target_X = scaler.transform(train_target_X)
+        test_target_X = scaler.transform(test_target_X)
 
-            train_target_X, train_target_y_task = utils.apply_sliding_window(
-                train_target_X, train_target_y_task, filter_len=6
-            )
-            test_target_X, test_target_y_task = utils.apply_sliding_window(
-                test_target_X, test_target_y_task, filter_len=6
-            )
+        train_target_X, train_target_y_task = utils.apply_sliding_window(
+            train_target_X, train_target_y_task, filter_len=6
+        )
+        test_target_X, test_target_y_task = utils.apply_sliding_window(
+            test_target_X, test_target_y_task, filter_len=6
+        )
+        for _ in range(num_repeats):
+
             source_loader, _, _, _, _, _ = utils.get_loader(
                 train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True
             )
@@ -551,21 +552,21 @@ def train_on_target(
         return sum(accs) / n_splits
     else:
         accs = []
+        train_target_X, test_target_X, train_target_y_task, test_target_y_task = train_test_split(
+            target_X, target_y_task, test_size=0.5, shuffle=False
+        )
+
+        test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
+        test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
+        test_target_X = test_target_X.to(DEVICE)
+        test_target_y_task = test_target_y_task.to(DEVICE)
+
+        train_target_X = torch.tensor(train_target_X, dtype=torch.float32)
+        train_target_y_task = torch.tensor(train_target_y_task, dtype=torch.float32)
+        train_target_X = train_target_X.to(DEVICE)
+        train_target_y_task = train_target_y_task.to(DEVICE)
+        target_ds = TensorDataset(train_target_X, train_target_y_task)
         for _ in range(num_repeats):
-            train_target_X, test_target_X, train_target_y_task, test_target_y_task = train_test_split(
-                target_X, target_y_task, test_size=0.5, shuffle=False
-            )
-
-            test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
-            test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
-            test_target_X = test_target_X.to(DEVICE)
-            test_target_y_task = test_target_y_task.to(DEVICE)
-
-            train_target_X = torch.tensor(train_target_X, dtype=torch.float32)
-            train_target_y_task = torch.tensor(train_target_y_task, dtype=torch.float32)
-            train_target_X = train_target_X.to(DEVICE)
-            train_target_y_task = train_target_y_task.to(DEVICE)
-            target_ds = TensorDataset(train_target_X, train_target_y_task)
             target_loader = DataLoader(target_ds, batch_size=32, shuffle=True)
             ## Train on Target fit, predict
             train_on_target = CoDATS_F_C(input_size=train_target_X.shape[2])
