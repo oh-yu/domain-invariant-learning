@@ -187,7 +187,7 @@ def codats(source_idx=2, season_idx=0, n_splits: int = 5, is_kfold_eval: bool = 
     train_source_y_task = train_source_y_task.values.reshape(-1)
     target_prime_y_task = target_prime_y_task.values.reshape(-1)
 
-    target_X, target_y_task = target_prime_X, target_prime_y_task
+    target_X, target_y_task = target_prime_X.values, target_prime_y_task
     scaler = preprocessing.StandardScaler()
     scaler.fit(train_source_X)
     train_source_X = scaler.transform(train_source_X)
@@ -203,11 +203,19 @@ def codats(source_idx=2, season_idx=0, n_splits: int = 5, is_kfold_eval: bool = 
                 target_y_task[train_idx],
                 target_y_task[test_idx],
             )
+            scaler.fit(train_target_X)
+            train_target_X = scaler.transform(train_target_X)
+            test_target_X = scaler.transform(test_target_X)
+            train_target_X, train_target_y_task = utils.apply_sliding_window(
+                train_target_X, train_target_y_task, filter_len=6
+            )
+            test_target_X, test_target_y_task = utils.apply_sliding_window(
+                test_target_X, test_target_y_task, filter_len=6
+            )
+
             source_loader, target_loader, _, _, _, _ = utils.get_loader(
                 train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True
             )
-            # TODO: Update utils.get_loader's docstring
-
             test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
             test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
             test_target_X = test_target_X.to(DEVICE)
@@ -216,6 +224,7 @@ def codats(source_idx=2, season_idx=0, n_splits: int = 5, is_kfold_eval: bool = 
             ## CoDATS fit, predict
             codats = Codats(input_size=train_source_X.shape[2], hidden_size=128, lr=0.0001, num_epochs=300)
             codats.fit(source_loader, target_loader, test_target_X, test_target_y_task)
+            codats.set_eval()
             pred_y_task = codats.predict(test_target_X)
 
             pred_y_task = pred_y_task > 0.5
@@ -241,7 +250,6 @@ def codats(source_idx=2, season_idx=0, n_splits: int = 5, is_kfold_eval: bool = 
             source_loader, target_loader, _, _, _, _ = utils.get_loader(
                 train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True
             )
-            # TODO: Update utils.get_loader's docstring
 
             test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
             test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
@@ -295,7 +303,6 @@ def without_adapt(source_idx=2, season_idx=0, n_splits: int = 5, is_kfold_eval: 
             source_loader, _, _, _, _, _ = utils.get_loader(
                 train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True
             )
-            # TODO: Update utils.get_loader's docstring
 
             test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
             test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
@@ -338,7 +345,6 @@ def without_adapt(source_idx=2, season_idx=0, n_splits: int = 5, is_kfold_eval: 
             source_loader, _, _, _, _, _ = utils.get_loader(
                 train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True
             )
-            # TODO: Update utils.get_loader's docstring
 
             test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
             test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)

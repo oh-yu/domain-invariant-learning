@@ -338,7 +338,6 @@ def codats(
             source_loader, target_loader, _, _, _, _ = utils.get_loader(
                 train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True
             )
-            # TODO: Update utils.get_loader's docstring
 
             test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
             test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
@@ -372,7 +371,6 @@ def codats(
             source_loader, target_loader, _, _, _, _ = utils.get_loader(
                 train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True
             )
-            # TODO: Update utils.get_loader's docstring
 
             test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
             test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
