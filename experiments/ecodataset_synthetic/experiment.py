@@ -90,7 +90,7 @@ def isih_da(source_idx=2, season_idx=0, n_splits: int = 5, is_kfold_eval: bool =
     pred_y_task = pred_y_task > 0.5
     train_source_X = target_X
     train_source_y_task = pred_y_task.cpu().detach().numpy()
-    target_X = target_prime_X
+    target_X = target_prime_X.values
     target_y_task = target_prime_y_task
 
     with open("isih_dann_tmp.pickle", mode="wb") as f:
