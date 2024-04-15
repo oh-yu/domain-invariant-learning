@@ -9,7 +9,7 @@ python -m domain-invariant-learning.experiments.make_moons.experiment
 
 ## [ECO data set](https://vs.inf.ethz.ch/res/show.html?what=eco-data "ECO data set REF") Experiment
 python -m domain-invariant-learning.experiments.ecodataset.experiment
-
+python -m domain-invariant-learning.experiments.ecodataset_synthetic.experiment
 ## [MNIT,MNIST-M,SVHN](https://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_digits.html) Experiment
 
 ## [HAR](https://api.semanticscholar.org/CorpusID:6975432) Experiment
