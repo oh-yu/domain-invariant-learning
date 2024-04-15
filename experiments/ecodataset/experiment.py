@@ -101,6 +101,15 @@ def isih_da_house(
                 target_y_task[train_idx],
                 target_y_task[test_idx],
             )
+            scaler.fit(train_target_X)
+            train_target_X = scaler.transform(train_target_X)
+            test_target_X = scaler.transform(test_target_X)
+            train_target_X, train_target_y_task = utils.apply_sliding_window(
+                train_target_X, train_target_y_task, filter_len=6
+            )
+            test_target_X, test_target_y_task = utils.apply_sliding_window(
+                test_target_X, test_target_y_task, filter_len=6
+            )
             source_loader, target_loader, _, _, _, _ = utils.get_loader(
                 train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True
             )
@@ -110,8 +119,11 @@ def isih_da_house(
             test_target_X = test_target_X.to(DEVICE)
             test_target_y_task = test_target_y_task.to(DEVICE)
             ## isih-DA fit, predict for 2nd dimension
-            isih_dann.fit_2nd_dim(source_loader, target_loader, test_target_X, test_target_y_task)
-            pred_y_task = isih_dann.predict(test_target_X, is_1st_dim=False)
+            with open("isih_dann_tmp.pickle", mode="rb") as f:
+                isih_dann_tmp = pickle.load(f)
+            isih_dann_tmp.fit_2nd_dim(source_loader, target_loader, test_target_X, test_target_y_task)
+            isih_dann_tmp.set_eval()
+            pred_y_task = isih_dann_tmp.predict(test_target_X, is_1st_dim=False)
 
             # Algo3. Evaluation
             pred_y_task = pred_y_task > 0.5
