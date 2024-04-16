@@ -89,8 +89,6 @@ def isih_da_house(
     ].values.reshape(-1)
     target_X = target_X[target_X.Season == summer_idx].values
 
-    # target_X = scaler.transform(target_X)
-
     with open("isih_dann_tmp.pickle", mode="wb") as f:
         pickle.dump(isih_dann, f)
 
