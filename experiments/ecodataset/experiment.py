@@ -26,7 +26,7 @@ def isih_da_house(
     n_splits: int = 5,
     is_kfold_eval: bool = False,
     num_repeats: int = 10,
-) -> torch.Tensor:
+) -> float:
     """
     Execute isih-DA (Household => Season) experiment.
     TODO: Attach paper
@@ -178,7 +178,7 @@ def isih_da_season(
     n_splits: int = 5,
     is_kfold_eval: bool = False,
     num_repeats: int = 10,
-) -> torch.Tensor:
+) -> float:
     """
     Execute isih-DA (Season => Household) experiment.
     TODO: Attach paper
@@ -327,7 +327,7 @@ def codats(
     n_splits: int = 5,
     is_kfold_eval: bool = False,
     num_repeats: int = 10,
-) -> torch.Tensor:
+) -> float:
     """
     Execute CoDATS experiment.
     TODO: Attach paper
