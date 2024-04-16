@@ -243,7 +243,7 @@ def isih_da_season(
 
     with open("isih_dann_tmp.pickle", mode="wb") as f:
         pickle.dump(isih_dann, f)
-    if id_kfold_eval:
+    if is_kfold_eval:
         kfold = KFold(n_splits=n_splits, shuffle=False)
         accs = []
         for train_idx, test_idx in kfold.split(target_X):
