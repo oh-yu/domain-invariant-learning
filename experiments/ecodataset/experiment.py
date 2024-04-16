@@ -357,8 +357,8 @@ def codats(
         accs = []
         for train_idx, test_idx in kfold.split(target_X):
             train_target_X, test_target_X, train_target_y_task, test_target_y_task = (
-                target_X[train_idx],
-                target_X[test_idx],
+                target_X.values[train_idx],
+                target_X.values[test_idx],
                 target_y_task[train_idx],
                 target_y_task[test_idx],
             )
@@ -459,8 +459,8 @@ def without_adapt(
         accs = []
         for train_idx, test_idx in kfold.split(target_X):
             train_target_X, test_target_X, train_target_y_task, test_target_y_task = (
-                target_X[train_idx],
-                target_X[test_idx],
+                target_X.values[train_idx],
+                target_X.values[test_idx],
                 target_y_task[train_idx],
                 target_y_task[test_idx],
             )
