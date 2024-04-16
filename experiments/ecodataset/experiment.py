@@ -598,7 +598,7 @@ def train_on_target(
             pred_y_task = pred_y_task > 0.5
             acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
             accs.append(acc.item())
-        return sum(accs) / n_splits
+        return sum(accs) / n_splits, None
     else:
         accs = []
         train_target_X, test_target_X, train_target_y_task, test_target_y_task = train_test_split(
