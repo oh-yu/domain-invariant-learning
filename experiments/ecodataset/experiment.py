@@ -145,15 +145,14 @@ def isih_da_house(
         test_target_X, test_target_y_task = utils.apply_sliding_window(
             test_target_X, test_target_y_task, filter_len=6
         )
+        test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
+        test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
+        test_target_X = test_target_X.to(DEVICE)
+        test_target_y_task = test_target_y_task.to(DEVICE)
         for _ in range(num_repeats):
             source_loader, target_loader, _, _, _, _ = utils.get_loader(
                 train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True
             )
-
-            test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
-            test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
-            test_target_X = test_target_X.to(DEVICE)
-            test_target_y_task = test_target_y_task.to(DEVICE)
             ## isih-DA fit, predict for 2nd dimension
             with open("isih_dann_tmp.pickle", mode="rb") as f:
                 isih_dann_tmp = pickle.load(f)
