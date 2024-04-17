@@ -26,7 +26,7 @@ LAG_NUM_TO_TIME_LIST = {
 FLAGS = flags.FLAGS
 flags.DEFINE_integer("lag_1", 1, "time lag for intermediate domain")
 flags.DEFINE_integer("lag_2", 6, "time lag for terminal domain")
-flags.DEFINE_boolean("is_kfold_eval", False, "use kfold cross validation,  otherwise use train-test split")
+flags.DEFINE_boolean("is_kfold_eval", False, "use kfold cross validation,  otherwise use train-test split. currently isih-DA is not supported.")
 flags.mark_flag_as_required("lag_1")
 flags.mark_flag_as_required("lag_2")
 
