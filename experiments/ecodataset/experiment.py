@@ -15,7 +15,7 @@ from ...utils import utils
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 HOUSEHOLD_IDXS = [1, 2, 3, 4, 5]
 FLAGS = flags.FLAGS
-flags.DEFINE_boolean("is_kfold_eval", False, "use kfold cross validation,  otherwise use train-test split")
+flags.DEFINE_boolean("is_kfold_eval", False, "use kfold cross validation,  otherwise use train-test split. currently isih-DA is not supported")
 
 
 def isih_da_house(
@@ -23,116 +23,73 @@ def isih_da_house(
     target_idx: int,
     winter_idx: int,
     summer_idx: int,
-    n_splits: int = 5,
-    is_kfold_eval: bool = False,
     num_repeats: int = 10,
 ) -> float:
     """
     Execute isih-DA (Household => Season) experiment.
     TODO: Attach paper
     """
-    # Algo1. Inter-Households DA
-    ## Prepare Data
-    train_source_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv")
-    target_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_X_train.csv")
-    train_source_y_task = pd.read_csv(
-        f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_Y_train.csv"
-    )[train_source_X.Season == winter_idx].values.reshape(-1)
-    target_y_task = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_Y_train.csv")[
-        target_X.Season == winter_idx
-    ].values.reshape(-1)
-    train_source_X = train_source_X[train_source_X.Season == winter_idx]
-    target_X = target_X[target_X.Season == winter_idx]
+    accs = []
+    for _ in range(num_repeats):
+        # Algo1. Inter-Households DA
+        ## Prepare Data
+        train_source_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv")
+        target_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_X_train.csv")
+        train_source_y_task = pd.read_csv(
+            f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_Y_train.csv"
+        )[train_source_X.Season == winter_idx].values.reshape(-1)
+        target_y_task = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_Y_train.csv")[
+            target_X.Season == winter_idx
+        ].values.reshape(-1)
+        train_source_X = train_source_X[train_source_X.Season == winter_idx]
+        target_X = target_X[target_X.Season == winter_idx]
 
-    scaler = preprocessing.StandardScaler()
-    train_source_X = scaler.fit_transform(train_source_X)
-    scaler.fit(target_X)
-    target_X = scaler.transform(target_X)
+        scaler = preprocessing.StandardScaler()
+        train_source_X = scaler.fit_transform(train_source_X)
+        scaler.fit(target_X)
+        target_X = scaler.transform(target_X)
 
-    train_source_X, train_source_y_task = utils.apply_sliding_window(train_source_X, train_source_y_task, filter_len=6)
-    target_X, target_y_task = utils.apply_sliding_window(target_X, target_y_task, filter_len=6)
+        train_source_X, train_source_y_task = utils.apply_sliding_window(train_source_X, train_source_y_task, filter_len=6)
+        target_X, target_y_task = utils.apply_sliding_window(target_X, target_y_task, filter_len=6)
 
-    train_target_X, test_target_X, train_target_y_task, test_target_y_task = (
-        target_X,
-        target_X,
-        target_y_task,
-        target_y_task,
-    )
-    source_loader, target_loader, _, _, _, _ = utils.get_loader(
-        train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True
-    )
+        train_target_X, test_target_X, train_target_y_task, test_target_y_task = (
+            target_X,
+            target_X,
+            target_y_task,
+            target_y_task,
+        )
+        source_loader, target_loader, _, _, _, _ = utils.get_loader(
+            train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True
+        )
 
-    test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
-    test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
-    test_target_X = test_target_X.to(DEVICE)
-    test_target_y_task = test_target_y_task.to(DEVICE)
+        test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
+        test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
+        test_target_X = test_target_X.to(DEVICE)
+        test_target_y_task = test_target_y_task.to(DEVICE)
 
-    ## isih-DA fit, predict for 1st dimension
-    isih_dann = IsihDanns(
-        input_size=train_source_X.shape[2],
-        hidden_size=128,
-        lr_dim1=0.0001,
-        lr_dim2=0.00005,
-        num_epochs_dim1=200,
-        num_epochs_dim2=100,
-    )
-    isih_dann.fit_1st_dim(source_loader, target_loader, test_target_X, test_target_y_task)
-    pred_y_task = isih_dann.predict(test_target_X, is_1st_dim=True)
+        ## isih-DA fit, predict for 1st dimension
+        isih_dann = IsihDanns(
+            input_size=train_source_X.shape[2],
+            hidden_size=128,
+            lr_dim1=0.0001,
+            lr_dim2=0.00005,
+            num_epochs_dim1=200,
+            num_epochs_dim2=100,
+        )
+        isih_dann.fit_1st_dim(source_loader, target_loader, test_target_X, test_target_y_task)
+        pred_y_task = isih_dann.predict(test_target_X, is_1st_dim=True)
 
-    # Algo2. Inter-Seasons DA
-    ## Prepare Data
-    train_source_X = target_X
-    train_source_y_task = pred_y_task.cpu().detach().numpy()
-    target_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_X_train.csv")
-    target_y_task = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_Y_train.csv")[
-        target_X.Season == summer_idx
-    ].values.reshape(-1)
-    target_X = target_X[target_X.Season == summer_idx].values
+        # Algo2. Inter-Seasons DA
+        ## Prepare Data
+        train_source_X = target_X
+        train_source_y_task = pred_y_task.cpu().detach().numpy()
+        target_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_X_train.csv")
+        target_y_task = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_Y_train.csv")[
+            target_X.Season == summer_idx
+        ].values.reshape(-1)
+        target_X = target_X[target_X.Season == summer_idx].values
 
-    with open("isih_dann_tmp.pickle", mode="wb") as f:
-        pickle.dump(isih_dann, f)
-
-    if is_kfold_eval:
-        kf = KFold(n_splits=n_splits, shuffle=False)
-        accs = []
-        for train_idx, test_idx in kf.split(target_X):
-            train_target_X, test_target_X, train_target_y_task, test_target_y_task = (
-                target_X[train_idx],
-                target_X[test_idx],
-                target_y_task[train_idx],
-                target_y_task[test_idx],
-            )
-            scaler.fit(train_target_X)
-            train_target_X = scaler.transform(train_target_X)
-            test_target_X = scaler.transform(test_target_X)
-            train_target_X, train_target_y_task = utils.apply_sliding_window(
-                train_target_X, train_target_y_task, filter_len=6
-            )
-            test_target_X, test_target_y_task = utils.apply_sliding_window(
-                test_target_X, test_target_y_task, filter_len=6
-            )
-            source_loader, target_loader, _, _, _, _ = utils.get_loader(
-                train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True
-            )
-
-            test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
-            test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
-            test_target_X = test_target_X.to(DEVICE)
-            test_target_y_task = test_target_y_task.to(DEVICE)
-            ## isih-DA fit, predict for 2nd dimension
-            with open("isih_dann_tmp.pickle", mode="rb") as f:
-                isih_dann_tmp = pickle.load(f)
-            isih_dann_tmp.fit_2nd_dim(source_loader, target_loader, test_target_X, test_target_y_task)
-            isih_dann_tmp.set_eval()
-            pred_y_task = isih_dann_tmp.predict(test_target_X, is_1st_dim=False)
-
-            # Algo3. Evaluation
-            pred_y_task = pred_y_task > 0.5
-            acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
-            accs.append(acc.item())
-        return sum(accs) / n_splits
-    else:
-        accs = []
+        
         train_target_X, test_target_X, train_target_y_task, test_target_y_task = train_test_split(
             target_X, target_y_task, test_size=0.5, shuffle=False
         )
@@ -149,22 +106,20 @@ def isih_da_house(
         test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
         test_target_X = test_target_X.to(DEVICE)
         test_target_y_task = test_target_y_task.to(DEVICE)
-        for _ in range(num_repeats):
-            source_loader, target_loader, _, _, _, _ = utils.get_loader(
-                train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True
-            )
-            ## isih-DA fit, predict for 2nd dimension
-            with open("isih_dann_tmp.pickle", mode="rb") as f:
-                isih_dann_tmp = pickle.load(f)
-            isih_dann_tmp.fit_2nd_dim(source_loader, target_loader, test_target_X, test_target_y_task)
-            isih_dann_tmp.set_eval()
-            pred_y_task = isih_dann_tmp.predict(test_target_X, is_1st_dim=False)
 
-            # Algo3. Evaluation
-            pred_y_task = pred_y_task > 0.5
-            acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
-            accs.append(acc.item())
-        return sum(accs) / num_repeats
+        source_loader, target_loader, _, _, _, _ = utils.get_loader(
+            train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True
+        )
+        ## isih-DA fit, predict for 2nd dimension
+        isih_dann.fit_2nd_dim(source_loader, target_loader, test_target_X, test_target_y_task)
+        isih_dann.set_eval()
+        pred_y_task = isih_dann.predict(test_target_X, is_1st_dim=False)
+
+        # Algo3. Evaluation
+        pred_y_task = pred_y_task > 0.5
+        acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
+        accs.append(acc.item())
+    return sum(accs) / num_repeats
 
 
 def isih_da_season(
@@ -172,115 +127,73 @@ def isih_da_season(
     target_idx: int,
     winter_idx: int,
     summer_idx: int,
-    n_splits: int = 5,
-    is_kfold_eval: bool = False,
     num_repeats: int = 10,
 ) -> float:
     """
     Execute isih-DA (Season => Household) experiment.
     TODO: Attach paper
     """
-    # Algo1. Inter-Seasons DA
-    ## Prepare Data
-    train_source_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv")
-    target_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv")
-    train_source_y_task = pd.read_csv(
-        f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_Y_train.csv"
-    )[train_source_X.Season == winter_idx].values.reshape(-1)
-    target_y_task = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_Y_train.csv")[
-        target_X.Season == summer_idx
-    ].values.reshape(-1)
-    train_source_X = train_source_X[train_source_X.Season == winter_idx]
-    target_X = target_X[target_X.Season == summer_idx]
+    accs = []
+    for _ in range(num_repeats):
+        # Algo1. Inter-Seasons DA
+        ## Prepare Data
+        train_source_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv")
+        target_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv")
+        train_source_y_task = pd.read_csv(
+            f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_Y_train.csv"
+        )[train_source_X.Season == winter_idx].values.reshape(-1)
+        target_y_task = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_Y_train.csv")[
+            target_X.Season == summer_idx
+        ].values.reshape(-1)
+        train_source_X = train_source_X[train_source_X.Season == winter_idx]
+        target_X = target_X[target_X.Season == summer_idx]
 
-    scaler = preprocessing.StandardScaler()
-    train_source_X = scaler.fit_transform(train_source_X)
-    scaler.fit(target_X)
-    target_X = scaler.transform(target_X)
+        scaler = preprocessing.StandardScaler()
+        train_source_X = scaler.fit_transform(train_source_X)
+        scaler.fit(target_X)
+        target_X = scaler.transform(target_X)
 
-    train_source_X, train_source_y_task = utils.apply_sliding_window(train_source_X, train_source_y_task, filter_len=6)
-    target_X, target_y_task = utils.apply_sliding_window(target_X, target_y_task, filter_len=6)
+        train_source_X, train_source_y_task = utils.apply_sliding_window(train_source_X, train_source_y_task, filter_len=6)
+        target_X, target_y_task = utils.apply_sliding_window(target_X, target_y_task, filter_len=6)
 
-    train_target_X, test_target_X, train_target_y_task, test_target_y_task = (
-        target_X,
-        target_X,
-        target_y_task,
-        target_y_task,
-    )
-    source_loader, target_loader, _, _, _, _ = utils.get_loader(
-        train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True
-    )
+        train_target_X, test_target_X, train_target_y_task, test_target_y_task = (
+            target_X,
+            target_X,
+            target_y_task,
+            target_y_task,
+        )
+        source_loader, target_loader, _, _, _, _ = utils.get_loader(
+            train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True
+        )
 
-    test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
-    test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
-    test_target_X = test_target_X.to(DEVICE)
-    test_target_y_task = test_target_y_task.to(DEVICE)
+        test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
+        test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
+        test_target_X = test_target_X.to(DEVICE)
+        test_target_y_task = test_target_y_task.to(DEVICE)
 
-    ## isih-DA fit, predict for 1st dimension
-    isih_dann = IsihDanns(
-        input_size=train_source_X.shape[2],
-        hidden_size=128,
-        lr_dim1=0.0001,
-        lr_dim2=0.00005,
-        num_epochs_dim1=200,
-        num_epochs_dim2=100,
-    )
-    isih_dann.fit_1st_dim(source_loader, target_loader, test_target_X, test_target_y_task)
-    pred_y_task = isih_dann.predict(test_target_X, is_1st_dim=True)
+        ## isih-DA fit, predict for 1st dimension
+        isih_dann = IsihDanns(
+            input_size=train_source_X.shape[2],
+            hidden_size=128,
+            lr_dim1=0.0001,
+            lr_dim2=0.00005,
+            num_epochs_dim1=200,
+            num_epochs_dim2=100,
+        )
+        isih_dann.fit_1st_dim(source_loader, target_loader, test_target_X, test_target_y_task)
+        pred_y_task = isih_dann.predict(test_target_X, is_1st_dim=True)
 
-    # Algo2. Inter-Households DA
-    ## Prepare Data
-    train_source_X = target_X
-    train_source_y_task = pred_y_task.cpu().detach().numpy()
-    target_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_X_train.csv")
-    target_y_task = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_Y_train.csv")[
-        target_X.Season == summer_idx
-    ].values.reshape(-1)
-    target_X = target_X[target_X.Season == summer_idx].values
+        # Algo2. Inter-Households DA
+        ## Prepare Data
+        train_source_X = target_X
+        train_source_y_task = pred_y_task.cpu().detach().numpy()
+        target_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_X_train.csv")
+        target_y_task = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_Y_train.csv")[
+            target_X.Season == summer_idx
+        ].values.reshape(-1)
+        target_X = target_X[target_X.Season == summer_idx].values
 
-    with open("isih_dann_tmp.pickle", mode="wb") as f:
-        pickle.dump(isih_dann, f)
-    if is_kfold_eval:
-        kfold = KFold(n_splits=n_splits, shuffle=False)
-        accs = []
-        for train_idx, test_idx in kfold.split(target_X):
-            train_target_X, test_target_X, train_target_y_task, test_target_y_task = (
-                target_X[train_idx],
-                target_X[test_idx],
-                target_y_task[train_idx],
-                target_y_task[test_idx],
-            )
-            scaler.fit(train_target_X)
-            train_target_X = scaler.transform(train_target_X)
-            test_target_X = scaler.transform(test_target_X)
-            train_target_X, train_target_y_task = utils.apply_sliding_window(
-                train_target_X, train_target_y_task, filter_len=6
-            )
-            test_target_X, test_target_y_task = utils.apply_sliding_window(
-                test_target_X, test_target_y_task, filter_len=6
-            )
-            source_loader, target_loader, _, _, _, _ = utils.get_loader(
-                train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True
-            )
-
-            test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
-            test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
-            test_target_X = test_target_X.to(DEVICE)
-            test_target_y_task = test_target_y_task.to(DEVICE)
-            ## isih-DA fit, predict for 2nd dimension
-            with open("isih_dann_tmp.pickle", mode="rb") as f:
-                isih_dann_tmp = pickle.load(f)
-            isih_dann_tmp.fit_2nd_dim(source_loader, target_loader, test_target_X, test_target_y_task)
-            isih_dann_tmp.set_eval()
-            pred_y_task = isih_dann_tmp.predict(test_target_X, is_1st_dim=False)
-
-            # Algo3. Evaluation
-            pred_y_task = pred_y_task > 0.5
-            acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
-            accs.append(acc.item())
-        return sum(accs) / n_splits
-    else:
-        accs = []
+        
         train_target_X, test_target_X, train_target_y_task, test_target_y_task = train_test_split(
             target_X, target_y_task, test_size=0.5, shuffle=False
         )
@@ -293,27 +206,25 @@ def isih_da_season(
         train_target_X, train_target_y_task = utils.apply_sliding_window(
             train_target_X, train_target_y_task, filter_len=6
         )
-        for _ in range(num_repeats):
-            source_loader, target_loader, _, _, _, _ = utils.get_loader(
-                train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True
-            )
+        
+        source_loader, target_loader, _, _, _, _ = utils.get_loader(
+            train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True
+        )
 
-            test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
-            test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
-            test_target_X = test_target_X.to(DEVICE)
-            test_target_y_task = test_target_y_task.to(DEVICE)
-            ## isih-DA fit, predict for 2nd dimension
-            with open("isih_dann_tmp.pickle", mode="rb") as f:
-                isih_dann_tmp = pickle.load(f)
-            isih_dann_tmp.fit_2nd_dim(source_loader, target_loader, test_target_X, test_target_y_task)
-            isih_dann_tmp.set_eval()
-            pred_y_task = isih_dann_tmp.predict(test_target_X, is_1st_dim=False)
+        test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
+        test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
+        test_target_X = test_target_X.to(DEVICE)
+        test_target_y_task = test_target_y_task.to(DEVICE)
+        ## isih-DA fit, predict for 2nd dimension
+        isih_dann.fit_2nd_dim(source_loader, target_loader, test_target_X, test_target_y_task)
+        isih_dann.set_eval()
+        pred_y_task = isih_dann.predict(test_target_X, is_1st_dim=False)
 
-            # Algo3. Evaluation
-            pred_y_task = pred_y_task > 0.5
-            acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
-            accs.append(acc.item())
-        return sum(accs) / num_repeats
+        # Algo3. Evaluation
+        pred_y_task = pred_y_task > 0.5
+        acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
+        accs.append(acc.item())
+    return sum(accs) / num_repeats
 
 
 def codats(
