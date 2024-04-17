@@ -1,0 +1,22 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+  - repo: local
+    hooks:
+      - id: black
+        name: code format
+        entry: black .
+        language: system
+        types: [file, python]
+
+      - id: isort
+        name: import sort
+        entry: isort .
+        language: system
+        types: [file, python]
+
+      - id: pflake8
+        name: code lint
+        entry: pflake8 .
+        language: system
+        types: [file, python]
