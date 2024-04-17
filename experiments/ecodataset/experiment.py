@@ -570,8 +570,8 @@ def main(argv):
             elif (i != 4) and (i != 5):
                 if (j == 4) or (j == 5):
                     continue
-            isih_da_house_acc = isih_da_house(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1, is_kfold_eval=FLAGS.is_kfold_eval)
-            isih_da_season_acc = isih_da_season(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1, is_kfold_eval=FLAGS.is_kfold_eval)
+            isih_da_house_acc = isih_da_house(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
+            isih_da_season_acc = isih_da_season(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
             codats_acc = codats(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1, is_kfold_eval=FLAGS.is_kfold_eval)
             without_adapt_acc = without_adapt(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1, is_kfold_eval=FLAGS.is_kfold_eval)
             train_on_target_acc, ground_truth_ratio = train_on_target(target_idx=j, summer_idx=1, is_kfold_eval=FLAGS.is_kfold_eval)
@@ -597,8 +597,8 @@ def main(argv):
             elif (i != 4) and (i != 5):
                 if (j == 4) or (j == 5):
                     continue
-            isih_da_house_acc = isih_da_house(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0, is_kfold_eval=FLAGS.is_kfold_eval)
-            isih_da_season_acc = isih_da_season(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0, is_kfold_eval=FLAGS.is_kfold_eval)
+            isih_da_house_acc = isih_da_house(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0)
+            isih_da_season_acc = isih_da_season(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0)
             codats_acc = codats(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0, is_kfold_eval=FLAGS.is_kfold_eval)
             without_adapt_acc = without_adapt(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0, is_kfold_eval=FLAGS.is_kfold_eval)
             train_on_target_acc, ground_truth_ratio = train_on_target(target_idx=j, summer_idx=0, is_kfold_eval=FLAGS.is_kfold_eval)
