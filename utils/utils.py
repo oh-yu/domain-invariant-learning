@@ -134,31 +134,44 @@ def get_loader(
     return source_loader, target_loader, source_y_task, source_X, target_X, target_y_task
 
 
-def apply_sliding_window(X: np.ndarray, y: np.ndarray, filter_len: int = 3) -> (np.ndarray, np.ndarray):
+def apply_sliding_window(X: np.ndarray, y: np.ndarray, filter_len: int = 3, is_overlap: bool = True) -> (np.ndarray, np.ndarray):
     """
     Parameters
     ----------
     X : ndarray of shape(N, H)
     y : ndarray of shape(N, )
     filter_len : int
+    is_overlap: bool
 
     Returns
     -------
-    filtered_X : ndarray of shape(N', filter_len, H)
-    N' is N - filter_len + 1.
-    filtered_y : ndarray of shape(N', )
+    filtered_X : ndarray of shape(N', filter_len, H), N' is N - filter_len + 1 when is_ovelap == True:
+    filtered_y : ndarray of shape(N', ) when is_ovelap == True:
     """
     len_data, H = X.shape
-    N = len_data - filter_len + 1
-    filtered_X = np.zeros((N, filter_len, H))
-    for i in range(0, N):
-        # print(f"(Start, End) = {i, i+filter_len-1}")
-        start = i
-        end = i + filter_len
-        filtered_X[i] = X[start:end]
-    filtered_y = y[filter_len - 1:]
-    return filtered_X, filtered_y
-
+    if is_overlap:
+        N = len_data - filter_len + 1
+        filtered_X = np.zeros((N, filter_len, H))
+        for i in range(0, N):
+            # print(f"(Start, End) = {i, i+filter_len-1}")
+            start = i
+            end = i + filter_len
+            filtered_X[i] = X[start:end]
+        filtered_y = y[filter_len - 1:]
+        return filtered_X, filtered_y
+    
+    else:
+        X = np.expand_dims(X, axis=1)
+        i = 0
+        filtered_Xs = []
+        filtered_ys = []
+        while i < len_data-filter_len:
+            filtered_X = np.expand_dims(np.concatenate(X[i:i+filter_len], axis=0), axis=0)
+            filtered_Xs.append(filtered_X)
+            filtered_ys.append(y[i+filter_len-1])
+            i += filter_len
+        return np.vstack(filtered_Xs), np.array(filtered_ys).reshape(-1)
+            
 
 def _change_lr_during_dann_training(
     domain_optimizer: torch.optim.Adam,
