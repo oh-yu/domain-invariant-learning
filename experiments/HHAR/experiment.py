@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 import pandas as pd
+import torch
 from ...utils import utils
+from ...networks import CoDATS_F_C
 
 
 if __name__ == "__main__":
@@ -14,5 +16,11 @@ if __name__ == "__main__":
     df["gt"] = df["gt"].apply(lambda x: gt_to_int_tmp[x])
     
     X, y = utils.apply_sliding_window(df[["x", "y", "z"]].values, df["gt"].values.reshape(-1), filter_len=128, is_overlap=False)
+    X = torch.tensor(X, dtype=torch.float32).to(utils.DEVICE)
     print(X.shape)
     print(y.shape)
+    
+    codats_f_c = CoDATS_F_C(input_size=X.shape[2])
+    out = codats_f_c(X)
+    print(out.shape)
+    
