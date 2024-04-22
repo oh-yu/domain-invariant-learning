@@ -145,8 +145,12 @@ def apply_sliding_window(X: np.ndarray, y: np.ndarray, filter_len: int = 3, is_o
 
     Returns
     -------
-    filtered_X : ndarray of shape(N', filter_len, H), N' is N - filter_len + 1 when is_ovelap == True:
-    filtered_y : ndarray of shape(N', ) when is_ovelap == True:
+    filtered_X : 
+        ndarray of shape(N - filter_len + 1, filter_len, H) when is_ovelap == True:
+        ndarray of shape(N//filter_len, filter_len, H) when is_ovelap == False:
+    filtered_y : 
+        ndarray of shape(N - filter_len + 1, ) when is_ovelap == True:
+        ndarray of shape(N//filter_len, ) when is_ovelap == False:
     """
     len_data, H = X.shape
     if is_overlap:
