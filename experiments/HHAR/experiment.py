@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 import torch
+from torch import nn
 from ...utils import utils
 from ...networks import CoDATS_F_C
 
@@ -17,10 +18,18 @@ if __name__ == "__main__":
     
     X, y = utils.apply_sliding_window(df[["x", "y", "z"]].values, df["gt"].values.reshape(-1), filter_len=128, is_overlap=False)
     X = torch.tensor(X, dtype=torch.float32).to(utils.DEVICE)
+    y = torch.tensor(y, dtype=torch.long).to(utils.DEVICE)
     print(X.shape)
     print(y.shape)
-    
-    codats_f_c = CoDATS_F_C(input_size=X.shape[2])
+
+    codats_f_c = CoDATS_F_C(input_size=X.shape[2], output_size=len(gt_to_int_tmp))
+    criterion = nn.CrossEntropyLoss()
+    softmax = nn.Softmax(dim=1)
+
     out = codats_f_c(X)
+    out = softmax(out)
     print(out.shape)
-    
+    loss = criterion(out, y)
+    print(loss)
+
+    loss.backward()
