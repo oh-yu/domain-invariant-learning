@@ -123,8 +123,7 @@ def fit(
             loss_domains.append(loss_domain.item())
 
             # 1.3. Task Classifier
-            pred_y_task = task_classifier(source_X_batch)
-            pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
+            pred_y_task = task_classifier.predict_proba(source_X_batch)
             weights = utils._get_terminal_weights(
                 is_target_weights,
                 is_class_weights,
@@ -154,9 +153,7 @@ def fit(
         task_classifier.eval()
         with torch.no_grad():
             target_feature_eval = feature_extractor(target_X)
-            pred_y_task_eval = task_classifier(target_feature_eval)
-            pred_y_task_eval = torch.sigmoid(pred_y_task_eval).reshape(-1)
-            pred_y_task_eval = pred_y_task_eval > 0.5
+            pred_y_task_eval = task_classifier.predict(target_feature_eval)
             acc = sum(pred_y_task_eval == target_y_task) / target_y_task.shape[0]
         loss_task_evals.append(acc.item())
     utils._plot_dann_loss(do_plot, loss_domains, loss_tasks, loss_task_evals)
