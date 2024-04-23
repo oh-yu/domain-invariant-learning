@@ -45,7 +45,6 @@ if __name__ == "__main__":
         num_epochs_dim2=100
     )
     isih_dann.fit_1st_dim(source_loader, target_loader, target_X, target_y_task)
-    pred_y_task = isih_dann.predict(target_X, is_1st_dim=True)
     # TODO: multi-class
 
 

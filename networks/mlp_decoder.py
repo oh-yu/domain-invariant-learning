@@ -1,3 +1,4 @@
+import torch
 import torch.nn.functional as F
 from torch import nn
 
@@ -14,3 +15,17 @@ class Decoder(nn.Module):
         x = F.relu(self.fc2(x))
         x = self.fc3(x)
         return x
+    
+    def predict_proba(self, x, output_size):
+        out = self.forward(x)
+        if output_size == 1:
+            return torch.sigmoid(out).reshape(-1)
+        else:
+            return torch.softmax(out, dim=1)
+
+    def predict(self, x, output_size):
+        out = self.predict_proba(x, output_size)
+        if output_size==1:
+            return out > 0.5
+        else:
+            return out.argmax(dim=1)
