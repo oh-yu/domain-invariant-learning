@@ -73,13 +73,15 @@ class IsihDanns:
 
     def predict(self, X: torch.Tensor, is_1st_dim: bool) -> torch.Tensor:
         if is_1st_dim:
-            out = self.task_classifier_dim1(self.feature_extractor(X))
-            out = torch.sigmoid(out).reshape(-1)
-            return out
+            return self.task_classifier_dim1.predict(self.feature_extractor(X))
         else:
-            out = self.task_classifier_dim2(self.feature_extractor(X))
-            out = torch.sigmoid(out).reshape(-1)
-            return out
+            return self.task_classifier_dim2.predict(self.feature_extractor(X))
+
+    def predict_proba(self, X: torch.Tensor, is_1st_dim: bool) -> torch.Tensor:
+        if is_1st_dim:
+            return self.task_classifier_dim1.predict_proba(self.feature_extractor(X))
+        else:
+            return self.task_classifier_dim2.predict_proba(self.feature_extractor(X))
 
     def set_eval(self):
         self.task_classifier_dim2.eval()
