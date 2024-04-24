@@ -235,7 +235,7 @@ def _get_psuedo_label_weights(source_Y_batch: torch.Tensor, thr: float = 0.75, a
 
     else:
         pred_y = source_Y_batch[:, :output_size]
-        pred_y = np.max(pred_y, axis=1)
+        pred_y = torch.max(pred_y, axis=1).values
         for i in pred_y:
             if i > thr:
                 psuedo_label_weights.append(1)
