@@ -107,7 +107,7 @@ def fit(
                 source_y_task_batch = source_y_task_batch.to(torch.float32)
                 source_y_domain_batch = source_Y_batch[:, utils.COL_IDX_DOMAIN]
             else:
-                if psuedo_label_weights:
+                if is_psuedo_weights:
                     output_size = source_Y_batch[:, :-1].shape[1]
                     source_y_task_batch = source_Y_batch[:, :output_size]
                     source_y_task_batch = torch.argmax(source_y_task_batch, dim=1)
