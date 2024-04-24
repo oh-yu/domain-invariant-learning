@@ -24,7 +24,7 @@ class IsihDanns:
     ):
         self.feature_extractor = Conv1d(input_size=input_size).to(DEVICE)
         self.domain_classifier_dim1 = Decoder(input_size=hidden_size, output_size=1).to(DEVICE)
-        self.task_classifier_dim1 = Decoder(input_size=hidden_size, output_size=1).to(DEVICE)
+        self.task_classifier_dim1 = Decoder(input_size=hidden_size, output_size=6).to(DEVICE)
         self.feature_optimizer_dim1 = optim.Adam(self.feature_extractor.parameters(), lr=lr_dim1)
         self.domain_optimizer_dim1 = optim.Adam(self.domain_classifier_dim1.parameters(), lr=lr_dim1)
         self.task_optimizer_dim1 = optim.Adam(self.task_classifier_dim1.parameters(), lr=lr_dim1)

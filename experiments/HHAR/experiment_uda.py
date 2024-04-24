@@ -20,7 +20,7 @@ def get_data_for_uda(user, model, is_targer_prime: bool = False):
 
     df = pd.read_csv("./domain-invariant-learning/experiments/HHAR/data/heterogeneity+activity+recognition/Activity recognition exp/Activity recognition exp/Phones_accelerometer.csv")
     df = df[df.User==user]
-    df = df[df.Model==model]
+    # df = df[df.Model==model]
     df = df.dropna(how="any")
     df = df.reset_index()
     df["gt"] = df["gt"].apply(lambda x: GT_TO_INT[x])
@@ -32,21 +32,21 @@ def get_data_for_uda(user, model, is_targer_prime: bool = False):
 
 if __name__ == "__main__":
     # Load Data
-    source_X, source_y_task = get_data_for_uda(user="a", model="nexus4")
-    target_X, target_y_task = get_data_for_uda(user="a", model="s3")
+    source_X, source_y_task = get_data_for_uda(user="b", model="nexus4")
+    target_X, target_y_task = get_data_for_uda(user="d", model="nexus4")
     target_prime_X, target_prime_y_task = get_data_for_uda(user="b", model="s3")
     
 
     # Algo1: Inter-devices DA
     source_loader, target_loader, _, _, target_X, target_y_task = utils.get_loader(
-        source_X, target_X, source_y_task, target_y_task, batch_size=4, shuffle=True
+        source_X, target_X, source_y_task, target_y_task, batch_size=128, shuffle=True
     )
     isih_dann = IsihDanns(
         input_size = source_X.shape[2],
         hidden_size=128,
         lr_dim1 = 0.0001,
         lr_dim2=0.00005,
-        num_epochs_dim1=20,
+        num_epochs_dim1=3000,
         num_epochs_dim2=10
     )
     isih_dann.fit_1st_dim(source_loader, target_loader, target_X, target_y_task)

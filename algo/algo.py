@@ -87,8 +87,8 @@ def fit(
     loss_tasks = []
     loss_task_evals = []
     num_epochs = torch.tensor(num_epochs, dtype=torch.int32).to(utils.DEVICE)
-
-    for epoch in range(1, num_epochs.item() + 1):
+    from tqdm import tqdm
+    for epoch in tqdm(range(1, num_epochs.item() + 1)):
         epoch = torch.tensor(epoch, dtype=torch.float32).to(utils.DEVICE)
         feature_extractor.train()
         task_classifier.train()
@@ -101,7 +101,7 @@ def fit(
         ):
             # 0. Data
             source_y_task_batch = source_Y_batch[:, utils.COL_IDX_TASK] > 0.5
-            source_y_task_batch = source_y_task_batch.to(torch.float32)
+            source_y_task_batch = source_y_task_batch.to(torch.long)
             psuedo_label_weights = utils._get_psuedo_label_weights(source_Y_batch)
             source_y_domain_batch = source_Y_batch[:, utils.COL_IDX_DOMAIN]
 
@@ -135,7 +135,8 @@ def fit(
             if task_classifier.output_size == 1:
                 criterion_weight = nn.BCELoss(weight=weights.detach())
             else:
-                criterion_weight = nn.CrossEntropyLoss(weight=weights.detach())
+                criterion_weight = nn.CrossEntropyLoss()
+                # TODO: attach weight=weights.detacht() when algo2
 
             loss_task = criterion_weight(pred_y_task, source_y_task_batch)
             loss_tasks.append(loss_task.item())
@@ -160,5 +161,7 @@ def fit(
             pred_y_task_eval = task_classifier.predict(target_feature_eval)
             acc = sum(pred_y_task_eval == target_y_task) / target_y_task.shape[0]
         loss_task_evals.append(acc.item())
+        if epoch % 100 == 0:
+            print(f"Epoch: {epoch}, Loss Domain: {loss_domain}, Loss Task: {loss_task}, Acc: {acc}")
     utils._plot_dann_loss(do_plot, loss_domains, loss_tasks, loss_task_evals)
     return feature_extractor, task_classifier, loss_task_evals
