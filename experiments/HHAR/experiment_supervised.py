@@ -11,7 +11,7 @@ GT_TO_INT = {"bike": 0, "stairsup": 1, "stairsdown": 2, "stand": 3, "walk": 4, "
 USER_LIST = ["a", "b", "c", "d", "e", "f", "g", "h", "i"]
 MODEL_LIST = ["nexus4", "s3", "samsungold", "s3mini"]
 
-def get_data_for_uda(user, model, is_targer_prime: bool = False):
+def get_data_for_uda(user):
     assert model in MODEL_LIST
     assert user in USER_LIST
 
@@ -22,7 +22,6 @@ def get_data_for_uda(user, model, is_targer_prime: bool = False):
     df = pd.merge(accelerometer_df, gyroscope_df, left_on=["Arrival_Time_accele", "User_accele", "Device_accele"], right_on=["Arrival_Time_gyro", "User_gyro", "Device_gyro"],how="left")
     df[["x_gyro", "y_gyro", "z_gyro"]] = df[["x_gyro", "y_gyro", "z_gyro"]].interpolate()
     df = df[df.User_accele==user]
-    df = df[df.Model_accele==model]
     df = df.dropna(how="any")
     df = df.reset_index()
     df["gt_accele"] = df["gt_accele"].apply(lambda x: GT_TO_INT[x])
@@ -31,7 +30,7 @@ def get_data_for_uda(user, model, is_targer_prime: bool = False):
 
 if __name__ == "__main__":
     # Load Data
-    X, y = get_data_for_uda(user="a", model="s3mini")
+    X, y = get_data_for_uda(user="a")
 
     # train_test_split
     train_X, test_X, train_y, test_y = train_test_split(X, y, test_size=0.2)
