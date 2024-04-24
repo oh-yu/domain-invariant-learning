@@ -3,7 +3,7 @@ from torch import nn, optim
 
 from ..algo import algo
 from .conv1d import Conv1d
-from .mlp_decoder import Decoder
+from .mlp_decoder_domain import DomainDecoder
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -17,8 +17,8 @@ class Codats:
         self, input_size: int, hidden_size: int, lr: float, num_epochs: int, num_domains: int = 1, num_classes: int = 1
     ) -> None:
         self.feature_extractor = Conv1d(input_size=input_size).to(DEVICE)
-        self.domain_classifier = Decoder(input_size=hidden_size, output_size=num_domains).to(DEVICE)
-        self.task_classifier = Decoder(input_size=hidden_size, output_size=num_classes).to(DEVICE)
+        self.domain_classifier = DomainDecoder(input_size=hidden_size, output_size=num_domains).to(DEVICE)
+        self.task_classifier = DomainDecoder(input_size=hidden_size, output_size=num_classes).to(DEVICE)
         self.criterion = nn.BCELoss()
 
         self.feature_optimizer = optim.Adam(self.feature_extractor.parameters(), lr=lr)

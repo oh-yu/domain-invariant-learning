@@ -3,7 +3,8 @@ from torch import nn, optim
 
 from ..algo import algo
 from .conv1d import Conv1d
-from .mlp_decoder import Decoder
+from .mlp_decoder_domain import DomainDecoder
+from .mlp_decoder_task import TaskDecoder
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -24,16 +25,16 @@ class IsihDanns:
         output_size: int = 1
     ):
         self.feature_extractor = Conv1d(input_size=input_size).to(DEVICE)
-        self.domain_classifier_dim1 = Decoder(input_size=hidden_size, output_size=1).to(DEVICE)
-        self.task_classifier_dim1 = Decoder(input_size=hidden_size, output_size=output_size).to(DEVICE)
+        self.domain_classifier_dim1 = DomainDecoder(input_size=hidden_size, output_size=1).to(DEVICE)
+        self.task_classifier_dim1 = TaskDecoder(input_size=hidden_size, output_size=output_size).to(DEVICE)
         self.feature_optimizer_dim1 = optim.Adam(self.feature_extractor.parameters(), lr=lr_dim1)
         self.domain_optimizer_dim1 = optim.Adam(self.domain_classifier_dim1.parameters(), lr=lr_dim1)
         self.task_optimizer_dim1 = optim.Adam(self.task_classifier_dim1.parameters(), lr=lr_dim1)
         self.criterion = nn.BCELoss()
         self.num_epochs_dim1 = num_epochs_dim1
 
-        self.domain_classifier_dim2 = Decoder(input_size=hidden_size, output_size=1).to(DEVICE)
-        self.task_classifier_dim2 = Decoder(input_size=hidden_size, output_size=output_size).to(DEVICE)
+        self.domain_classifier_dim2 = DomainDecoder(input_size=hidden_size, output_size=1).to(DEVICE)
+        self.task_classifier_dim2 = TaskDecoder(input_size=hidden_size, output_size=output_size).to(DEVICE)
         self.feature_optimizer_dim2 = optim.Adam(self.feature_extractor.parameters(), lr=lr_dim2)
         self.domain_optimizer_dim2 = optim.Adam(self.domain_classifier_dim2.parameters(), lr=lr_dim2)
         self.task_optimizer_dim2 = optim.Adam(self.task_classifier_dim2.parameters(), lr=lr_dim2)
