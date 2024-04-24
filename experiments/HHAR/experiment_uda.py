@@ -42,8 +42,8 @@ def get_data_for_uda(user, model, is_targer_prime: bool = False):
         return train_X, train_y, test_X, test_y
 if __name__ == "__main__":
     # Load Data
-    source_X, source_y_task = get_data_for_uda(user="b", model="nexus4")
-    target_X, target_y_task = get_data_for_uda(user="d", model="nexus4")
+    source_X, source_y_task = get_data_for_uda(user="c", model="nexus4")
+    target_X, target_y_task = get_data_for_uda(user="h", model="nexus4")
     train_target_prime_X, train_target_prime_y_task, test_target_prime_X, test_target_prime_y_task = get_data_for_uda(user="b", model="s3", is_targer_prime=True)
     
 
