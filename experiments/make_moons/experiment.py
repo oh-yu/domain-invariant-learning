@@ -34,8 +34,8 @@ def main(argv):
     num_classes = 1
 
     feature_extractor = Encoder(input_size=source_X.shape[1], output_size=hidden_size).to(device)
-    domain_classifier = DomainDecoder(input_size=hidden_size, output_size=num_domains, dropout_ratio=0, fc1_size=100, fc2_size=50).to(device)
-    task_classifier = DomainDecoder(input_size=hidden_size, output_size=num_classes, dropout_ratio=0, fc1_size=100, fc2_size=50).to(device)
+    domain_classifier = DomainDecoder(input_size=hidden_size, output_size=num_domains, dropout_ratio=0, fc1_size=50, fc2_size=10).to(device)
+    task_classifier = DomainDecoder(input_size=hidden_size, output_size=num_classes, dropout_ratio=0, fc1_size=50, fc2_size=10).to(device)
     learning_rate = 0.001
 
     criterion = nn.BCELoss()
@@ -90,7 +90,7 @@ def main(argv):
     plt.show()
 
     # Without Adaptation
-    task_classifier = DomainDecoder(input_size=source_X.shape[1], output_size=num_classes, dropout_ratio=0, fc1_size=100, fc2_size=50).to(device)
+    task_classifier = DomainDecoder(input_size=source_X.shape[1], output_size=num_classes, dropout_ratio=0, fc1_size=50, fc2_size=10).to(device)
     task_optimizer = optim.Adam(task_classifier.parameters(), lr=learning_rate)
     task_classifier = utils.fit_without_adaptation(
         source_loader, task_classifier, task_optimizer, criterion, num_epochs

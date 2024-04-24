@@ -26,7 +26,7 @@ def get_data_for_uda(user, model, is_targer_prime: bool = False):
     df[["x_gyro", "y_gyro", "z_gyro"]] = df[["x_gyro", "y_gyro", "z_gyro"]].interpolate()
     df = df[df.User_accele==user]
     # df = df[df.Model_accele==model]
-    df = df.dropna(how="any")
+    df = df[["x_accele", "y_accele", "z_accele", "x_gyro", "y_gyro", "z_gyro", "gt_accele"]].dropna(how="any")
     df = df.reset_index()
     df["gt_accele"] = df["gt_accele"].apply(lambda x: GT_TO_INT[x])
     scaler = StandardScaler()
