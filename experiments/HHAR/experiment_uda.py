@@ -74,6 +74,7 @@ if __name__ == "__main__":
     pred_y_task = isih_dann.predict(test_target_prime_X, is_1st_dim=False)
 
     # Algo3: Evaluation
-
+    acc = sum(pred_y_task == test_target_prime_y_task) / len(test_target_prime_y_task)  
+    print(f"Accuracy: {acc}")
     
 
