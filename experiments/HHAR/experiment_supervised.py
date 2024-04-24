@@ -4,6 +4,7 @@ from sklearn.model_selection import train_test_split
 import torch
 from torch import nn, optim
 from torch.utils.data import DataLoader, TensorDataset
+from tqdm import tqdm
 
 from ...utils import utils
 from ...networks import CoDATS_F_C
@@ -49,7 +50,6 @@ if __name__ == "__main__":
     optimizer = optim.Adam(codats_f_c.parameters(), lr=0.0001)
     # Epoch Training
     losses = []
-    from tqdm import tqdm
     for _ in tqdm(range(100)):
         for X, y in data_loader:
             out = codats_f_c(X)
