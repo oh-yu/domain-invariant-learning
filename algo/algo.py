@@ -152,7 +152,7 @@ def fit(
                 loss_task = criterion_weight(pred_y_task, source_y_task_batch)
                 loss_tasks.append(loss_task.item())
             else:
-                criterion_weight = nn.CrossEntropyLoss(reduction=None)
+                criterion_weight = nn.CrossEntropyLoss(reduction="none")
                 loss_task = criterion_weight(pred_y_task, source_y_task_batch)
                 loss_task = loss_task * weights
                 loss_task = loss_task.mean()

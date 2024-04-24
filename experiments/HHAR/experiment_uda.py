@@ -56,7 +56,7 @@ if __name__ == "__main__":
         hidden_size=128,
         lr_dim1 = 0.0001,
         lr_dim2=0.00005,
-        num_epochs_dim1=3000,
+        num_epochs_dim1=30,
         num_epochs_dim2=10,
         output_size=len(GT_TO_INT)
     )
