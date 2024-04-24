@@ -149,13 +149,14 @@ def fit(
             )
             if task_classifier.output_size == 1:
                 criterion_weight = nn.BCELoss(weight=weights.detach())
+                loss_task = criterion_weight(pred_y_task, source_y_task_batch)
+                loss_tasks.append(loss_task.item())
             else:
-                if is_psuedo_weights:
-                    criterion_weight = nn.CrossEntropyLoss(weight=weights.detach())
-                else:
-                    criterion_weight = nn.CrossEntropyLoss()
-            loss_task = criterion_weight(pred_y_task, source_y_task_batch)
-            loss_tasks.append(loss_task.item())
+                criterion_weight = nn.CrossEntropyLoss(reduction=None)
+                loss_task = criterion_weight(pred_y_task, source_y_task_batch)
+                loss_task = loss_task * weights
+                loss_task = loss_task.mean()
+                loss_tasks.append(loss_task.item())
 
             # 2. Backward, Update Params
             domain_optimizer.zero_grad()
