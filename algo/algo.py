@@ -1,6 +1,6 @@
-import numpy as np
 import torch
 from torch import nn
+from tqdm import tqdm
 
 from ..utils import utils
 
@@ -88,7 +88,7 @@ def fit(
     loss_tasks = []
     loss_task_evals = []
     num_epochs = torch.tensor(num_epochs, dtype=torch.int32).to(utils.DEVICE)
-    from tqdm import tqdm
+    
     for epoch in tqdm(range(1, num_epochs.item() + 1)):
         epoch = torch.tensor(epoch, dtype=torch.float32).to(utils.DEVICE)
         feature_extractor.train()
@@ -107,11 +107,16 @@ def fit(
                 source_y_task_batch = source_y_task_batch.to(torch.float32)
                 source_y_domain_batch = source_Y_batch[:, utils.COL_IDX_DOMAIN]
             else:
-                output_size = source_Y_batch[:, :-1].shape[1]
-                source_y_task_batch = source_Y_batch[:, :output_size]
-                source_y_task_batch = np.argmax(source_y_task_batch, axis=1)
-                source_y_task_batch = source_y_task_batch.to(torch.long)
-                source_y_domain_batch = source_Y_batch[:, output_size+1]
+                if psuedo_label_weights:
+                    output_size = source_Y_batch[:, :-1].shape[1]
+                    source_y_task_batch = source_Y_batch[:, :output_size]
+                    source_y_task_batch = torch.argmax(source_y_task_batch, dim=1)
+                    source_y_task_batch = source_y_task_batch.to(torch.long)
+                    source_y_domain_batch = source_Y_batch[:, output_size+1]
+                else:
+                    source_y_task_batch = source_Y_batch[:, utils.COL_IDX_TASK]
+                    source_y_task_batch = source_y_task_batch.to(torch.long)
+                    source_y_domain_batch = source_Y_batch[:, utils.COL_IDX_DOMAIN]
 
             psuedo_label_weights = utils._get_psuedo_label_weights(source_Y_batch)
 
