@@ -9,6 +9,7 @@ class Decoder(nn.Module):
         self.fc1 = nn.Linear(input_size, fc1_size)
         self.fc2 = nn.Linear(fc1_size, fc2_size)
         self.fc3 = nn.Linear(fc2_size, output_size)
+        self.output_size = output_size
 
     def forward(self, x):
         x = F.relu(self.fc1(x))
@@ -16,16 +17,16 @@ class Decoder(nn.Module):
         x = self.fc3(x)
         return x
     
-    def predict_proba(self, x, output_size):
+    def predict_proba(self, x):
         out = self.forward(x)
-        if output_size == 1:
+        if self.output_size == 1:
             return torch.sigmoid(out).reshape(-1)
         else:
             return torch.softmax(out, dim=1)
 
-    def predict(self, x, output_size):
-        out = self.predict_proba(x, output_size)
-        if output_size==1:
+    def predict(self, x):
+        out = self.predict_proba(x)
+        if self.output_size==1:
             return out > 0.5
         else:
             return out.argmax(dim=1)

@@ -287,7 +287,7 @@ def _plot_dann_loss(
         plt.plot(loss_domains, label="loss_domain")
         plt.plot(loss_tasks, label="loss_task")
         plt.xlabel("batch")
-        plt.ylabel("binary cross entropy loss")
+        plt.ylabel("cross entropy loss")
         plt.legend()
 
         plt.figure()
