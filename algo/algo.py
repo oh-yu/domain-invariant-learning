@@ -101,7 +101,10 @@ def fit(
         ):
             # 0. Data
             source_y_task_batch = source_Y_batch[:, utils.COL_IDX_TASK] > 0.5
-            source_y_task_batch = source_y_task_batch.to(torch.long)
+            if task_classifier.output_size == 1:
+                source_y_task_batch = source_y_task_batch.to(torch.float32)
+            else:
+                source_y_task_batch = source_y_task_batch.to(torch.long)
             psuedo_label_weights = utils._get_psuedo_label_weights(source_Y_batch)
             source_y_domain_batch = source_Y_batch[:, utils.COL_IDX_DOMAIN]
 
