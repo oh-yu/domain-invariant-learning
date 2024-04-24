@@ -132,7 +132,11 @@ def fit(
                 source_y_task_batch,
                 psuedo_label_weights,
             )
-            criterion_weight = nn.BCELoss(weight=weights.detach())
+            if task_classifier.output_size == 1:
+                criterion_weight = nn.BCELoss(weight=weights.detach())
+            else:
+                criterion_weight = nn.CrossEntropyLoss(weight=weights.detach())
+
             loss_task = criterion_weight(pred_y_task, source_y_task_batch)
             loss_tasks.append(loss_task.item())
 
