@@ -12,7 +12,6 @@ USER_LIST = ["a", "b", "c", "d", "e", "f", "g", "h", "i"]
 MODEL_LIST = ["nexus4", "s3", "samsungold", "s3mini"]
 
 def get_data_for_uda(user):
-    assert model in MODEL_LIST
     assert user in USER_LIST
 
     accelerometer_df = pd.read_csv("./domain-invariant-learning/experiments/HHAR/data/heterogeneity+activity+recognition/Activity recognition exp/Activity recognition exp/Phones_accelerometer.csv")
@@ -30,7 +29,7 @@ def get_data_for_uda(user):
 
 if __name__ == "__main__":
     # Load Data
-    X, y = get_data_for_uda(user="a")
+    X, y = get_data_for_uda(user="b")
 
     # train_test_split
     train_X, test_X, train_y, test_y = train_test_split(X, y, test_size=0.2)
@@ -50,7 +49,7 @@ if __name__ == "__main__":
     # Epoch Training
     losses = []
     from tqdm import tqdm
-    for _ in tqdm(range(500)):
+    for _ in tqdm(range(100)):
         for X, y in data_loader:
             out = codats_f_c(X)
             out = softmax(out)
