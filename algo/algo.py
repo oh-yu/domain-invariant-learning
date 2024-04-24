@@ -112,7 +112,7 @@ def fit(
                     source_y_task_batch = source_Y_batch[:, :output_size]
                     source_y_task_batch = torch.argmax(source_y_task_batch, dim=1)
                     source_y_task_batch = source_y_task_batch.to(torch.long)
-                    source_y_domain_batch = source_Y_batch[:, output_size+1]
+                    source_y_domain_batch = source_Y_batch[:, output_size]
                 else:
                     source_y_task_batch = source_Y_batch[:, utils.COL_IDX_TASK]
                     source_y_task_batch = source_y_task_batch.to(torch.long)

@@ -63,8 +63,8 @@ if __name__ == "__main__":
     isih_dann.fit_1st_dim(source_loader, target_loader, target_X, target_y_task)
     pred_y_task = isih_dann.predict_proba(target_X, is_1st_dim=True)
     # Algo2: Inter-users DA
-    source_X = target_X
-    source_y_task = pred_y_task
+    source_X = target_X.cpu().detach().numpy()
+    source_y_task = pred_y_task.cpu().detach().numpy()
     source_loader, target_loader, _, _, _, _ = utils.get_loader(
         source_X, train_target_prime_X, source_y_task, train_target_prime_y_task, batch_size=128, shuffle=True, output_size=6
     )
