@@ -18,16 +18,21 @@ def get_data_for_uda(user, model, is_targer_prime: bool = False):
     assert model in MODEL_LIST
     assert user in USER_LIST
 
-    df = pd.read_csv("./domain-invariant-learning/experiments/HHAR/data/heterogeneity+activity+recognition/Activity recognition exp/Activity recognition exp/Phones_accelerometer.csv")
-    df = df[df.User==user]
-    # df = df[df.Model==model]
+    accelerometer_df = pd.read_csv("./domain-invariant-learning/experiments/HHAR/data/heterogeneity+activity+recognition/Activity recognition exp/Activity recognition exp/Phones_accelerometer.csv")
+    accelerometer_df = accelerometer_df.add_suffix('_accele')
+    gyroscope_df = pd.read_csv("./domain-invariant-learning/experiments/HHAR/data/heterogeneity+activity+recognition/Activity recognition exp/Activity recognition exp/Phones_gyroscope.csv")
+    gyroscope_df = gyroscope_df.add_suffix('_gyro')
+    df = pd.merge(accelerometer_df, gyroscope_df, left_on=["Arrival_Time_accele", "User_accele", "Device_accele"], right_on=["Arrival_Time_gyro", "User_gyro", "Device_gyro"],how="left")
+    df[["x_gyro", "y_gyro", "z_gyro"]] = df[["x_gyro", "y_gyro", "z_gyro"]].interpolate()
+    df = df[df.User_accele==user]
+    # df = df[df.Model_accele==model]
     df = df.dropna(how="any")
     df = df.reset_index()
-    df["gt"] = df["gt"].apply(lambda x: GT_TO_INT[x])
+    df["gt_accele"] = df["gt_accele"].apply(lambda x: GT_TO_INT[x])
     scaler = StandardScaler()
     if not is_targer_prime:
-        df[["x", "y", "z"]] = scaler.fit_transform(df[["x", "y", "z"]])
-    X, y = utils.apply_sliding_window(df[["x", "y", "z"]].values, df["gt"].values.reshape(-1), filter_len=128, is_overlap=False)
+        df[["x_accele", "y_accele", "z_accele", "x_gyro", "y_gyro", "z_gyro"]] = scaler.fit_transform(df[["x_accele", "y_accele", "z_accele", "x_gyro", "y_gyro", "z_gyro"]])
+    X, y = utils.apply_sliding_window(df[["x_accele", "y_accele", "z_accele", "x_gyro", "y_gyro", "z_gyro"]].values, df["gt_accele"].values.reshape(-1), filter_len=128, is_overlap=False)
     return X, y
 
 if __name__ == "__main__":
