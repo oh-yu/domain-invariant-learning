@@ -106,7 +106,7 @@ def get_loader(
     target_y_task : torch.Tensor of shape(N, )
     """
     # 1. Create y_domain
-    if source_y_task.shape[1] > 1:
+    if source_y_task.ndim > 1:
         source_y_domain = np.zeros(source_y_task.shape[0]).reshape(-1, 1)
     else:
         source_y_domain = np.zeros_like(source_y_task).reshape(-1, 1)
