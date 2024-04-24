@@ -56,12 +56,12 @@ if __name__ == "__main__":
         hidden_size=128,
         lr_dim1 = 0.0001,
         lr_dim2=0.00005,
-        num_epochs_dim1=30,
-        num_epochs_dim2=10,
+        num_epochs_dim1=1,
+        num_epochs_dim2=1,
         output_size=len(GT_TO_INT)
     )
     isih_dann.fit_1st_dim(source_loader, target_loader, target_X, target_y_task)
-    pred_y_task = isih_dann.predict(target_X, is_1st_dim=True)
+    pred_y_task = isih_dann.predict_proba(target_X, is_1st_dim=True)
     # Algo2: Inter-users DA
     source_X = target_X
     source_y_task = pred_y_task
