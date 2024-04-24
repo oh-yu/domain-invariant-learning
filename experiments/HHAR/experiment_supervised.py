@@ -20,8 +20,9 @@ def get_data_for_uda(user):
     gyroscope_df = gyroscope_df.add_suffix('_gyro')
     df = pd.merge(accelerometer_df, gyroscope_df, left_on=["Arrival_Time_accele", "User_accele", "Device_accele"], right_on=["Arrival_Time_gyro", "User_gyro", "Device_gyro"],how="left")
     df[["x_gyro", "y_gyro", "z_gyro"]] = df[["x_gyro", "y_gyro", "z_gyro"]].interpolate()
+    df[["x_accele", "y_accele", "z_accele"]] = df[["x_accele", "y_accele", "z_accele"]].interpolate()
     df = df[df.User_accele==user]
-    df = df.dropna(how="any")
+    df = df[["x_accele", "y_accele", "z_accele", "x_gyro", "y_gyro", "z_gyro", "gt_accele"]].dropna(how="any")
     df = df.reset_index()
     df["gt_accele"] = df["gt_accele"].apply(lambda x: GT_TO_INT[x])
     X, y = utils.apply_sliding_window(df[["x_accele", "y_accele", "z_accele", "x_gyro", "y_gyro", "z_gyro"]].values, df["gt_accele"].values.reshape(-1), filter_len=128, is_overlap=False)
