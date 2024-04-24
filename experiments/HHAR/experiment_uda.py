@@ -32,14 +32,19 @@ def get_data_for_uda(user, model, is_targer_prime: bool = False):
     scaler = StandardScaler()
     if not is_targer_prime:
         df[["x_accele", "y_accele", "z_accele", "x_gyro", "y_gyro", "z_gyro"]] = scaler.fit_transform(df[["x_accele", "y_accele", "z_accele", "x_gyro", "y_gyro", "z_gyro"]])
-    X, y = utils.apply_sliding_window(df[["x_accele", "y_accele", "z_accele", "x_gyro", "y_gyro", "z_gyro"]].values, df["gt_accele"].values.reshape(-1), filter_len=128, is_overlap=False)
-    return X, y
-
+        X, y = utils.apply_sliding_window(df[["x_accele", "y_accele", "z_accele", "x_gyro", "y_gyro", "z_gyro"]].values, df["gt_accele"].values.reshape(-1), filter_len=128, is_overlap=False)
+        return X, y
+    else:
+        train_X, test_X, train_y, test_y = train_test_split(df[["x_accele", "y_accele", "z_accele", "x_gyro", "y_gyro", "z_gyro"]].values, df["gt_accele"].values, test_size=0.2, random_state=42)
+        train_X, test_X = scaler.fit_transform(train_X), scaler.transform(test_X)
+        train_X, train_y = utils.apply_sliding_window(train_X, train_y.reshape(-1), filter_len=128, is_overlap=False)
+        test_X, test_y = utils.apply_sliding_window(test_X, test_y.reshape(-1), filter_len=128, is_overlap=False)
+        return train_X, train_y, test_X, test_y
 if __name__ == "__main__":
     # Load Data
     source_X, source_y_task = get_data_for_uda(user="b", model="nexus4")
     target_X, target_y_task = get_data_for_uda(user="d", model="nexus4")
-    target_prime_X, target_prime_y_task = get_data_for_uda(user="b", model="s3")
+    train_target_prime_X, train_target_prime_y_task, test_target_prime_X, test_target_prime_y_task = get_data_for_uda(user="b", model="s3", is_targer_prime=True)
     
 
     # Algo1: Inter-devices DA
@@ -56,12 +61,18 @@ if __name__ == "__main__":
         output_size=len(GT_TO_INT)
     )
     isih_dann.fit_1st_dim(source_loader, target_loader, target_X, target_y_task)
-    # TODO: multi-class
-
-
+    pred_y_task = isih_dann.predict(target_X, is_1st_dim=True)
     # Algo2: Inter-users DA
-    # TODO: Scaler
-    
+    source_X = target_X
+    source_y_task = pred_y_task
+    source_loader, target_loader, _, _, _, _ = utils.get_loader(
+        source_X, train_target_prime_X, source_y_task, train_target_prime_y_task, batch_size=128, shuffle=True
+    )
+    isih_dann.fit_2nd_dim(source_loader, target_loader, test_target_prime_X, test_target_prime_y_task)
+    # TODO: psuedo weights impementation
+    isih_dann.set_eval()
+    pred_y_task = isih_dann.predict(test_target_prime_X, is_1st_dim=False)
+
 
     # Algo3: Evaluation
 
