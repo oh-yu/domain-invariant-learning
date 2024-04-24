@@ -66,13 +66,12 @@ if __name__ == "__main__":
     source_X = target_X
     source_y_task = pred_y_task
     source_loader, target_loader, _, _, _, _ = utils.get_loader(
-        source_X, train_target_prime_X, source_y_task, train_target_prime_y_task, batch_size=128, shuffle=True
+        source_X, train_target_prime_X, source_y_task, train_target_prime_y_task, batch_size=128, shuffle=True, output_size=6
     )
     isih_dann.fit_2nd_dim(source_loader, target_loader, test_target_prime_X, test_target_prime_y_task)
     # TODO: psuedo weights impementation
     isih_dann.set_eval()
     pred_y_task = isih_dann.predict(test_target_prime_X, is_1st_dim=False)
-
 
     # Algo3: Evaluation
 

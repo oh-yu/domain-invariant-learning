@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 from torch import nn
 
@@ -100,13 +101,19 @@ def fit(
             source_loader, target_loader
         ):
             # 0. Data
-            source_y_task_batch = source_Y_batch[:, utils.COL_IDX_TASK] > 0.5
+            
             if task_classifier.output_size == 1:
+                source_y_task_batch = source_Y_batch[:, utils.COL_IDX_TASK] > 0.5
                 source_y_task_batch = source_y_task_batch.to(torch.float32)
+                source_y_domain_batch = source_Y_batch[:, utils.COL_IDX_DOMAIN]
             else:
+                output_size = source_Y_batch[:, :-1].shape[1]
+                source_y_task_batch = source_Y_batch[:, :output_size]
+                source_y_task_batch = np.argmax(source_y_task_batch, axis=1)
                 source_y_task_batch = source_y_task_batch.to(torch.long)
+                source_y_domain_batch = source_Y_batch[:, output_size+1]
+
             psuedo_label_weights = utils._get_psuedo_label_weights(source_Y_batch)
-            source_y_domain_batch = source_Y_batch[:, utils.COL_IDX_DOMAIN]
 
             # 1. Forward
             # 1.1 Feature Extractor
@@ -138,8 +145,7 @@ def fit(
             if task_classifier.output_size == 1:
                 criterion_weight = nn.BCELoss(weight=weights.detach())
             else:
-                criterion_weight = nn.CrossEntropyLoss()
-                # TODO: attach weight=weights.detacht() when algo2
+                criterion_weight = nn.CrossEntropyLoss(weight=weights.detach())
 
             loss_task = criterion_weight(pred_y_task, source_y_task_batch)
             loss_tasks.append(loss_task.item())

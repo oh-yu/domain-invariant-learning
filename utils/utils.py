@@ -78,6 +78,7 @@ def get_loader(
     target_y_task: np.ndarray,
     batch_size: int = 34,
     shuffle: bool = False,
+    output_size: int = 1
 ):
     """
     Get instances of torch.utils.data.DataLoader for domain invariant learning,
@@ -106,7 +107,8 @@ def get_loader(
     """
     # 1. Create y_domain
     source_y_domain = np.zeros_like(source_y_task).reshape(-1, 1)
-    source_y_task = source_y_task.reshape(-1, 1)
+    if output_size == 1:
+        source_y_task = source_y_task.reshape(-1, 1)
     source_Y = np.concatenate([source_y_task, source_y_domain], axis=1)
     target_y_domain = np.ones_like(target_y_task)
 
@@ -212,20 +214,31 @@ def _get_psuedo_label_weights(source_Y_batch: torch.Tensor, thr: float = 0.75, a
     -------
     psuedo_label_weights : torch.Tensor of shape(N, )
     """
-    pred_y = source_Y_batch[:, COL_IDX_TASK]
+    output_size = source_Y_batch[:, :-1].shape[1]
     psuedo_label_weights = []
-    for i in pred_y:
-        if i > thr:
-            psuedo_label_weights.append(1)
-        elif i < 1 - thr:
-            psuedo_label_weights.append(1)
-        else:
-            if i > 0.5:
-                psuedo_label_weights.append(i**alpha + (1 - thr))
+
+    if output_size == 1:
+        pred_y = source_Y_batch[:, COL_IDX_TASK]        
+        for i in pred_y:
+            if i > thr:
+                psuedo_label_weights.append(1)
+            elif i < 1 - thr:
+                psuedo_label_weights.append(1)
             else:
-                psuedo_label_weights.append((1 - i)**alpha + (1 - thr))
-    psuedo_label_weights = torch.tensor(psuedo_label_weights, dtype=torch.float32).to(DEVICE)
-    return psuedo_label_weights
+                if i > 0.5:
+                    psuedo_label_weights.append(i**alpha + (1 - thr))
+                else:
+                    psuedo_label_weights.append((1 - i)**alpha + (1 - thr))
+
+    else:
+        pred_y = source_Y_batch[:, :output_size]
+        pred_y = np.max(pred_y, axis=1)
+        for i in pred_y:
+            if i > thr:
+                psuedo_label_weights.append(1)
+            else:
+                psuedo_label_weights.append(i**alpha + (1 - thr))
+    return torch.tensor(psuedo_label_weights, dtype=torch.float32).to(DEVICE)
 
 
 def _get_terminal_weights(
