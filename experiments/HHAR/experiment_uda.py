@@ -47,7 +47,8 @@ if __name__ == "__main__":
         lr_dim1 = 0.0001,
         lr_dim2=0.00005,
         num_epochs_dim1=3000,
-        num_epochs_dim2=10
+        num_epochs_dim2=10,
+        output_size=len(GT_TO_INT)
     )
     isih_dann.fit_1st_dim(source_loader, target_loader, target_X, target_y_task)
     # TODO: multi-class
