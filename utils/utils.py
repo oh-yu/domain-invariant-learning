@@ -110,7 +110,6 @@ def get_loader(
         source_y_domain = np.zeros(source_y_task.shape[0]).reshape(-1, 1)
     else:
         source_y_domain = np.zeros_like(source_y_task).reshape(-1, 1)
-    if output_size == 1:
         source_y_task = source_y_task.reshape(-1, 1)
     source_Y = np.concatenate([source_y_task, source_y_domain], axis=1)
     target_y_domain = np.ones_like(target_y_task)
