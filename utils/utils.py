@@ -77,8 +77,7 @@ def get_loader(
     source_y_task: np.ndarray,
     target_y_task: np.ndarray,
     batch_size: int = 34,
-    shuffle: bool = False,
-    output_size: int = 1
+    shuffle: bool = False
 ):
     """
     Get instances of torch.utils.data.DataLoader for domain invariant learning,

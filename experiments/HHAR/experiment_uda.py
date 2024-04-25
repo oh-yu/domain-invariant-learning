@@ -1,10 +1,7 @@
-import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 import torch
-from torch import nn, optim
-from torch.utils.data import DataLoader, TensorDataset
 
 from ...utils import utils
 from ...networks import IsihDanns
@@ -24,6 +21,7 @@ def get_data_for_uda(user, model, is_targer_prime: bool = False):
     gyroscope_df = gyroscope_df.add_suffix('_gyro')
     df = pd.merge(accelerometer_df, gyroscope_df, left_on=["Arrival_Time_accele", "User_accele", "Device_accele"], right_on=["Arrival_Time_gyro", "User_gyro", "Device_gyro"],how="left")
     df[["x_gyro", "y_gyro", "z_gyro"]] = df[["x_gyro", "y_gyro", "z_gyro"]].interpolate()
+    df[["x_accele", "y_accele", "z_accele"]] = df[["x_accele", "y_accele", "z_accele"]].interpolate()
     df = df[df.User_accele==user]
     # df = df[df.Model_accele==model]
     df = df[["x_accele", "y_accele", "z_accele", "x_gyro", "y_gyro", "z_gyro", "gt_accele"]].dropna(how="any")
@@ -71,7 +69,6 @@ if __name__ == "__main__":
     test_target_prime_X = torch.tensor(test_target_prime_X, dtype=torch.float32).to(utils.DEVICE)
     test_target_prime_y_task = torch.tensor(test_target_prime_y_task, dtype=torch.long).to(utils.DEVICE)
     isih_dann.fit_2nd_dim(source_loader, target_loader, test_target_prime_X, test_target_prime_y_task)
-    # TODO: psuedo weights impementation
     isih_dann.set_eval()
     pred_y_task = isih_dann.predict(test_target_prime_X, is_1st_dim=False)
 
