@@ -8,9 +8,11 @@ from tqdm import tqdm
 
 from ...utils import utils
 from ...networks import CoDATS_F_C
+
 GT_TO_INT = {"bike": 0, "stairsup": 1, "stairsdown": 2, "stand": 3, "walk": 4, "sit": 5}
 USER_LIST = ["a", "b", "c", "d", "e", "f", "g", "h", "i"]
 MODEL_LIST = ["nexus4", "s3", "samsungold", "s3mini"]
+
 
 def get_data_for_uda(user):
     assert user in USER_LIST
@@ -28,6 +30,7 @@ def get_data_for_uda(user):
     df["gt_accele"] = df["gt_accele"].apply(lambda x: GT_TO_INT[x])
     X, y = utils.apply_sliding_window(df[["x_accele", "y_accele", "z_accele", "x_gyro", "y_gyro", "z_gyro"]].values, df["gt_accele"].values.reshape(-1), filter_len=128, is_overlap=False)
     return X, y
+
 
 if __name__ == "__main__":
     # Load Data
@@ -48,6 +51,7 @@ if __name__ == "__main__":
     criterion = nn.CrossEntropyLoss()
     softmax = nn.Softmax(dim=1)
     optimizer = optim.Adam(codats_f_c.parameters(), lr=0.0001)
+
     # Epoch Training
     losses = []
     for _ in tqdm(range(100)):
@@ -62,6 +66,7 @@ if __name__ == "__main__":
             losses.append(loss.item())
     plt.plot(losses)
     plt.show()
+
     # Evaluation
     with torch.no_grad():
         out = codats_f_c(test_X)
