@@ -4,8 +4,8 @@ import torchvision
 from torchvision import datasets, transforms
 from ...networks import Conv2d, DomainDecoder
 
-if __name__ == "__main__":
-    # Load Data
+
+def get_mnist_data():
     transform = transforms.ToTensor()
     train_data = torchvision.datasets.SVHN(
         './data/SVHN', 
@@ -19,6 +19,13 @@ if __name__ == "__main__":
         download=True,
         transform=transform)
     test_loader = DataLoader(test_data, batch_size=128, shuffle=False)
+    return train_loader, test_loader
+
+
+if __name__ == "__main__":
+    # Load Data
+    train_loader, test_loader = get_mnist_data()
+
     # Model Init
     feature_extractor = Conv2d()
     task_classifier = DomainDecoder(input_size=1600, output_size=10, fc2_size=50)
