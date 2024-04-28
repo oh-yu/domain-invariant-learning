@@ -244,13 +244,13 @@ def main(patterns, num_repeat=10):
         isihda_user_accs.append(isihda_user_acc)
         codats_accs.append(codats_acc)
         without_adapt_accs.append(without_adapt_acc)
-        executed_patterns.append(f"({pat.source_user}, {pat.source_model}) => ({pat.target_user}, {pat.target_model})")
+        executed_patterns.append(f"({pat.source_user},{pat.source_model})->({pat.target_user},{pat.target_model})")
     
     df = pd.DataFrame()
     df["PAT"] = executed_patterns
     df["Train on Target"] = train_on_taget_accs
-    df["Isih-DA (Model => User)"] = isihda_model_accs
-    df["Isih-DA (User => Model)"] = isihda_user_accs
+    df["Isih-DA(Model => User)"] = isihda_model_accs
+    df["Isih-DA(User => Model)"] = isihda_user_accs
     df["CoDATS"] = codats_accs
     df["Without Adapt"] = without_adapt_accs
     df.to_csv("HHAR_experiment.csv", index=False)
