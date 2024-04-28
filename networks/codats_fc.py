@@ -17,3 +17,6 @@ class CoDATS_F_C(nn.Module):
     
     def predict(self, x):
         return self.decoder.predict(self.conv1d(x))
+    
+    def predict_proba(self, x):
+        return self.decoder.predict_proba(self.conv1d(x))

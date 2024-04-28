@@ -3,6 +3,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 import torch
 from torch import optim, nn
+from torch.utils.data import DataLoader, TensorDataset
 
 from ...utils import utils
 from ...networks import Codats, IsihDanns, CoDATS_F_C
@@ -174,6 +175,34 @@ def without_adapt(pattern):
     acc = sum(pred_y_task == test_target_prime_y_task) / len(test_target_prime_y_task)
     return acc.item()
 
+
+def train_on_target(pattern):
+    train_target_prime_X, train_target_prime_y_task, test_target_prime_X, test_target_prime_y_task = get_data_for_uda(user=pattern.target_user, model=pattern.target_model, is_targer_prime=True)
+
+    train_target_prime_X = torch.tensor(train_target_prime_X, dtype=torch.float32).to(utils.DEVICE)
+    train_target_prime_y_task = torch.tensor(train_target_prime_y_task, dtype=torch.long).to(utils.DEVICE)
+    test_target_prime_X = torch.tensor(test_target_prime_y_task, dtype=torch.float32).to(utils.DEVICE)
+    test_target_prime_y_task = torch.tensor(test_target_prime_y_task, dtype=torch.long).to(utils.DEVICE)
+    target_prime_ds = TensorDataset(train_target_prime_X, train_target_prime_y_task)
+    target_prime_loader = DataLoader(target_prime_ds, batch_size=128, shuffle=True)
+
+    train_on_target = CoDATS_F_C(input_size=train_target_prime_X.shape[2], output_size=len(GT_TO_INT))
+    train_on_target_optimizer = optim.Adam(train_on_target.parameters(), lr=0.0001)
+    criterion = nn.CrossEntropyLoss()
+
+    for _ in range(200):
+        for target_prime_X_batch, target_prime_y_task_batch in target_prime_loader:
+            pred_y_task = train_on_target.predict_proba(target_prime_X_batch)
+            loss = criterion(pred_y_task, target_prime_y_task_batch)
+
+            train_on_target_optimizer.zero_grad()
+            loss.backward()
+            train_on_target_optimizer.step()
+    train_on_target.eval()
+    pred_y_task = train_on_target.predict(test_target_prime_X)
+    acc = sum(pred_y_task == test_target_prime_y_task) / len(test_target_prime_y_task)
+    return acc.item()
+
 if __name__ == "__main__":
     # TODO: Remove
     class Pattern:
@@ -183,4 +212,4 @@ if __name__ == "__main__":
             self.target_user = "d"
             self.target_model = "nexus4"
     pat = Pattern()
-    print(without_adapt(pat))
+    print(train_on_target(pat))
