@@ -34,7 +34,7 @@ def get_data_for_uda(user, model, is_targer_prime: bool = False):
         X, y = utils.apply_sliding_window(df[["x_accele", "y_accele", "z_accele", "x_gyro", "y_gyro", "z_gyro"]].values, df["gt_accele"].values.reshape(-1), filter_len=128, is_overlap=False)
         return X, y
     else:
-        train_X, test_X, train_y, test_y = train_test_split(df[["x_accele", "y_accele", "z_accele", "x_gyro", "y_gyro", "z_gyro"]].values, df["gt_accele"].values, test_size=0.2, shuffl=False)
+        train_X, test_X, train_y, test_y = train_test_split(df[["x_accele", "y_accele", "z_accele", "x_gyro", "y_gyro", "z_gyro"]].values, df["gt_accele"].values, test_size=0.2, shuffle=False)
         # Shuffle = False, since data has meaning of time series
     
         train_X, test_X = scaler.fit_transform(train_X), scaler.transform(test_X)
@@ -58,8 +58,8 @@ if __name__ == "__main__":
         hidden_size=128,
         lr_dim1 = 0.0001,
         lr_dim2=0.00005,
-        num_epochs_dim1=1,
-        num_epochs_dim2=1,
+        num_epochs_dim1=30,
+        num_epochs_dim2=30,
         output_size=len(GT_TO_INT)
     )
     isih_dann.fit_1st_dim(source_loader, target_loader, target_X, target_y_task)
