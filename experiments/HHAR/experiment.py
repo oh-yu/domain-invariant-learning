@@ -125,8 +125,8 @@ def isih_da_model(pattern):
 
 def codats(pattern):
     # Load Data
-    source_X, source_y_task = get_data_for_uda(user=pattern.source_user, model=pattern.source_model)
-    train_target_prime_X, train_target_prime_y_task, test_target_prime_X, test_target_prime_y_task = get_data_for_uda(user=pattern.target_user, model=pattern.target_model, is_targer_prime=True)
+    source_X, source_y_task = get_data_for_uda(user="c", model="nexus4")
+    train_target_prime_X, train_target_prime_y_task, test_target_prime_X, test_target_prime_y_task = get_data_for_uda(user="d", model="nexus4", is_targer_prime=True)
 
     # Direct Inter-Users and Inter-models DA
     source_loader, target_loader, _, _, train_target_prime_X, train_target_prime_y_task = utils.get_loader(
@@ -134,8 +134,8 @@ def codats(pattern):
     )
     test_target_prime_X = torch.tensor(test_target_prime_X, dtype=torch.float32)
     test_target_prime_y_task = torch.tensor(test_target_prime_y_task, dtype=torch.float32)
-    test_target_prime_X = test_target_prime_X.to(DEVICE)
-    test_target_prime_y_task = test_target_prime_y_task.to(DEVICE)
+    test_target_prime_X = test_target_prime_X.to(utils.DEVICE)
+    test_target_prime_y_task = test_target_prime_y_task.to(utils.DEVICE)
 
     codats = Codats(input_size=source_X.shape[2], hidden_size=128, lr=0.0001, num_epochs=200, output_size=len(GT_TO_INT))
     codats.fit(source_loader, target_loader, test_target_prime_X, test_target_prime_y_task)
@@ -147,6 +147,5 @@ def codats(pattern):
 
 
 if __name__ == "__main__":
-
-    
+    print(codats(None))
 
