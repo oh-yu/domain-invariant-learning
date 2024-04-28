@@ -1,5 +1,5 @@
 import numpy as np
-
+import torch
 from torch import nn, optim
 from torch.utils.data import DataLoader
 import torchvision
@@ -9,17 +9,16 @@ from ...networks import Conv2d, DomainDecoder
 
 class Reshape(object):
     def __call__(self, img):
-        padding = np.zeros(3, 32, 32)
-        img = np.repeat(img, 3, axis=0)
-        padding[:, 2:30, 2:30] = img
+        padding = torch.zeros(3, 32, 32)
+        padding[:, 2:30, 2:30] = img.repeat(3, 1, 1)
         return padding
     # TODO: Understand this style implementation
 
 def get_image_data_for_uda(name="MNIST"):
     if name == "MNIST":
         custom_transform = transforms.Compose([
+            transforms.ToTensor(),
             Reshape(),
-            transforms.ToTensor()
         ])
         # TODO: Understand transforms.Compose
         train_data = datasets.MNIST(root="./data/MNIST", train=True, download=True, transform=custom_transform)
@@ -68,8 +67,8 @@ if __name__ == "__main__":
             print(f"Epoch {_}: Loss {loss}")
 
     # Evaluation
-    for X_batch, y_batch in test_loader:
-        out = task_classifier.predict(feature_extractor(X_batch))
-        acc = sum(out == y_batch) / len(y_batch)
-        print(acc)
-        break
+    # for X_batch, y_batch in test_loader:
+    #     out = task_classifier.predict(feature_extractor(X_batch))
+    #     acc = sum(out == y_batch) / len(y_batch)
+    #     print(acc)
+    #     break
