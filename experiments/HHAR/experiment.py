@@ -67,7 +67,7 @@ if __name__ == "__main__":
     source_X = target_X.cpu().detach().numpy()
     source_y_task = pred_y_task.cpu().detach().numpy()
     source_loader, target_loader, _, _, _, _ = utils.get_loader(
-        source_X, train_target_prime_X, source_y_task, train_target_prime_y_task, batch_size=128, shuffle=True, output_size=6
+        source_X, train_target_prime_X, source_y_task, train_target_prime_y_task, batch_size=128, shuffle=True
     )
     test_target_prime_X = torch.tensor(test_target_prime_X, dtype=torch.float32).to(utils.DEVICE)
     test_target_prime_y_task = torch.tensor(test_target_prime_y_task, dtype=torch.long).to(utils.DEVICE)
