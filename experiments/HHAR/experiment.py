@@ -2,6 +2,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 import torch
+from torch import optim, nn
 
 from ...utils import utils
 from ...networks import Codats, IsihDanns, CoDATS_F_C
