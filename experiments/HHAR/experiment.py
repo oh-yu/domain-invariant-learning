@@ -4,6 +4,7 @@ from sklearn.preprocessing import StandardScaler
 import torch
 from torch import optim, nn
 from torch.utils.data import DataLoader, TensorDataset
+from tqdm import tqdm
 
 from ...utils import utils
 from ...networks import Codats, IsihDanns, CoDATS_F_C
@@ -82,7 +83,7 @@ def isih_da_user(pattern):
 
     # Algo3: Evaluation
     acc = sum(pred_y_task == test_target_prime_y_task) / len(test_target_prime_y_task) 
-    return acc
+    return acc.item()
 
 
 def isih_da_model(pattern):
@@ -121,7 +122,7 @@ def isih_da_model(pattern):
 
     # Algo3: Evaluation
     acc = sum(pred_y_task == test_target_prime_y_task) / len(test_target_prime_y_task) 
-    return acc
+    return acc.item()
 
 
 def codats(pattern):
@@ -143,7 +144,7 @@ def codats(pattern):
     codats.set_eval()
     pred_y_task = codats.predict(test_target_prime_X)
     acc = sum(pred_y_task == test_target_prime_y_task) / len(test_target_prime_y_task)
-    return acc
+    return acc.item()
 
 
 def without_adapt(pattern):
@@ -190,7 +191,7 @@ def train_on_target(pattern):
     train_on_target_optimizer = optim.Adam(train_on_target.parameters(), lr=0.0001)
     criterion = nn.CrossEntropyLoss()
 
-    for _ in range(200):
+    for _ in tqdm(range(200)):
         for target_prime_X_batch, target_prime_y_task_batch in target_prime_loader:
             pred_y_task = train_on_target.predict_proba(target_prime_X_batch)
 
@@ -212,7 +213,7 @@ if __name__ == "__main__":
             self.source_user = "c"
             self.source_model = "nexus4"
             self.target_user = "d"
-            self.target_model = "nexus4"
+            self.target_model = "s3"
     pat = Pattern()
 
     print(train_on_target(pat))
