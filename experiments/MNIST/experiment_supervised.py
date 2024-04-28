@@ -9,9 +9,10 @@ from ...networks import Conv2d, DomainDecoder
 
 class Reshape(object):
     def __call__(self, img):
+        padding = np.zeros(3, 32, 32)
         img = np.repeat(img, 3, axis=0)
-        # TODO: padding for (3, 32, 32)
-        return img
+        padding[:, 2:30, 2:30] = img
+        return padding
     # TODO: Understand this style implementation
 
 def get_image_data_for_uda(name="MNIST"):
