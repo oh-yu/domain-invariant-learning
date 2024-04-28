@@ -45,11 +45,11 @@ def get_data_for_uda(user, model, is_targer_prime: bool = False):
         return train_X, train_y, test_X, test_y
 
 
-if __name__ == "__main__":
+def isih_da_user(pattern):
     # Load Data
-    source_X, source_y_task = get_data_for_uda(user="c", model="nexus4")
-    target_X, target_y_task = get_data_for_uda(user="d", model="nexus4")
-    train_target_prime_X, train_target_prime_y_task, test_target_prime_X, test_target_prime_y_task = get_data_for_uda(user="d", model="s3", is_targer_prime=True)
+    source_X, source_y_task = get_data_for_uda(user=pattern.source_user, model=pattern.source_model)
+    target_X, target_y_task = get_data_for_uda(user=pattern.target_user, model=pattern.source_model)
+    train_target_prime_X, train_target_prime_y_task, test_target_prime_X, test_target_prime_y_task = get_data_for_uda(user=pattern.target_user, model=pattern.target_model, is_targer_prime=True)
 
     # Algo1: Inter-devices DA
     source_loader, target_loader, _, _, target_X, target_y_task = utils.get_loader(
@@ -80,7 +80,49 @@ if __name__ == "__main__":
     pred_y_task = isih_dann.predict(test_target_prime_X, is_1st_dim=False)
 
     # Algo3: Evaluation
-    acc = sum(pred_y_task == test_target_prime_y_task) / len(test_target_prime_y_task)  
-    print(f"Accuracy: {acc}")
+    acc = sum(pred_y_task == test_target_prime_y_task) / len(test_target_prime_y_task) 
+    return acc
+
+
+def isih_da_model(pattern):
+    # Load Data
+    source_X, source_y_task = get_data_for_uda(user=pattern.source_user, model=pattern.source_model)
+    target_X, target_y_task = get_data_for_uda(user=pattern.source_user, model=pattern.target_model)
+    train_target_prime_X, train_target_prime_y_task, test_target_prime_X, test_target_prime_y_task = get_data_for_uda(user=pattern.target_user, model=pattern.target_model, is_targer_prime=True)
+
+    # Algo1: Inter-devices DA
+    source_loader, target_loader, _, _, target_X, target_y_task = utils.get_loader(
+        source_X, target_X, source_y_task, target_y_task, batch_size=128, shuffle=True
+    )
+    isih_dann = IsihDanns(
+        input_size = source_X.shape[2],
+        hidden_size=128,
+        lr_dim1 = 0.0001,
+        lr_dim2=0.0001,
+        num_epochs_dim1=150,
+        num_epochs_dim2=50,
+        output_size=len(GT_TO_INT)
+    )
+    isih_dann.fit_1st_dim(source_loader, target_loader, target_X, target_y_task)
+    pred_y_task = isih_dann.predict_proba(target_X, is_1st_dim=True)
+
+    # Algo2: Inter-users DA
+    source_X = target_X.cpu().detach().numpy()
+    source_y_task = pred_y_task.cpu().detach().numpy()
+    source_loader, target_loader, _, _, _, _ = utils.get_loader(
+        source_X, train_target_prime_X, source_y_task, train_target_prime_y_task, batch_size=128, shuffle=True
+    )
+    test_target_prime_X = torch.tensor(test_target_prime_X, dtype=torch.float32).to(utils.DEVICE)
+    test_target_prime_y_task = torch.tensor(test_target_prime_y_task, dtype=torch.long).to(utils.DEVICE)
+    isih_dann.fit_2nd_dim(source_loader, target_loader, test_target_prime_X, test_target_prime_y_task)
+    isih_dann.set_eval()
+    pred_y_task = isih_dann.predict(test_target_prime_X, is_1st_dim=False)
+
+    # Algo3: Evaluation
+    acc = sum(pred_y_task == test_target_prime_y_task) / len(test_target_prime_y_task) 
+    return acc
+
+if __name__ == "__main__":
+    
     
 
