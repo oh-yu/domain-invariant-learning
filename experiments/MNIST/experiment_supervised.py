@@ -1,3 +1,5 @@
+import numpy as np
+
 from torch import nn, optim
 from torch.utils.data import DataLoader
 import torchvision
@@ -5,10 +7,12 @@ from torchvision import datasets, transforms
 from ...networks import Conv2d, DomainDecoder
 
 
-class Reshape(transforms.Transform):
+class Reshape(object):
     def __call__(self, img):
-        return img[0].repeat(3, 1, 1).permute(1, 2, 0)
-    # TODO: Understand this style
+        img = np.repeat(img, 3, axis=0)
+        # TODO: padding for (3, 32, 32)
+        return img
+    # TODO: Understand this style implementation
 
 def get_image_data_for_uda(name="MNIST"):
     if name == "MNIST":
@@ -43,7 +47,7 @@ def get_image_data_for_uda(name="MNIST"):
 
 if __name__ == "__main__":
     # Load Data
-    train_loader, test_loader = get_image_data_for_uda()
+    train_loader = get_image_data_for_uda("MNIST")
 
     # Model Init
     feature_extractor = Conv2d()
@@ -52,7 +56,7 @@ if __name__ == "__main__":
     optimizer = optim.Adam(list(feature_extractor.parameters()) + list(task_classifier.parameters()), lr=1e-3)
 
     # Training
-    for _ in range(100):
+    for _ in range(1):
         for X_batch, y_batch in train_loader:
             out = task_classifier.predict_proba(feature_extractor(X_batch))
             loss = criterion(out, y_batch)
@@ -67,3 +71,4 @@ if __name__ == "__main__":
         out = task_classifier.predict(feature_extractor(X_batch))
         acc = sum(out == y_batch) / len(y_batch)
         print(acc)
+        break
