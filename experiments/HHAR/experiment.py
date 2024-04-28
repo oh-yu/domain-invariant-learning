@@ -223,12 +223,15 @@ def main(patterns, num_repeat=10):
     train_on_taget_accs = []
     isihda_model_accs = []
     isihda_user_accs = []
+    codats_accs = []
     without_adapt_accs = []
+    executed_patterns = []
 
     for pat in patterns:
         train_on_taget_acc = 0
         isihda_model_acc = 0
         isihda_user_acc = 0
+        codats_acc = 0
         without_adapt_acc = 0
         for _ in range(num_repeat):
             train_on_taget_acc += train_on_target(pat)
