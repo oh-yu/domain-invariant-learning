@@ -12,17 +12,16 @@ from ...networks import Codats, IsihDanns, CoDATS_F_C
 GT_TO_INT = {"bike": 0, "stairsup": 1, "stairsdown": 2, "stand": 3, "walk": 4, "sit": 5}
 USER_LIST = ["a", "b", "c", "d", "e", "f", "g", "h", "i"]
 MODEL_LIST = ["nexus4", "s3", "samsungold", "s3mini"]
+ACCELEROMETER_DF = pd.read_csv("./domain-invariant-learning/experiments/HHAR/data/heterogeneity+activity+recognition/Activity recognition exp/Activity recognition exp/Phones_accelerometer.csv")
+ACCELEROMETER_DF = ACCELEROMETER_DF.add_suffix('_accele')
+GYROSCOPE_DF = pd.read_csv("./domain-invariant-learning/experiments/HHAR/data/heterogeneity+activity+recognition/Activity recognition exp/Activity recognition exp/Phones_gyroscope.csv")
+GYROSCOPE_DF = GYROSCOPE_DF.add_suffix('_gyro')
 
 
 def get_data_for_uda(user, model, is_targer_prime: bool = False):
     assert model in MODEL_LIST
     assert user in USER_LIST
-
-    accelerometer_df = pd.read_csv("./domain-invariant-learning/experiments/HHAR/data/heterogeneity+activity+recognition/Activity recognition exp/Activity recognition exp/Phones_accelerometer.csv")
-    accelerometer_df = accelerometer_df.add_suffix('_accele')
-    gyroscope_df = pd.read_csv("./domain-invariant-learning/experiments/HHAR/data/heterogeneity+activity+recognition/Activity recognition exp/Activity recognition exp/Phones_gyroscope.csv")
-    gyroscope_df = gyroscope_df.add_suffix('_gyro')
-    df = pd.merge(accelerometer_df, gyroscope_df, left_on=["Arrival_Time_accele", "User_accele", "Device_accele"], right_on=["Arrival_Time_gyro", "User_gyro", "Device_gyro"],how="left")
+    df = pd.merge(ACCELEROMETER_DF, GYROSCOPE_DF, left_on=["Arrival_Time_accele", "User_accele", "Device_accele"], right_on=["Arrival_Time_gyro", "User_gyro", "Device_gyro"],how="left")
     df[["x_gyro", "y_gyro", "z_gyro"]] = df[["x_gyro", "y_gyro", "z_gyro"]].interpolate()
     df[["x_accele", "y_accele", "z_accele"]] = df[["x_accele", "y_accele", "z_accele"]].interpolate()
     df = df[df.User_accele==user]
@@ -181,7 +180,8 @@ def train_on_target(pattern):
 
     train_target_prime_X = torch.tensor(train_target_prime_X, dtype=torch.float32).to(utils.DEVICE)
     train_target_prime_y_task = torch.tensor(train_target_prime_y_task, dtype=torch.long).to(utils.DEVICE)
-    test_target_prime_X = torch.tensor(test_target_prime_y_task, dtype=torch.float32).to(utils.DEVICE)
+    test_target_prime_X = torch.tensor(test_target_prime_X, dtype=torch.float32).to(utils.DEVICE)
+
     test_target_prime_y_task = torch.tensor(test_target_prime_y_task, dtype=torch.long).to(utils.DEVICE)
     target_prime_ds = TensorDataset(train_target_prime_X, train_target_prime_y_task)
     target_prime_loader = DataLoader(target_prime_ds, batch_size=128, shuffle=True)
@@ -193,12 +193,14 @@ def train_on_target(pattern):
     for _ in range(200):
         for target_prime_X_batch, target_prime_y_task_batch in target_prime_loader:
             pred_y_task = train_on_target.predict_proba(target_prime_X_batch)
+
             loss = criterion(pred_y_task, target_prime_y_task_batch)
 
             train_on_target_optimizer.zero_grad()
             loss.backward()
             train_on_target_optimizer.step()
     train_on_target.eval()
+    
     pred_y_task = train_on_target.predict(test_target_prime_X)
     acc = sum(pred_y_task == test_target_prime_y_task) / len(test_target_prime_y_task)
     return acc.item()
@@ -212,4 +214,10 @@ if __name__ == "__main__":
             self.target_user = "d"
             self.target_model = "nexus4"
     pat = Pattern()
+
     print(train_on_target(pat))
+    print(isih_da_model(pat))
+    print(isih_da_user(pat))
+    print(codats(pat))
+    print(without_adapt(pat))
+    
