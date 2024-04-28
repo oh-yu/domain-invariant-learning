@@ -341,7 +341,11 @@ def fit_without_adaptation(source_loader, task_classifier, task_optimizer, crite
 
             # Forward
             pred_y_task = task_classifier(source_X_batch)
-            pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
+            if task_classifier.output_size == 1:
+                pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
+            else:
+                pred_y_task = torch.softmax(pred_y_task, dim=1)
+            
             loss_task = criterion(pred_y_task, source_y_task_batch)
 
             # Backward

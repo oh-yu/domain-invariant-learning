@@ -159,7 +159,7 @@ def without_adapt(pattern):
     test_target_prime_X = test_target_prime_X.to(utils.DEVICE)
     test_target_prime_y_task = test_target_prime_y_task.to(utils.DEVICE)
 
-    without_adapt = CoDATS_F_C(input_size=source_X.shape[2])
+    without_adapt = CoDATS_F_C(input_size=source_X.shape[2], output_size=len(GT_TO_INT))
     without_adapt_optimizer = optim.Adam(without_adapt.parameters(), lr=0.0001)
     criterion = nn.CrossEntropyLoss()
     without_adapt = utils.fit_without_adaptation(
@@ -169,8 +169,17 @@ def without_adapt(pattern):
         criterion=criterion,
         num_epochs=200,
     )
-
-    # TODO: Evaluation
+    pred_y_task = without_adapt.predict(test_target_prime_X)
+    acc = sum(pred_y_task == test_target_prime_y_task) / len(test_target_prime_y_task)
+    return acc.item()
 
 if __name__ == "__main__":
-
+    # TODO: Remove
+    class Pattern:
+        def __init__(self):
+            self.source_user = "c"
+            self.source_model = "nexus4"
+            self.target_user = "d"
+            self.target_model = "nexus4"
+    pat = Pattern()
+    print(without_adapt(pat))
