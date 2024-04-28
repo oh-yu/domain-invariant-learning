@@ -8,6 +8,7 @@ from ...networks import Conv2d, DomainDecoder
 class Reshape(transforms.Transform):
     def __call__(self, img):
         return img[0].repeat(3, 1, 1).permute(1, 2, 0)
+    # TODO: Understand this style
 
 def get_image_data_for_uda(name="MNIST"):
     if name == "MNIST":
@@ -15,6 +16,7 @@ def get_image_data_for_uda(name="MNIST"):
             Reshape(),
             transforms.ToTensor()
         ])
+        # TODO: Understand transforms.Compose
         train_data = datasets.MNIST(root="./data/MNIST", train=True, download=True, transform=custom_transform)
         train_loader = DataLoader(train_data, batch_size=128, shuffle=True)
         return train_loader
