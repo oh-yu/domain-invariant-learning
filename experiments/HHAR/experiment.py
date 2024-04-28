@@ -4,7 +4,7 @@ from sklearn.preprocessing import StandardScaler
 import torch
 
 from ...utils import utils
-from ...networks import IsihDanns
+from ...networks import Codats
 
 
 GT_TO_INT = {"bike": 0, "stairsup": 1, "stairsdown": 2, "stand": 3, "walk": 4, "sit": 5}
