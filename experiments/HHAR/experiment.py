@@ -38,7 +38,7 @@ def get_data_for_uda(user, model, is_targer_prime: bool = False):
         train_X, test_X, train_y, test_y = train_test_split(X, y, test_size=0.5, shuffle=False, stratify=y)
         # Shuffle = False, since data has meaning of time series
         N, T, H = train_X.shape
-        train_X, test_X = train_X.reshape(T*T, H), test_X.reshape(T*H, H)
+        train_X, test_X = train_X.reshape(N*T, H), test_X.reshape(N*T, H)
         train_X, test_X = scaler.fit_transform(train_X), scaler.transform(test_X)
         train_X, test_X = train_X.reshape(N, T, H), tes_X.reshape(N, T, H)
         return train_X, train_y, test_X, test_y
