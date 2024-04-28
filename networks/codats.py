@@ -49,9 +49,7 @@ class Codats:
         )
 
     def predict(self, x: torch.Tensor) -> torch.Tensor:
-        pred_y_task = self.task_classifier(self.feature_extractor(x))
-        pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
-        return pred_y_task
+        return self.task_classifier.predict(self.feature_extractor(x))
 
     def set_eval(self):
         self.task_classifier.eval()

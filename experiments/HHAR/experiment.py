@@ -137,7 +137,7 @@ def codats(pattern):
     test_target_prime_X = test_target_prime_X.to(DEVICE)
     test_target_prime_y_task = test_target_prime_y_task.to(DEVICE)
 
-    codats = Codats(input_size=source_X.shape[2], hidden_size=128, lr=0.0001, num_epochs=200)
+    codats = Codats(input_size=source_X.shape[2], hidden_size=128, lr=0.0001, num_epochs=200, output_size=len(GT_TO_INT))
     codats.fit(source_loader, target_loader, test_target_prime_X, test_target_prime_y_task)
     codats.set_eval()
     pred_y_task = codats.predict(test_target_prime_X)
