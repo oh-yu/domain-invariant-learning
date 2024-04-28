@@ -35,7 +35,7 @@ def get_data_for_uda(user, model, is_targer_prime: bool = False):
         return X, y
     else:
         X, y = utils.apply_sliding_window(df[["x_accele", "y_accele", "z_accele", "x_gyro", "y_gyro", "z_gyro"]].values, df["gt_accele"].values.reshape(-1), filter_len=128, is_overlap=False)
-        train_X, test_X, train_y, test_y = train_test_split(X, y, test_size=0.5, shuffle=False, stratify=y)
+        train_X, test_X, train_y, test_y = train_test_split(X, y, test_size=0.5, stratify=y)
         # Shuffle = False, since data has meaning of time series
         N, T, H = train_X.shape
         train_X, test_X = train_X.reshape(N*T, H), test_X.reshape(N*T, H)
