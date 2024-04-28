@@ -33,7 +33,7 @@ if __name__ == "__main__":
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-        if _ % 10:
+        if _ % 10 == 0:
             print(f"Epoch {_}: Loss {loss}")
 
     # Evaluation
