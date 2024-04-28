@@ -19,6 +19,18 @@ GYROSCOPE_DF = pd.read_csv("./domain-invariant-learning/experiments/HHAR/data/he
 GYROSCOPE_DF = GYROSCOPE_DF.add_suffix('_gyro')
 
 
+class Pattern:
+    def __init__(self, source_user, source_model, target_user, target_model):
+        assert source_user in USER_LIST
+        assert target_user in USER_LIST
+        assert source_model in MODEL_LIST
+        assert target_model in MODEL_LIST
+        self.source_user = source_user
+        self.source_model = source_model
+        self.target_user = target_user
+        self.target_model = target_model
+
+
 def get_data_for_uda(user, model, is_targer_prime: bool = False):
     assert model in MODEL_LIST
     assert user in USER_LIST
@@ -207,18 +219,41 @@ def train_on_target(pattern):
     return acc.item()
 
 if __name__ == "__main__":
-    # TODO: Remove
-    class Pattern:
-        def __init__(self):
-            self.source_user = "c"
-            self.source_model = "nexus4"
-            self.target_user = "d"
-            self.target_model = "s3"
-    pat = Pattern()
+    patterns = [
+        Pattern(USER_LIST[2], MODEL_LIST[0], USER_LIST[3], MODEL_LIST[1]),
+        Pattern(USER_LIST[5], MODEL_LIST[3], USER_LIST[6], MODEL_LIST[1]),
+        Pattern(USER_LIST[8], MODEL_LIST[2], USER_LIST[4], MODEL_LIST[1]),
+        Pattern(USER_LIST[7], MODEL_LIST[0], USER_LIST[6], MODEL_LIST[0]),
+        Pattern(USER_LIST[7], MODEL_LIST[3], USER_LIST[5], MODEL_LIST[1])
+    ]
+    train_on_taget_accs = []
+    isihda_model_accs = []
+    isihda_user_accs = []
+    without_adapt_accs = []
 
-    print(train_on_target(pat))
-    print(isih_da_model(pat))
-    print(isih_da_user(pat))
-    print(codats(pat))
-    print(without_adapt(pat))
+    for pat in patterns:
+        train_on_taget_acc = 0
+        isihda_model_acc = 0
+        isihda_user_acc = 0
+        without_adapt_acc = 0
+        for _ in range(num_repeat):
+            train_on_taget_acc += train_on_target(pat)
+            isihda_model_acc += isih_da_model(pat)
+            isihda_user_acc += isih_da_user(pat)
+            codats_acc += codats(pat)
+            without_adapt_acc += without_adapt(pat)
+        train_on_taget_accs.append(train_on_taget_acc/num_repeat)
+        isihda_model_accs.append(isihda_model_acc)
+        isihda_user_accs.append(isihda_user_acc)
+        codats_accs.append(codats_acc)
+        without_adapt_accs.append(without_adapt_acc)
+        executed_patterns.append(f"({pat.source_user}, {pat.source_model}) => ({pat.target_user}, {pat.target_model})")
     
+    df = pd.DataFrame()
+    df["PAT"] = executed_patterns
+    df["Train on Target"] = train_on_taget_accs
+    df["Isih-DA (Model => User)"] = isihda_model_accs
+    df["Isih-DA (User => Model)"] = isihda_user_accs
+    df["CoDATS"] = codats_accs
+    df["Without Adapt"] = without_adapt_accs
+    df.to_csv("HHAR_experiment.csv", index=False)
