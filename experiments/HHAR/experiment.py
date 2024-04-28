@@ -145,6 +145,32 @@ def codats(pattern):
     return acc
 
 
+def without_adapt(pattern):
+    # Load Data
+    source_X, source_y_task = get_data_for_uda(user=pattern.source_user, model=pattern.source_model)
+    train_target_prime_X, train_target_prime_y_task, test_target_prime_X, test_target_prime_y_task = get_data_for_uda(user=pattern.target_user, model=pattern.target_model, is_targer_prime=True)
+
+    # Without Adapt
+    source_loader, _, _, _, _, _ = utils.get_loader(
+        source_X, train_target_prime_X, source_y_task, train_target_prime_y_task, batch_size=128, shuffle=True
+    )  
+    test_target_prime_X = torch.tensor(test_target_prime_X, dtype=torch.float32)
+    test_target_prime_y_task = torch.tensor(test_target_prime_y_task, dtype=torch.float32)
+    test_target_prime_X = test_target_prime_X.to(utils.DEVICE)
+    test_target_prime_y_task = test_target_prime_y_task.to(utils.DEVICE)
+
+    without_adapt = CoDATS_F_C(input_size=source_X.shape[2])
+    without_adapt_optimizer = optim.Adam(without_adapt.parameters(), lr=0.0001)
+    criterion = nn.CrossEntropyLoss()
+    without_adapt = utils.fit_without_adaptation(
+        source_loader=source_loader,
+        task_classifier=without_adapt,
+        task_optimizer=without_adapt_optimizer,
+        criterion=criterion,
+        num_epochs=200,
+    )
+
+    # TODO: Evaluation
 
 if __name__ == "__main__":
 
