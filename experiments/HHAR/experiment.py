@@ -48,7 +48,7 @@ if __name__ == "__main__":
     source_X, source_y_task = get_data_for_uda(user="c", model="nexus4")
     target_X, target_y_task = get_data_for_uda(user="d", model="nexus4")
     train_target_prime_X, train_target_prime_y_task, test_target_prime_X, test_target_prime_y_task = get_data_for_uda(user="d", model="s3", is_targer_prime=True)
-    
+
     # Algo1: Inter-devices DA
     source_loader, target_loader, _, _, target_X, target_y_task = utils.get_loader(
         source_X, target_X, source_y_task, target_y_task, batch_size=128, shuffle=True
@@ -57,9 +57,9 @@ if __name__ == "__main__":
         input_size = source_X.shape[2],
         hidden_size=128,
         lr_dim1 = 0.0001,
-        lr_dim2=0.00005,
-        num_epochs_dim1=30,
-        num_epochs_dim2=30,
+        lr_dim2=0.0001,
+        num_epochs_dim1=150,
+        num_epochs_dim2=50,
         output_size=len(GT_TO_INT)
     )
     isih_dann.fit_1st_dim(source_loader, target_loader, target_X, target_y_task)

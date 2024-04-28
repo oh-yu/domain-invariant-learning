@@ -178,7 +178,7 @@ def fit(
             pred_y_task_eval = task_classifier.predict(target_feature_eval)
             acc = sum(pred_y_task_eval == target_y_task) / target_y_task.shape[0]
         loss_task_evals.append(acc.item())
-        if epoch % 10 == 0:
+        if epoch % 50 == 0:
             print(f"Epoch: {epoch}, Loss Domain: {loss_domain}, Loss Task: {loss_task}, Acc: {acc}")
     utils._plot_dann_loss(do_plot, loss_domains, loss_tasks, loss_task_evals)
     return feature_extractor, task_classifier, loss_task_evals
