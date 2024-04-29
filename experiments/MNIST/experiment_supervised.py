@@ -24,13 +24,13 @@ def get_image_data_for_uda(name="MNIST"):
             Reshape(),
         ])
         # TODO: Understand transforms.Compose
-        train_data = datasets.MNIST(root="./data/MNIST", train=True, download=True, transform=custom_transform)
+        train_data = datasets.MNIST(root="./domain-invariant-learning/experiments/MNIST/data/MNIST", train=True, download=True, transform=custom_transform)
         train_loader = DataLoader(train_data, batch_size=128, shuffle=True)
         return train_loader
     
     elif name == "MNIST-M":
         transform = transforms.ToTensor()
-        train_data = ImageFolder(root='./data/MNIST-M/training', transform=transform)
+        train_data = ImageFolder(root='./domain-invariant-learning/experiments/MNIST/data/MNIST-M/training', transform=transform)
         train_loader = DataLoader(train_data, batch_size=32, shuffle=True)
         return train_loader
 
@@ -56,7 +56,7 @@ def get_image_data_for_uda(name="MNIST"):
 
 if __name__ == "__main__":
     # Load Data
-    train_loader = get_image_data_for_uda("MNIST")
+    train_loader = get_image_data_for_uda("MNIST-M")
 
     # Model Init
     feature_extractor = Conv2d()
@@ -76,8 +76,8 @@ if __name__ == "__main__":
             print(f"Epoch {_}: Loss {loss}")
 
     # Evaluation
-    # for X_batch, y_batch in test_loader:
-    #     out = task_classifier.predict(feature_extractor(X_batch))
-    #     acc = sum(out == y_batch) / len(y_batch)
-    #     print(acc)
-    #     break
+    for X_batch, y_batch in train_loader:
+        out = task_classifier.predict(feature_extractor(X_batch))
+        acc = sum(out == y_batch) / len(y_batch)
+        print(acc)
+        break
