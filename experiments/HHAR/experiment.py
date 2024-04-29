@@ -261,7 +261,7 @@ if __name__ == "__main__":
         Pattern(USER_LIST[2], MODEL_LIST[0], USER_LIST[3], MODEL_LIST[1]),
         Pattern(USER_LIST[5], MODEL_LIST[3], USER_LIST[6], MODEL_LIST[1]),
         Pattern(USER_LIST[8], MODEL_LIST[2], USER_LIST[4], MODEL_LIST[1]),
-        Pattern(USER_LIST[7], MODEL_LIST[0], USER_LIST[6], MODEL_LIST[0]),
+        Pattern(USER_LIST[7], MODEL_LIST[0], USER_LIST[6], MODEL_LIST[2]),
         Pattern(USER_LIST[7], MODEL_LIST[3], USER_LIST[5], MODEL_LIST[1])
     ]
     main(patterns)
