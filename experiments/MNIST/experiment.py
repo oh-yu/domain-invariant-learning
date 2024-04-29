@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 from torch import nn, optim
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, TensorDataset
 import torchvision
 from torchvision import datasets, transforms
 from torchvision.datasets import ImageFolder
@@ -86,7 +86,8 @@ if __name__ == "__main__":
     source_loader = get_image_data_for_uda("MNIST", "source")
     target_loader, target_data = get_image_data_for_uda("MNIST-M", "target")
     target_loader_gt, _ = get_image_data_for_uda("MNIST-M", "source")
-    target_prime_loader = get_image_data_for_uda("SVHN")
+    train_target_prime_loader, _ = get_image_data_for_uda("SVHN", "target")
+    _, test_target_prime_loader_gt = get_image_data_for_uda("SVHN", "source")
 
     # Model Init
     isih_dann = IsihDanns(
@@ -105,8 +106,16 @@ if __name__ == "__main__":
     target_X = torch.tensor(target_X, dtype=torch.float32).to(utils.DEVICE)
     target_y_task = torch.tensor(target_y_task, dtype=torch.long).to(utils.DEVICE)
     isih_dann.fit_1st_dim(source_loader, target_loader, target_X, target_y_task)
-    
+    pred_y_task = isih_dann.predict_proba(target_X, is_1st_dim=False)
     # Algo2 inter-reals DA
-
-
-    # Algo3 Evaluation
+    source_ds = TensorDataset(target_X, pred_y_task)
+    source_loader = DataLoader(source_ds, batch_size=128, shuffle=True)
+    test_target_prime_X = torch.cat([X for X, _ in test_target_prime_loader_gt], dim=0)
+    test_target_prime_y_task = torch.cat([y[:, 0] for _, y in test_target_prime_loader_gt], dim=0)
+    isih_dann.fit_2nd_dim(source_loader, train_target_prime_loader, test_target_prime_X, test_target_prime_y_task)
+    
+    # Algo3 Eval
+    isih_dann.set_eval()
+    pred_y_task = isih_dann.preditc(test_target_prime_X, is_1st_dim=False)
+    acc = sum(pred_y_task == test_target_prime_y_task) / len(test_target_prime_y_task)
+    print(acc.item())
