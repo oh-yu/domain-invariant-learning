@@ -101,6 +101,8 @@ def fit(
             source_loader, target_loader
         ):
             # 0. Data
+            source_Y_batch = source_Y_batch.to(utils.DEVICE)
+            target_y_domain_batch = target_y_domain_batch.to(utils.DEVICE)
             
             if task_classifier.output_size == 1:
                 source_y_task_batch = source_Y_batch[:, utils.COL_IDX_TASK] > 0.5
