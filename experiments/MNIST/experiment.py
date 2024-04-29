@@ -31,9 +31,9 @@ class CustomUDADataset(torch.utils.data.Dataset):
         domain_label = self.domain_label
 
         if self.source_or_target == "source":
-            return image, torch.tensor([label, domain_label])
+            return image, torch.tensor([label, float(domain_label)])
         elif self.source_or_target == "target":
-            return image, domain_label
+            return image, torch.tensor(domain_label, dtype=torch.float32)
 
     # TODO: Understand this style implementation
 
@@ -57,7 +57,7 @@ def get_image_data_for_uda(name="MNIST"):
         train_data = ImageFolder(root='./domain-invariant-learning/experiments/MNIST/data/MNIST-M/training', transform=transform)
         train_data = CustomUDADataset(train_data, "target")
 
-        train_loader = DataLoader(train_data, batch_size=32, shuffle=True)
+        train_loader = DataLoader(train_data, batch_size=128, shuffle=True)
         return train_loader
 
     elif name == "SVHN":
@@ -91,16 +91,23 @@ if __name__ == "__main__":
         print(X.shape)
         print(y.shape)
         break
+    # TODO: Remove
+
     # Model Init
     isih_dann = IsihDanns(
         input_size=None,
         hidden_size=None,
         lr_dim1=0.0001,
         lr_dim2=0.00005,
-        num_epochs_dim1=200,
-        num_epochs_dim2=100,
+        num_epochs_dim1=2,
+        num_epochs_dim2=1,
         experiment="MNIST"
     )
+    target_X, target_y_task = next(iter(source_loader))
+    target_y_task = target_y_task[:, 0]
+    # TODO: Implement, need for psuedo-labeling
+
+    isih_dann.fit_1st_dim(source_loader, target_loader, target_X, target_y_task)
     
 
     # Algo1 inter-colors DA
