@@ -184,6 +184,7 @@ def without_adapt(pattern):
         criterion=criterion,
         num_epochs=200,
     )
+    without_adapt.eval()
     pred_y_task = without_adapt.predict(test_target_prime_X)
     acc = sum(pred_y_task == test_target_prime_y_task) / len(test_target_prime_y_task)
     return acc.item()
