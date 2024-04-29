@@ -4,6 +4,7 @@ from torch import nn, optim
 from torch.utils.data import DataLoader
 import torchvision
 from torchvision import datasets, transforms
+from torchvision.datasets import ImageFolder
 from ...networks import Conv2d, DomainDecoder
 
 
@@ -15,6 +16,8 @@ class Reshape(object):
     # TODO: Understand this style implementation
 
 def get_image_data_for_uda(name="MNIST"):
+    assert name in ["MNIST", "MNIST-M", "SVHN"]
+
     if name == "MNIST":
         custom_transform = transforms.Compose([
             transforms.ToTensor(),
@@ -23,6 +26,12 @@ def get_image_data_for_uda(name="MNIST"):
         # TODO: Understand transforms.Compose
         train_data = datasets.MNIST(root="./data/MNIST", train=True, download=True, transform=custom_transform)
         train_loader = DataLoader(train_data, batch_size=128, shuffle=True)
+        return train_loader
+    
+    elif name == "MNIST-M":
+        transform = transforms.ToTensor()
+        train_data = ImageFolder(root='./data/MNIST-M/training', transform=transform)
+        train_loader = DataLoader(train_data, batch_size=32, shuffle=True)
         return train_loader
 
     elif name == "SVHN":
