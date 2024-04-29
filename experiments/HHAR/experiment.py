@@ -263,7 +263,7 @@ if __name__ == "__main__":
     import itertools
     import random
 
-    combinations = list(itertools.product([i for i in range(USER_LIST)], [i for i in range(MODEL_LIST)]))
+    combinations = list(itertools.product(USER_LIST, MODEL_LIST))
     valid_combinations = [(u1, m1, u2, m2) for (u1, m1), (u2, m2) in itertools.combinations(combinations, 2) if u1 != u2 and m1 != m2]
     patterns = [Pattern(source_user=u1, source_model=m1, target_user=u2, target_model=m2) for u1, m1, u2, m2 in valid_combinations]
     sampled_patterns = random.sample(patterns, 16)
