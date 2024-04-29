@@ -16,6 +16,17 @@ class Reshape(object):
     # TODO: Understand this style implementation
 
 
+class CustomMNISTDataset(torch.utils.data.Dataset):
+    def __init__(self, mnist_dataset):
+        self.mnist_dataset = mnist_dataset
+    def __len__(self):
+        return len(self.mnist_dataset)
+    def __getitem__(self, idx):
+        image, label = self.mnist_dataset[idx]
+        domain_label = 0
+        return image, (label, domain_label)
+
+
 def get_image_data_for_uda(name="MNIST"):
     assert name in ["MNIST", "MNIST-M", "SVHN"]
 
@@ -26,7 +37,8 @@ def get_image_data_for_uda(name="MNIST"):
         ])
         # TODO: Understand transforms.Compose
         train_data = datasets.MNIST(root="./domain-invariant-learning/experiments/MNIST/data/MNIST", train=True, download=True, transform=custom_transform)
-        train_loader = DataLoader(train_data, batch_size=128, shuffle=True)
+        train_data = CustomMNISTDataset(train_data)
+        train_loader = torch.utils.data.DataLoader(train_data, batch_size=128, shuffle=True)
         return train_loader
     
     elif name == "MNIST-M":
@@ -57,6 +69,11 @@ if __name__ == "__main__":
     source_loader = get_image_data_for_uda("MNIST")
     target_loader = get_image_data_for_uda("MNIST-M")
     target_prime_loader = get_image_data_for_uda("SVHN")
+
+    for X, y in source_loader:
+        print(y[0])
+        print(y[1])
+        break
 
     # Algo1 inter-colors DA
 
