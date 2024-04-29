@@ -89,7 +89,7 @@ def fit(
     loss_task_evals = []
     num_epochs = torch.tensor(num_epochs, dtype=torch.int32).to(utils.DEVICE)
     
-    for epoch in tqdm(range(1, num_epochs.item() + 1)):
+    for epoch in tqdm(range(1, num_epochs.item() + 1), disable=True):
         epoch = torch.tensor(epoch, dtype=torch.float32).to(utils.DEVICE)
         feature_extractor.train()
         task_classifier.train()

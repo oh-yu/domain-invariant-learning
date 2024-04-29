@@ -205,7 +205,7 @@ def train_on_target(pattern):
     train_on_target_optimizer = optim.Adam(train_on_target.parameters(), lr=0.0001)
     criterion = nn.CrossEntropyLoss()
 
-    for _ in tqdm(range(200)):
+    for _ in tqdm(range(200), disable=True):
         for target_prime_X_batch, target_prime_y_task_batch in target_prime_loader:
             pred_y_task = train_on_target.predict_proba(target_prime_X_batch)
 
