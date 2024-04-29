@@ -86,18 +86,7 @@ if __name__ == "__main__":
     source_loader = get_image_data_for_uda("MNIST", "source")
     target_loader, target_data = get_image_data_for_uda("MNIST-M", "target")
     target_loader_gt, _ = get_image_data_for_uda("MNIST-M", "source")
-
     target_prime_loader = get_image_data_for_uda("SVHN")
-
-    for X, y in source_loader:
-        print(X.shape)
-        print(y.shape)
-        break
-    for X, y in target_loader:
-        print(X.shape)
-        print(y.shape)
-        break
-    # TODO: Remove
 
     # Model Init
     isih_dann = IsihDanns(
@@ -105,7 +94,7 @@ if __name__ == "__main__":
         hidden_size=None,
         lr_dim1=0.0001,
         lr_dim2=0.00005,
-        num_epochs_dim1=2,
+        num_epochs_dim1=50,
         num_epochs_dim2=1,
         experiment="MNIST"
     )
