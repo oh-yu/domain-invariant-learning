@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
@@ -253,7 +255,7 @@ def main(patterns, num_repeat=10):
     df["Isih-DA(User => Model)"] = isihda_user_accs
     df["CoDATS"] = codats_accs
     df["Without Adapt"] = without_adapt_accs
-    df.to_csv("HHAR_experiment.csv", index=False)
+    df.to_csv(f"HHAR_experiment_{str(datetime.now())}.csv", index=False)
 
 
 if __name__ == "__main__":
