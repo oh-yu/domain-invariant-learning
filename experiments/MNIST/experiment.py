@@ -108,7 +108,7 @@ if __name__ == "__main__":
     )
 
     # Algo1 inter-colors DA
-    target_X = torch.cat([X for X, _ in target_loader], dim=0)
+    target_X = torch.cat([X for X, _ in target_loader_gt], dim=0)
     target_y_task = torch.cat([y[:, 0] for _, y in target_loader_gt], dim=0)
     target_X = torch.tensor(target_X, dtype=torch.float32).to(utils.DEVICE)
     target_y_task = torch.tensor(target_y_task, dtype=torch.long).to(utils.DEVICE)
