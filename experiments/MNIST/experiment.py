@@ -17,14 +17,24 @@ class Reshape(object):
 
 
 class CustomUDADataset(torch.utils.data.Dataset):
-    def __init__(self, dataset):
+    def __init__(self, dataset, source_or_target):
         self.dataset = dataset
+        self.source_or_target = source_or_target
+        if source_or_target == "source":
+            self.domain_label = 0
+        elif source_or_target == "target":
+            self.domain_label = 1
     def __len__(self):
         return len(self.dataset)
     def __getitem__(self, idx):
         image, label = self.dataset[idx]
-        domain_label = 0
-        return image, torch.tensor([label, domain_label])
+        domain_label = self.domain_label
+
+        if self.source_or_target == "source":
+            return image, torch.tensor([label, domain_label])
+        elif self.source_or_target == "target":
+            return image, domain_label
+
     # TODO: Understand this style implementation
 
 
@@ -38,13 +48,15 @@ def get_image_data_for_uda(name="MNIST"):
         ])
         # TODO: Understand transforms.Compose
         train_data = datasets.MNIST(root="./domain-invariant-learning/experiments/MNIST/data/MNIST", train=True, download=True, transform=custom_transform)
-        train_data = CustomUDADataset(train_data)
+        train_data = CustomUDADataset(train_data, "source")
         train_loader = torch.utils.data.DataLoader(train_data, batch_size=128, shuffle=True)
         return train_loader
     
     elif name == "MNIST-M":
         transform = transforms.ToTensor()
         train_data = ImageFolder(root='./domain-invariant-learning/experiments/MNIST/data/MNIST-M/training', transform=transform)
+        train_data = CustomUDADataset(train_data, "target")
+
         train_loader = DataLoader(train_data, batch_size=32, shuffle=True)
         return train_loader
 
@@ -72,8 +84,12 @@ if __name__ == "__main__":
     target_prime_loader = get_image_data_for_uda("SVHN")
 
     for X, y in source_loader:
-        print(y[0])
-        print(y[1])
+        print(X.shape)
+        print(y.shape)
+        break
+    for X, y in target_loader:
+        print(X.shape)
+        print(y.shape)
         break
 
     # Algo1 inter-colors DA
