@@ -16,15 +16,16 @@ class Reshape(object):
     # TODO: Understand this style implementation
 
 
-class CustomMNISTDataset(torch.utils.data.Dataset):
-    def __init__(self, mnist_dataset):
-        self.mnist_dataset = mnist_dataset
+class CustomUDADataset(torch.utils.data.Dataset):
+    def __init__(self, dataset):
+        self.dataset = dataset
     def __len__(self):
-        return len(self.mnist_dataset)
+        return len(self.dataset)
     def __getitem__(self, idx):
-        image, label = self.mnist_dataset[idx]
+        image, label = self.dataset[idx]
         domain_label = 0
-        return image, (label, domain_label)
+        return image, torch.tensor([label, domain_label])
+    # TODO: Understand this style implementation
 
 
 def get_image_data_for_uda(name="MNIST"):
@@ -37,7 +38,7 @@ def get_image_data_for_uda(name="MNIST"):
         ])
         # TODO: Understand transforms.Compose
         train_data = datasets.MNIST(root="./domain-invariant-learning/experiments/MNIST/data/MNIST", train=True, download=True, transform=custom_transform)
-        train_data = CustomMNISTDataset(train_data)
+        train_data = CustomUDADataset(train_data)
         train_loader = torch.utils.data.DataLoader(train_data, batch_size=128, shuffle=True)
         return train_loader
     
