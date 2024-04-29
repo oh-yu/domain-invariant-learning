@@ -5,7 +5,7 @@ from torch.utils.data import DataLoader
 import torchvision
 from torchvision import datasets, transforms
 from torchvision.datasets import ImageFolder
-from ...networks import Conv2d, DomainDecoder
+from ...networks import IsihDanns
 
 
 class Reshape(object):
@@ -91,6 +91,17 @@ if __name__ == "__main__":
         print(X.shape)
         print(y.shape)
         break
+    # Model Init
+    isih_dann = IsihDanns(
+        input_size=None,
+        hidden_size=None,
+        lr_dim1=0.0001,
+        lr_dim2=0.00005,
+        num_epochs_dim1=200,
+        num_epochs_dim2=100,
+        experiment="MNIST"
+    )
+    
 
     # Algo1 inter-colors DA
 

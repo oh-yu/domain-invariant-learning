@@ -5,6 +5,7 @@ from ..algo import algo
 from .conv1d import Conv1d
 from .mlp_decoder_domain import DomainDecoder
 from .mlp_decoder_task import TaskDecoder
+from .conv2d import Conv2d
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -22,23 +23,45 @@ class IsihDanns:
         lr_dim2: float,
         num_epochs_dim1: int,
         num_epochs_dim2: int,
-        output_size: int = 1
+        output_size: int = 1,
+        experiment: str = "HHAR",
     ):
-        self.feature_extractor = Conv1d(input_size=input_size).to(DEVICE)
-        self.domain_classifier_dim1 = DomainDecoder(input_size=hidden_size, output_size=1).to(DEVICE)
-        self.task_classifier_dim1 = TaskDecoder(input_size=hidden_size, output_size=output_size).to(DEVICE)
-        self.feature_optimizer_dim1 = optim.Adam(self.feature_extractor.parameters(), lr=lr_dim1)
-        self.domain_optimizer_dim1 = optim.Adam(self.domain_classifier_dim1.parameters(), lr=lr_dim1)
-        self.task_optimizer_dim1 = optim.Adam(self.task_classifier_dim1.parameters(), lr=lr_dim1)
-        self.criterion = nn.BCELoss()
-        self.num_epochs_dim1 = num_epochs_dim1
+        if experiment in ["HHAR", "ECOdataset", "ECOdataset_synthetic"]:
+            self.feature_extractor = Conv1d(input_size=input_size).to(DEVICE)
+            self.domain_classifier_dim1 = DomainDecoder(input_size=hidden_size, output_size=1).to(DEVICE)
+            self.task_classifier_dim1 = TaskDecoder(input_size=hidden_size, output_size=output_size).to(DEVICE)
+            self.feature_optimizer_dim1 = optim.Adam(self.feature_extractor.parameters(), lr=lr_dim1)
+            self.domain_optimizer_dim1 = optim.Adam(self.domain_classifier_dim1.parameters(), lr=lr_dim1)
+            self.task_optimizer_dim1 = optim.Adam(self.task_classifier_dim1.parameters(), lr=lr_dim1)
+            self.criterion = nn.BCELoss()
+            self.num_epochs_dim1 = num_epochs_dim1
 
-        self.domain_classifier_dim2 = DomainDecoder(input_size=hidden_size, output_size=1).to(DEVICE)
-        self.task_classifier_dim2 = TaskDecoder(input_size=hidden_size, output_size=output_size).to(DEVICE)
-        self.feature_optimizer_dim2 = optim.Adam(self.feature_extractor.parameters(), lr=lr_dim2)
-        self.domain_optimizer_dim2 = optim.Adam(self.domain_classifier_dim2.parameters(), lr=lr_dim2)
-        self.task_optimizer_dim2 = optim.Adam(self.task_classifier_dim2.parameters(), lr=lr_dim2)
-        self.num_epochs_dim2 = num_epochs_dim2
+            self.task_classifier_dim2 = TaskDecoder(input_size=hidden_size, output_size=output_size).to(DEVICE)
+            self.domain_classifier_dim2 = DomainDecoder(input_size=hidden_size, output_size=1).to(DEVICE)
+            self.feature_optimizer_dim2 = optim.Adam(self.feature_extractor.parameters(), lr=lr_dim2)
+            self.domain_optimizer_dim2 = optim.Adam(self.domain_classifier_dim2.parameters(), lr=lr_dim2)
+            self.task_optimizer_dim2 = optim.Adam(self.task_classifier_dim2.parameters(), lr=lr_dim2)
+            self.num_epochs_dim2 = num_epochs_dim2
+
+
+        elif experiment in ["MNIST"]:
+            self.feature_extractor = Conv2d().to(DEVICE)
+            self.task_classifier_dim1 = DomainDecoder(input_size=1600, output_size=10, fc2_size=50).to(DEVICE)
+            self.domain_classifier_dim1 = DomainDecoder(input_size=1600, output_size=1, fc2_size=50).to(DEVICE)
+            self.feature_optimizer_dim1 = optim.Adam(self.feature_extractor.parameters(), lr=lr_dim1)
+            self.domain_optimizer_dim1 = optim.Adam(self.domain_classifier_dim1.parameters(), lr=lr_dim1)
+            self.task_optimizer_dim1 = optim.Adam(self.task_classifier_dim1.parameters(), lr=lr_dim1)
+            self.criterion = nn.BCELoss()
+            self.num_epochs_dim1 = num_epochs_dim1
+
+            self.task_classifier_dim2 = DomainDecoder(input_size=1600, output_size=10, fc2_size=50).to(DEVICE)
+            self.domain_classifier_dim2 = DomainDecoder(input_size=1600, output_size=1, fc2_size=50).to(DEVICE)
+            self.feature_optimizer_dim2 = optim.Adam(self.feature_extractor.parameters(), lr=lr_dim2)
+            self.domain_optimizer_dim2 = optim.Adam(self.domain_classifier_dim2.parameters(), lr=lr_dim2)
+            self.task_optimizer_dim2 = optim.Adam(self.task_classifier_dim2.parameters(), lr=lr_dim2)
+            self.num_epochs_dim2 = num_epochs_dim2
+
+
 
     def fit_1st_dim(self, source_loader, target_loader, test_target_X: torch.Tensor, test_target_y_task: torch.Tensor):
         self.feature_extractor, self.task_classifier_dim1, _ = algo.fit(
