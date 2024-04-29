@@ -82,8 +82,8 @@ def get_image_data_for_uda(name="MNIST"):
 if __name__ == "__main__":
     # Load Data
     source_loader = get_image_data_for_uda("MNIST")
-    target_loader, target_data = get_image_data_for_uda("MNIST-M", "target")
-    target_prime_loader = get_image_data_for_uda("SVHN", "target")
+    target_loader, target_data = get_image_data_for_uda("MNIST-M")
+    target_prime_loader = get_image_data_for_uda("SVHN")
 
     for X, y in source_loader:
         print(X.shape)
