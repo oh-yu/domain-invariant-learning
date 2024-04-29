@@ -47,6 +47,7 @@ def get_image_data_for_uda(name="MNIST", source_or_target="source"):
         custom_transform = transforms.Compose([
             transforms.ToTensor(),
             Reshape(),
+            lambda x: x.to(utils.DEVICE),
         ])
         # TODO: Understand transforms.Compose
         train_data = datasets.MNIST(root="./domain-invariant-learning/experiments/MNIST/data/MNIST", train=True, download=True, transform=custom_transform)
@@ -55,27 +56,33 @@ def get_image_data_for_uda(name="MNIST", source_or_target="source"):
         return train_loader
     
     elif name == "MNIST-M":
-        transform = transforms.ToTensor()
-        train_data = ImageFolder(root='./domain-invariant-learning/experiments/MNIST/data/MNIST-M/training', transform=transform)
+        custom_transform = transforms.Compose([
+            transforms.ToTensor(),
+            lambda x: x.to(utils.DEVICE),
+        ])
+        train_data = ImageFolder(root='./domain-invariant-learning/experiments/MNIST/data/MNIST-M/training', transform=custom_transform)
         train_data = CustomUDADataset(train_data, source_or_target)
 
         train_loader = DataLoader(train_data, batch_size=128, shuffle=True)
         return train_loader, train_data
 
     elif name == "SVHN":
-        transform = transforms.ToTensor()
+        custom_transform = transforms.Compose([
+            transforms.ToTensor(),
+            lambda x: x.to(utils.DEVICE),
+        ])
         train_data = torchvision.datasets.SVHN(
             './data/SVHN', 
             split='train',
             download=True,
-            transform=transform)
+            transform=custom_transform)
         train_data = CustomUDADataset(train_data, source_or_target)
         train_loader = DataLoader(train_data, batch_size=128, shuffle=True)
         test_data = torchvision.datasets.SVHN(
             "./data/SVHN",
             split="test",
             download=True,
-            transform=transform)
+            transform=custom_transform)
         test_data = CustomUDADataset(test_data, source_or_target)
         test_loader = DataLoader(test_data, batch_size=128, shuffle=False)
         return train_loader, test_loader
