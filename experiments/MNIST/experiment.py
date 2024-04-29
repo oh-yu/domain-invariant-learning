@@ -40,7 +40,7 @@ class CustomUDADataset(torch.utils.data.Dataset):
     # TODO: Understand this style implementation
 
 
-def get_image_data_for_uda(name="MNIST"):
+def get_image_data_for_uda(name="MNIST", source_or_target="source"):
     assert name in ["MNIST", "MNIST-M", "SVHN"]
 
     if name == "MNIST":
@@ -50,14 +50,14 @@ def get_image_data_for_uda(name="MNIST"):
         ])
         # TODO: Understand transforms.Compose
         train_data = datasets.MNIST(root="./domain-invariant-learning/experiments/MNIST/data/MNIST", train=True, download=True, transform=custom_transform)
-        train_data = CustomUDADataset(train_data, "source")
+        train_data = CustomUDADataset(train_data, source_or_target)
         train_loader = torch.utils.data.DataLoader(train_data, batch_size=128, shuffle=True)
         return train_loader
     
     elif name == "MNIST-M":
         transform = transforms.ToTensor()
         train_data = ImageFolder(root='./domain-invariant-learning/experiments/MNIST/data/MNIST-M/training', transform=transform)
-        train_data = CustomUDADataset(train_data, "target")
+        train_data = CustomUDADataset(train_data, source_or_target)
 
         train_loader = DataLoader(train_data, batch_size=128, shuffle=True)
         return train_loader, train_data
@@ -81,8 +81,10 @@ def get_image_data_for_uda(name="MNIST"):
 
 if __name__ == "__main__":
     # Load Data
-    source_loader = get_image_data_for_uda("MNIST")
-    target_loader, target_data = get_image_data_for_uda("MNIST-M")
+    source_loader = get_image_data_for_uda("MNIST", "source")
+    target_loader, target_data = get_image_data_for_uda("MNIST-M", "target")
+    target_loader_gt, _ = get_image_data_for_uda("MNIST-M", "source")
+
     target_prime_loader = get_image_data_for_uda("SVHN")
 
     for X, y in source_loader:
@@ -106,8 +108,8 @@ if __name__ == "__main__":
         experiment="MNIST"
     )
     target_X = torch.cat([X for X, _ in target_loader], dim=0)
-    target_y_task = torch.cat([y for _, y in target_loader], dim=0)
-    # TODO: now this has domain label only
+    target_y_task = torch.cat([y[:, 0] for _, y in target_loader_gt], dim=0)
+
     target_X = torch.tensor(target_X, dtype=torch.float32).to(utils.DEVICE)
     target_y_task = torch.tensor(target_y_task, dtype=torch.long).to(utils.DEVICE)
     isih_dann.fit_1st_dim(source_loader, target_loader, target_X, target_y_task)
