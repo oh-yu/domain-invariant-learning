@@ -312,7 +312,7 @@ def _plot_dann_loss(
         plt.show()
 
 
-def fit_without_adaptation(source_loader, task_classifier, task_optimizer, criterion, num_epochs=1000):
+def fit_without_adaptation(source_loader, task_classifier, task_optimizer, criterion, num_epochs=1000, output_size=1):
     """
     Deep Learning model's fit method without domain adaptation.
 
@@ -341,7 +341,7 @@ def fit_without_adaptation(source_loader, task_classifier, task_optimizer, crite
 
             # Forward
             pred_y_task = task_classifier(source_X_batch)
-            if task_classifier.decoder.output_size == 1:
+            if output_size == 1:
                 pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
             else:
                 source_y_task_batch = source_y_task_batch.to(torch.long)

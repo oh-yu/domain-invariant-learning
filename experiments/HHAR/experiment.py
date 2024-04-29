@@ -183,6 +183,7 @@ def without_adapt(pattern):
         task_optimizer=without_adapt_optimizer,
         criterion=criterion,
         num_epochs=200,
+        output_size=len(GT_TO_INT),
     )
     without_adapt.eval()
     pred_y_task = without_adapt.predict(test_target_prime_X)
