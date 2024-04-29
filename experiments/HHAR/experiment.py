@@ -260,11 +260,11 @@ def main(patterns, num_repeat=10):
 
 
 if __name__ == "__main__":
-    patterns = [
-        Pattern(USER_LIST[2], MODEL_LIST[0], USER_LIST[3], MODEL_LIST[1]),
-        Pattern(USER_LIST[5], MODEL_LIST[3], USER_LIST[6], MODEL_LIST[1]),
-        Pattern(USER_LIST[8], MODEL_LIST[2], USER_LIST[4], MODEL_LIST[1]),
-        Pattern(USER_LIST[7], MODEL_LIST[0], USER_LIST[6], MODEL_LIST[2]),
-        Pattern(USER_LIST[7], MODEL_LIST[3], USER_LIST[5], MODEL_LIST[1])
-    ]
-    main(patterns)
+    import itertools
+    import random
+
+    combinations = list(itertools.product([i for i in range(USER_LIST)], [i for i in range(MODEL_LIST)]))
+    valid_combinations = [(u1, m1, u2, m2) for (u1, m1), (u2, m2) in itertools.combinations(combinations, 2) if u1 != u2 and m1 != m2]
+    patterns = [Pattern(source_user=u1, source_model=m1, target_user=u2, target_model=m2) for u1, m1, u2, m2 in valid_combinations]
+    sampled_patterns = random.sample(patterns, 16)
+    main(sampled_patterns)
