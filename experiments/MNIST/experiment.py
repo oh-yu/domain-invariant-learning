@@ -105,11 +105,8 @@ if __name__ == "__main__":
         num_epochs_dim2=1,
         experiment="MNIST"
     )
-    target_X = []
-    target_y_task = []
-    for X, y in target_loader:
-        target_y_task.append(y)
-        target_X.append(X)
+    target_X = torch.cat([X for X, _ in target_loader], dim=0)
+    target_y_task = torch.cat([y for _, y in target_loader], dim=0)
     target_X = torch.tensor(target_X, dtype=torch.float32).to(utils.DEVICE)
     target_y_task = torch.tensor(target_y_task, dtype=torch.long).to(utils.DEVICE)
     isih_dann.fit_1st_dim(source_loader, target_loader, target_X, target_y_task)
