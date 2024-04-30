@@ -108,8 +108,8 @@ if __name__ == "__main__":
     # Algo1 inter-colors DA
     target_X = torch.cat([X for X, _ in target_loader_gt], dim=0)
     target_y_task = torch.cat([y[:, 0] for _, y in target_loader_gt], dim=0)
-    target_X = torch.tensor(target_X, dtype=torch.float32).to(utils.DEVICE)
-    target_y_task = torch.tensor(target_y_task, dtype=torch.long).to(utils.DEVICE)
+    target_X = torch.tensor(target_X, dtype=torch.float32)
+    target_y_task = torch.tensor(target_y_task, dtype=torch.long)
     isih_dann.fit_1st_dim(source_loader, target_loader, target_X, target_y_task)
     pred_y_task = isih_dann.predict_proba(target_X, is_1st_dim=True)
     # Algo2 inter-reals DA
