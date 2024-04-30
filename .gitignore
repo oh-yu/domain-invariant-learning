@@ -1,3 +1,9 @@
+# experiments/MNIST/data
+experiments/MNIST/data
+
+# experiments/HHAR/data
+experiments/HHAR/data
+
 # .out
 *.out
 
