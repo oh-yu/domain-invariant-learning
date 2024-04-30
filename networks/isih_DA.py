@@ -77,7 +77,6 @@ class IsihDanns:
             self.domain_optimizer_dim1,
             self.task_optimizer_dim1,
             num_epochs=self.num_epochs_dim1,
-            do_plot=True
         )
 
     def fit_2nd_dim(self, source_loader, target_loader, test_target_X: torch.Tensor, test_target_y_task: torch.Tensor):
