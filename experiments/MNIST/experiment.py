@@ -97,7 +97,7 @@ if __name__ == "__main__":
     isih_dann = IsihDanns(
         input_size=None,
         hidden_size=None,
-        lr_dim1=0.0001,
+        lr_dim1=0.001,
         lr_dim2=0.00005,
         num_epochs_dim1=50,
         num_epochs_dim2=1,
