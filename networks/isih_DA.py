@@ -47,17 +47,17 @@ class IsihDanns:
 
 
         elif experiment in ["MNIST"]:
-            self.feature_extractor = Conv2d().to(DEVICE)
-            self.task_classifier_dim1 = DomainDecoder(input_size=1600, output_size=10, fc2_size=50).to(DEVICE)
-            self.domain_classifier_dim1 = DomainDecoder(input_size=1600, output_size=1, fc2_size=50).to(DEVICE)
+            self.feature_extractor = Conv2d()
+            self.task_classifier_dim1 = DomainDecoder(input_size=1600, output_size=10, fc2_size=50)
+            self.domain_classifier_dim1 = DomainDecoder(input_size=1600, output_size=1, fc2_size=50)
             self.feature_optimizer_dim1 = optim.Adam(self.feature_extractor.parameters(), lr=lr_dim1)
             self.domain_optimizer_dim1 = optim.Adam(self.domain_classifier_dim1.parameters(), lr=lr_dim1)
             self.task_optimizer_dim1 = optim.Adam(self.task_classifier_dim1.parameters(), lr=lr_dim1)
             self.criterion = nn.BCELoss()
             self.num_epochs_dim1 = num_epochs_dim1
 
-            self.task_classifier_dim2 = DomainDecoder(input_size=1600, output_size=10, fc2_size=50).to(DEVICE)
-            self.domain_classifier_dim2 = DomainDecoder(input_size=1600, output_size=1, fc2_size=50).to(DEVICE)
+            self.task_classifier_dim2 = DomainDecoder(input_size=1600, output_size=10, fc2_size=50)
+            self.domain_classifier_dim2 = DomainDecoder(input_size=1600, output_size=1, fc2_size=50)
             self.feature_optimizer_dim2 = optim.Adam(self.feature_extractor.parameters(), lr=lr_dim2)
             self.domain_optimizer_dim2 = optim.Adam(self.domain_classifier_dim2.parameters(), lr=lr_dim2)
             self.task_optimizer_dim2 = optim.Adam(self.task_classifier_dim2.parameters(), lr=lr_dim2)

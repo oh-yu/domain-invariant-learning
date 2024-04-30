@@ -47,7 +47,6 @@ def get_image_data_for_uda(name="MNIST"):
         custom_transform = transforms.Compose([
             transforms.ToTensor(),
             Reshape(),
-            lambda x: x.to(utils.DEVICE),
         ])
         # TODO: Understand transforms.Compose
         train_data = datasets.MNIST(root="./domain-invariant-learning/experiments/MNIST/data/MNIST", train=True, download=True, transform=custom_transform)
@@ -58,7 +57,6 @@ def get_image_data_for_uda(name="MNIST"):
     elif name == "MNIST-M":
         custom_transform = transforms.Compose([
             transforms.ToTensor(),
-            lambda x: x.to(utils.DEVICE),
         ])
         imagefolder_data = ImageFolder(root='./domain-invariant-learning/experiments/MNIST/data/MNIST-M/training', transform=custom_transform)
         train_data = CustomUDADataset(imagefolder_data, "target")
@@ -71,7 +69,6 @@ def get_image_data_for_uda(name="MNIST"):
     elif name == "SVHN":
         custom_transform = transforms.Compose([
             transforms.ToTensor(),
-            lambda x: x.to(utils.DEVICE),
         ])
         train_data = torchvision.datasets.SVHN(
             './data/SVHN', 
