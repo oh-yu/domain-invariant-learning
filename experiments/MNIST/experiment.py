@@ -114,7 +114,7 @@ if __name__ == "__main__":
     target_X = torch.tensor(target_X, dtype=torch.float32).to(utils.DEVICE)
     target_y_task = torch.tensor(target_y_task, dtype=torch.long).to(utils.DEVICE)
     isih_dann.fit_1st_dim(source_loader, target_loader, target_X, target_y_task)
-    pred_y_task = isih_dann.predict_proba(target_X, is_1st_dim=False)
+    pred_y_task = isih_dann.predict_proba(target_X, is_1st_dim=True)
     # Algo2 inter-reals DA
     source_ds = TensorDataset(target_X, pred_y_task)
     source_loader = DataLoader(source_ds, batch_size=128, shuffle=True)
