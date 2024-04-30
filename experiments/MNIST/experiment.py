@@ -104,7 +104,8 @@ if __name__ == "__main__":
         lr_dim2=0.00005,
         num_epochs_dim1=50,
         num_epochs_dim2=1,
-        experiment="MNIST"
+        experiment="MNIST",
+        is_target_weights=False
     )
 
     # Algo1 inter-colors DA

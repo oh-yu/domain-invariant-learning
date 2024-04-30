@@ -25,6 +25,7 @@ class IsihDanns:
         num_epochs_dim2: int,
         output_size: int = 1,
         experiment: str = "HHAR",
+        is_target_weights: bool = True,
     ):
         if experiment in ["HHAR", "ECOdataset", "ECOdataset_synthetic"]:
             self.feature_extractor = Conv1d(input_size=input_size).to(DEVICE)
@@ -42,6 +43,7 @@ class IsihDanns:
             self.domain_optimizer_dim2 = optim.Adam(self.domain_classifier_dim2.parameters(), lr=lr_dim2)
             self.task_optimizer_dim2 = optim.Adam(self.task_classifier_dim2.parameters(), lr=lr_dim2)
             self.num_epochs_dim2 = num_epochs_dim2
+            self.is_target_weights = is_target_weights
 
 
         elif experiment in ["MNIST"]:
@@ -60,7 +62,7 @@ class IsihDanns:
             self.domain_optimizer_dim2 = optim.Adam(self.domain_classifier_dim2.parameters(), lr=lr_dim2)
             self.task_optimizer_dim2 = optim.Adam(self.task_classifier_dim2.parameters(), lr=lr_dim2)
             self.num_epochs_dim2 = num_epochs_dim2
-
+            self.is_target_weights = is_target_weights
 
 
     def fit_1st_dim(self, source_loader, target_loader, test_target_X: torch.Tensor, test_target_y_task: torch.Tensor):
@@ -77,6 +79,7 @@ class IsihDanns:
             self.domain_optimizer_dim1,
             self.task_optimizer_dim1,
             num_epochs=self.num_epochs_dim1,
+            is_target_weights=self.is_target_weights,
         )
 
     def fit_2nd_dim(self, source_loader, target_loader, test_target_X: torch.Tensor, test_target_y_task: torch.Tensor):
@@ -94,6 +97,7 @@ class IsihDanns:
             self.task_optimizer_dim2,
             num_epochs=self.num_epochs_dim2,
             is_psuedo_weights=True,
+            is_target_weights=self.is_target_weights,
         )
 
     def predict(self, X: torch.Tensor, is_1st_dim: bool) -> torch.Tensor:
