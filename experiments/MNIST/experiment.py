@@ -40,7 +40,7 @@ class CustomUDADataset(torch.utils.data.Dataset):
     # TODO: Understand this style implementation
 
 
-def get_image_data_for_uda(name="MNIST", source_or_target="source"):
+def get_image_data_for_uda(name="MNIST"):
     assert name in ["MNIST", "MNIST-M", "SVHN"]
 
     if name == "MNIST":
@@ -51,7 +51,7 @@ def get_image_data_for_uda(name="MNIST", source_or_target="source"):
         ])
         # TODO: Understand transforms.Compose
         train_data = datasets.MNIST(root="./domain-invariant-learning/experiments/MNIST/data/MNIST", train=True, download=True, transform=custom_transform)
-        train_data = CustomUDADataset(train_data, source_or_target)
+        train_data = CustomUDADataset(train_data, "source")
         train_loader = torch.utils.data.DataLoader(train_data, batch_size=128, shuffle=False)
         return train_loader
     
@@ -60,11 +60,13 @@ def get_image_data_for_uda(name="MNIST", source_or_target="source"):
             transforms.ToTensor(),
             lambda x: x.to(utils.DEVICE),
         ])
-        train_data = ImageFolder(root='./domain-invariant-learning/experiments/MNIST/data/MNIST-M/training', transform=custom_transform)
-        train_data = CustomUDADataset(train_data, source_or_target)
-
+        imagefolder_data = ImageFolder(root='./domain-invariant-learning/experiments/MNIST/data/MNIST-M/training', transform=custom_transform)
+        train_data = CustomUDADataset(imagefolder_data, "target")
         train_loader = DataLoader(train_data, batch_size=128, shuffle=False)
-        return train_loader, train_data
+
+        train_data_gt = CustomUDADataset(imagefolder_data, "source")
+        train_loader_gt = DataLoader(train_data_gt, batch_size=128, shuffle=False)
+        return train_loader, train_loader_gt
 
     elif name == "SVHN":
         custom_transform = transforms.Compose([
@@ -76,25 +78,23 @@ def get_image_data_for_uda(name="MNIST", source_or_target="source"):
             split='train',
             download=True,
             transform=custom_transform)
-        train_data = CustomUDADataset(train_data, source_or_target)
+        train_data = CustomUDADataset(train_data, "target")
         train_loader = DataLoader(train_data, batch_size=128, shuffle=False)
         test_data = torchvision.datasets.SVHN(
             "./data/SVHN",
             split="test",
             download=True,
             transform=custom_transform)
-        test_data = CustomUDADataset(test_data, source_or_target)
+        test_data = CustomUDADataset(test_data, "source")
         test_loader = DataLoader(test_data, batch_size=128, shuffle=False)
         return train_loader, test_loader
 
 
 if __name__ == "__main__":
     # Load Data
-    source_loader = get_image_data_for_uda("MNIST", "source")
-    target_loader, target_data = get_image_data_for_uda("MNIST-M", "target")
-    target_loader_gt, _ = get_image_data_for_uda("MNIST-M", "source")
-    train_target_prime_loader, _ = get_image_data_for_uda("SVHN", "target")
-    _, test_target_prime_loader_gt = get_image_data_for_uda("SVHN", "source")
+    source_loader = get_image_data_for_uda("MNIST")
+    target_loader, target_loader_gt = get_image_data_for_uda("MNIST-M")
+    train_target_prime_loader, test_target_prime_loader_gt = get_image_data_for_uda("SVHN")
 
     # Model Init
     isih_dann = IsihDanns(
