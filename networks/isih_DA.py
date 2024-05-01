@@ -44,6 +44,7 @@ class IsihDanns:
             self.task_optimizer_dim2 = optim.Adam(self.task_classifier_dim2.parameters(), lr=lr_dim2)
             self.num_epochs_dim2 = num_epochs_dim2
             self.is_target_weights = is_target_weights
+            
 
 
         elif experiment in ["MNIST"]:
@@ -64,6 +65,8 @@ class IsihDanns:
             self.num_epochs_dim2 = num_epochs_dim2
             self.is_target_weights = is_target_weights
 
+            self.device = torch.device("cpu")
+
 
     def fit_1st_dim(self, source_loader, target_loader, test_target_X: torch.Tensor, test_target_y_task: torch.Tensor):
         self.feature_extractor, self.task_classifier_dim1, _ = algo.fit(
@@ -80,6 +83,7 @@ class IsihDanns:
             self.task_optimizer_dim1,
             num_epochs=self.num_epochs_dim1,
             is_target_weights=self.is_target_weights,
+            device=self.device,
         )
 
     def fit_2nd_dim(self, source_loader, target_loader, test_target_X: torch.Tensor, test_target_y_task: torch.Tensor):
@@ -98,6 +102,7 @@ class IsihDanns:
             num_epochs=self.num_epochs_dim2,
             is_psuedo_weights=True,
             is_target_weights=self.is_target_weights,
+            device=self.device,
         )
 
     def predict(self, X: torch.Tensor, is_1st_dim: bool) -> torch.Tensor:

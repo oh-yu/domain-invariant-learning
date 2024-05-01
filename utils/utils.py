@@ -202,7 +202,7 @@ def _change_lr_during_dann_training(
     return domain_optimizer, feature_optimizer, task_optimizer
 
 
-def _get_psuedo_label_weights(source_Y_batch: torch.Tensor, thr: float = 0.75, alpha: int = 1) -> torch.Tensor:
+def _get_psuedo_label_weights(source_Y_batch: torch.Tensor, thr: float = 0.75, alpha: int = 1, device=DEVICE) -> torch.Tensor:
     """
     # TODO: attach paper
 
@@ -239,7 +239,7 @@ def _get_psuedo_label_weights(source_Y_batch: torch.Tensor, thr: float = 0.75, a
                 psuedo_label_weights.append(1)
             else:
                 psuedo_label_weights.append(i**alpha + (1 - thr))
-    return torch.tensor(psuedo_label_weights, dtype=torch.float32).to(DEVICE)
+    return torch.tensor(psuedo_label_weights, dtype=torch.float32).to(device)
 
 
 def _get_terminal_weights(
