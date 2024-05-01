@@ -1,12 +1,20 @@
+from sklearn.gaussian_process.kernels import RBF
 import torch
+
 from ..utils import utils
 
 
 def fit_kernel(x, y):
-    # TODO: Implement
-    pass
+    """
+    https://scikit-learn.org/stable/modules/generated/sklearn.gaussian_process.kernels.RBF.html
+    """
+    rbf = RBF(length_scale=1.0)
+    return rbf(x, y)
 
 def get_MMD(x, y):
+    """
+    https://jejjohnson.github.io/research_journal/appendix/similarity/mmd/
+    """
     mmd_xx = torch.mean(fit_kernel(x, x))
     mmd_yy = torch.mean(fit_kernel(y, y))
     mmd_xy = -2 * torch.mean(fit_kernel(x, y))
