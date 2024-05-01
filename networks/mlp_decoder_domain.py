@@ -4,7 +4,7 @@ from torch import nn
 
 
 class DomainDecoder(nn.Module):
-    def __init__(self, input_size, output_size, fc1_size=500, fc2_size=500, dropout_ratio=0.3):
+    def __init__(self, input_size, output_size, fc1_size=3072, fc2_size=2048, dropout_ratio=0):
         super().__init__()
         self.fc1 = nn.Linear(input_size, fc1_size)
         self.dropout1 = nn.Dropout(dropout_ratio)

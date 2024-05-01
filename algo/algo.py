@@ -91,7 +91,7 @@ def fit(
     loss_task_evals = []
     num_epochs = torch.tensor(num_epochs, dtype=torch.int32).to(device)
     
-    for epoch in tqdm(range(1, num_epochs.item() + 1), disable=True):
+    for epoch in tqdm(range(1, num_epochs.item() + 1)):
         epoch = torch.tensor(epoch, dtype=torch.float32).to(device)
         feature_extractor.train()
         task_classifier.train()
@@ -160,6 +160,7 @@ def fit(
                 loss_tasks.append(loss_task.item())
 
             # 2. Backward, Update Params
+
             domain_optimizer.zero_grad()
             task_optimizer.zero_grad()
             feature_optimizer.zero_grad()
@@ -180,7 +181,6 @@ def fit(
             acc = sum(pred_y_task_eval == target_y_task) / target_y_task.shape[0]
         loss_task_evals.append(acc.item())
 
-        if (epoch % 50 == 0) & do_print:
-            print(f"Epoch: {epoch}, Loss Domain: {loss_domain}, Loss Task: {loss_task}, Acc: {acc}")
+        print(f"Epoch: {epoch}, Loss Domain: {loss_domain}, Loss Task: {loss_task}, Acc: {acc}")
     utils._plot_dann_loss(do_plot, loss_domains, loss_tasks, loss_task_evals)
     return feature_extractor, task_classifier, loss_task_evals

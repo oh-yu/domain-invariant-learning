@@ -76,7 +76,7 @@ def get_image_data_for_uda(name="MNIST"):
             download=True,
             transform=custom_transform)
         train_data = CustomUDADataset(train_data, "target")
-        train_loader = DataLoader(train_data, batch_size=16, shuffle=True)
+        train_loader = DataLoader(train_data, batch_size=128, shuffle=False)
         test_data = torchvision.datasets.SVHN(
             "./data/SVHN",
             split="test",
@@ -98,9 +98,9 @@ if __name__ == "__main__":
         input_size=None,
         hidden_size=None,
         lr_dim1=0.001,
-        lr_dim2=0.00005,
-        num_epochs_dim1=50,
-        num_epochs_dim2=1,
+        lr_dim2=0.0005,
+        num_epochs_dim1=100,
+        num_epochs_dim2=25,
         experiment="MNIST",
         is_target_weights=False
     )
@@ -112,6 +112,7 @@ if __name__ == "__main__":
     target_y_task = torch.tensor(target_y_task, dtype=torch.long)
     isih_dann.fit_1st_dim(source_loader, target_loader, target_X, target_y_task)
     pred_y_task = isih_dann.predict_proba(target_X, is_1st_dim=True)
+
     # Algo2 inter-reals DA
     source_ds = TensorDataset(target_X, pred_y_task)
     source_loader = DataLoader(source_ds, batch_size=128, shuffle=True)
