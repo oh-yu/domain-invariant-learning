@@ -10,7 +10,6 @@ class Conv2d(nn.Module):
         self.max_pool1 = nn.MaxPool2d(kernel_size=2, stride=2)
         self.conv2 = nn.Conv2d(in_channels=32, out_channels=48, kernel_size=5, stride=1, padding=1)
         self.max_pool2 = nn.MaxPool2d(kernel_size=2, stride=2)
-        self.conv3 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=5, stride=1, padding=1)
         # TODO: Understand nn.Conv2d, nn.MaxPool2d DOC
 
     def forward(self, x):
@@ -18,7 +17,6 @@ class Conv2d(nn.Module):
         # https://discuss.pytorch.org/t/runtimeerror-one-of-the-variables-needed-for-gradient-computation-has-been-modified-by-an-inplace-operation-torch-floattensor-64-1-which-is-output-0-of-asstridedbackward0-is-at-version-3-expected-version-2-instead-hint-the-backtrace-further-a/171826/7
         x = F.relu(nn.functional.conv2d(x, self.conv1.weight.clone(), self.conv1.bias, stride=1, padding=1))
         x = self.max_pool1(x)
-        # x = self.drop1(x)
         x = F.relu(nn.functional.conv2d(x, self.conv2.weight.clone(), self.conv2.bias, stride=1, padding=1))
         x = self.max_pool2(x)
         N = x.shape[0]

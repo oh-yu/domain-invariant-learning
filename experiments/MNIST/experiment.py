@@ -76,7 +76,7 @@ def get_image_data_for_uda(name="MNIST"):
             download=True,
             transform=custom_transform)
         train_data = CustomUDADataset(train_data, "target")
-        train_loader = DataLoader(train_data, batch_size=128, shuffle=False)
+        train_loader = DataLoader(train_data, batch_size=16, shuffle=True)
         test_data = torchvision.datasets.SVHN(
             "./data/SVHN",
             split="test",
