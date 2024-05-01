@@ -44,6 +44,8 @@ class IsihDanns:
             self.task_optimizer_dim2 = optim.Adam(self.task_classifier_dim2.parameters(), lr=lr_dim2)
             self.num_epochs_dim2 = num_epochs_dim2
             self.is_target_weights = is_target_weights
+
+            self.device = DEVICE
             
 
 
