@@ -33,7 +33,6 @@ def fit_dan(source_loader, target_loader, num_epochs,
         for (source_X_batch, source_Y_batch), (target_X_batch, _) in zip(
             source_loader, target_loader
         ):
-            pass
             # 0. Data
             if task_classifier_source.output_size == 1:
                 source_y_task_batch = source_Y_batch[:, utils.COL_IDX_TASK] > 0.5
