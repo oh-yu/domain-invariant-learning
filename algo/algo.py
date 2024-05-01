@@ -119,7 +119,7 @@ def fit(
                     source_y_task_batch = source_y_task_batch.to(torch.long)
                     source_y_domain_batch = source_Y_batch[:, utils.COL_IDX_DOMAIN]
 
-            psuedo_label_weights = utils._get_psuedo_label_weights(source_Y_batch, device)
+            psuedo_label_weights = utils._get_psuedo_label_weights(source_Y_batch=source_Y_batch, device=device)
 
             # 1. Forward
             # 1.1 Feature Extractor
