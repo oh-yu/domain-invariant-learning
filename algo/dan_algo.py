@@ -83,7 +83,7 @@ def fit_dan(source_loader, target_loader, num_epochs,
             acc = sum(target_out == target_y_task) / len(target_y_task)
             if epoch % 10 == 0:
                 print(f"Epoch: {epoch}, Loss MMD: {loss_mmd}, Loss Task: {loss_task}, Acc: {acc}")
-        return feature_extractor, task_classifier_target
+    return feature_extractor, task_classifier_target
 
 if __name__ == "__main__":
     # Load Data
@@ -155,13 +155,13 @@ if __name__ == "__main__":
     task_classifier = utils.fit_without_adaptation(
         source_loader, task_classifier, task_optimizer, criterion, num_epochs=100
     )
-    pred_y_task = task_classifier(feature_extractor(target_X.to(utils.DEVICE)))
+    pred_y_task = task_classifier(target_X.to(utils.DEVICE))
     pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
     pred_y_task = pred_y_task > 0.5
     acc = sum(pred_y_task == target_y_task) / target_y_task.shape[0]
     print(f"Without Adaptation Accuracy:{acc}")
 
-    y_grid = task_classifier(feature_extractor(x_grid.T))
+    y_grid = task_classifier(x_grid.T)
     y_grid = torch.sigmoid(y_grid).cpu().detach().numpy()
 
 
