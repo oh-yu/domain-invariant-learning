@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 from sklearn.gaussian_process.kernels import RBF
 import torch
 from torch import nn, optim
@@ -82,6 +83,7 @@ def fit_dan(source_loader, target_loader, num_epochs,
             acc = sum(target_out == target_y_task) / len(target_y_task)
             if epoch % 10 == 0:
                 print(f"Epoch: {epoch}, Loss MMD: {loss_mmd}, Loss Task: {loss_task}, Acc: {acc}")
+        return feature_extractor, task_classifier_target
 
 if __name__ == "__main__":
     # Load Data
@@ -112,7 +114,7 @@ if __name__ == "__main__":
     task_optimizer_source = optim.Adam(task_classifier_source.parameters(), lr=learning_rate)
 
     # Fit DAN
-    fit_dan(
+    feature_extractor, task_classifier = fit_dan(
         source_loader=source_loader,
         target_loader=target_loader,
         num_epochs=100,
@@ -130,5 +132,19 @@ if __name__ == "__main__":
         target_y_task=target_y_task
     )
     print("Done!")
+    source_X = source_X.cpu()
+    target_X = target_X.cpu()
+    x_grid = torch.tensor(x_grid, dtype=torch.float32).to(utils.DEVICE)
+    y_grid = task_classifier(x_grid.T)
+    y_grid = torch.sigmoid(y_grid).cpu().detach().numpy()
 
+    plt.figure()
+    plt.title("Domain Adaptation Boundary")
+    plt.xlabel("X1")
+    plt.ylabel("X2")
+    plt.scatter(source_X[:, 0], source_X[:, 1], c=source_y_task)
+    plt.scatter(target_X[:, 0], target_X[:, 1], c="black")
+    plt.contourf(x1_grid, x2_grid, y_grid.reshape(100, 100), alpha=0.3)
+    plt.colorbar()
+    plt.show()
     # Eval
