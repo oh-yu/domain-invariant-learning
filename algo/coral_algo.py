@@ -31,13 +31,12 @@ def get_covariance_matrix(x, y):
     return cov_mat_x, cov_mat_y
 
 
-def fit_coral(source_loader, target_loader, num_epochs, task_classifier, criterion, optimizer, is_psuedo_weights, alpha):
+def fit_coral(source_loader, target_loader, num_epochs, task_classifier, criterion, optimizer, is_psuedo_weights, k, alpha):
     for epoch in range(1, num_epochs.item() + 1):
         task_classifier.train()
         for (source_X_batch, source_Y_batch), (target_X_batch, _) in zip(
             source_loader, target_loader
         ):
-            k = source_X_batch.shape[1]
             # 0. Data
             if task_classifier.output_size == 1:
                 source_y_task_batch = source_Y_batch[:, utils.COL_IDX_TASK] > 0.5
