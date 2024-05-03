@@ -1,4 +1,5 @@
 from sklearn.gaussian_process.kernels import RBF
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from torch import nn, optim
@@ -74,6 +75,7 @@ def fit_coral(source_loader, target_loader, num_epochs, task_classifier, criteri
             acc = sum(target_out == target_y_task) / len(target_y_task)
             if epoch % 10 == 0:
                 print(f"Epoch: {epoch}, Loss Coral: {loss_coral}, Loss Task: {loss_task}, Acc: {acc}")
+        return task_classifier
 
 
 if __name__ == "__main__":
@@ -100,7 +102,7 @@ if __name__ == "__main__":
     task_optimizer = optim.Adam(task_classifier.parameters(), lr=learning_rate)
 
     # Fit CoRAL
-    fit_coral(
+    task_classifier = fit_coral(
         source_loader,
         target_loader,
         num_epochs=500,
@@ -111,4 +113,18 @@ if __name__ == "__main__":
         target_X=target_X,
         target_y_task=target_y_task,
     )
-    print("Done!")
+    source_X = source_X.cpu()
+    target_X = target_X.cpu()
+    x_grid = torch.tensor(x_grid, dtype=torch.float32).to(utils.DEVICE)
+    y_grid = task_classifier(x_grid.T)
+    y_grid = torch.sigmoid(y_grid).cpu().detach().numpy()
+
+    plt.figure()
+    plt.title("Domain Adaptation Boundary")
+    plt.xlabel("X1")
+    plt.ylabel("X2")
+    plt.scatter(source_X[:, 0], source_X[:, 1], c=source_y_task)
+    plt.scatter(target_X[:, 0], target_X[:, 1], c="black")
+    plt.contourf(x1_grid, x2_grid, y_grid.reshape(100, 100), alpha=0.3)
+    plt.colorbar()
+    plt.show()
