@@ -8,24 +8,8 @@ from ..networks import Decoder
 from ..utils import utils
 
 
-
-def fit_kernel(x, y):
-    """
-    https://scikit-learn.org/stable/modules/generated/sklearn.gaussian_process.kernels.RBF.html
-    """
-    x = x.cpu().detach().numpy()
-    y = y.cpu().detach().numpy()
-    rbf = RBF(length_scale=1.0)
-    return torch.tensor(rbf(x, y), dtype=torch.float32).to(utils.DEVICE)
-
-def get_MMD(x, y):
-    """
-    https://jejjohnson.github.io/research_journal/appendix/similarity/mmd/
-    """
-    mmd_xx = torch.mean(fit_kernel(x, x))
-    mmd_yy = torch.mean(fit_kernel(y, y))
-    mmd_xy = -2 * torch.mean(fit_kernel(x, y))
-    return mmd_xx + mmd_yy + mmd_xy
+def get_MSE(x, y):
+    return torch.sum((x - y) ** 2)
 
 
 def get_covariance_matrix(x, y):
@@ -58,7 +42,7 @@ def fit_coral(source_loader, target_loader, num_epochs, task_classifier, criteri
             # 1.2 CoRAL Loss
             cov_mat_source, cov_mat_target = get_covariance_matrix(source_out, target_out)
             k = source_out.shape[1]
-            loss_coral = get_MMD(cov_mat_source, cov_mat_target) * (1/(4*k**2))
+            loss_coral = get_MSE(cov_mat_source, cov_mat_target) * (1/(4*k**2))
             loss = loss_task + loss_coral * alpha
             # 2. Backward
             optimizer.zero_grad()
