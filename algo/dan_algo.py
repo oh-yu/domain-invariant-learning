@@ -26,7 +26,7 @@ def get_MMD(x, y):
 def fit_dan(source_loader, target_loader, num_epochs,
             feature_extractor, task_classifier_source, task_classifier_target,
             criterion, feature_optimizer, task_optimizer_source, task_optimizer_target,
-            is_psuedo_weights, alpha_feat, alpha_task):
+            is_psuedo_weights, alpha_feat, alpha_task, target_X, target_y_task):
 
     for epoch in range(1, num_epochs+1):
         feature_extractor.train()
@@ -72,7 +72,16 @@ def fit_dan(source_loader, target_loader, num_epochs,
             task_optimizer_target.step()
         
         # 4. Eval
-        # TODO: Implement
+        with torch.no_grad():
+            feature_extractor.eval()
+            task_classifier_target.eval()
+            target_feat = feature_extractor(target_X)
+            target_out = task_classifier_target(target_feat)
+            target_out = torch.sigmoid(target_out).reshape(-1)
+            target_out = target_out > 0.5
+            acc = sum(target_out == target_y_task) / len(target_y_task)
+            if epoch % 10 == 0:
+                print(f"Epoch: {epoch}, Loss MMD: {loss_mmd}, Loss Task: {loss_task}, Acc: {acc}")
 
 if __name__ == "__main__":
     # Load Data
@@ -89,14 +98,13 @@ if __name__ == "__main__":
         source_X, target_X, source_y_task, target_y_task
     )
     # Init NN
-    hidden_size = 10
-    num_domains = 1
+    hidden_size = 100
     num_classes = 1
 
     feature_extractor = Encoder(input_size=source_X.shape[1], output_size=hidden_size).to(utils.DEVICE)
-    task_classifier_source = Decoder(input_size=hidden_size, output_size=num_classes, fc1_size=50, fc2_size=10).to(utils.DEVICE)
-    task_classifier_target = Decoder(input_size=hidden_size, output_size=num_classes, fc1_size=50, fc2_size=10).to(utils.DEVICE)
-    learning_rate = 0.001
+    task_classifier_source = Decoder(input_size=hidden_size, output_size=num_classes, fc1_size=500, fc2_size=100).to(utils.DEVICE)
+    task_classifier_target = Decoder(input_size=hidden_size, output_size=num_classes, fc1_size=500, fc2_size=100).to(utils.DEVICE)
+    learning_rate = 0.01
 
     criterion = nn.BCELoss()
     feature_optimizer = optim.Adam(feature_extractor.parameters(), lr=learning_rate)
@@ -116,8 +124,10 @@ if __name__ == "__main__":
         task_optimizer_source=task_optimizer_source,
         task_optimizer_target=task_optimizer_target,
         is_psuedo_weights=False,
-        alpha_feat=1,
-        alpha_task=1,
+        alpha_feat=0.5,
+        alpha_task=0.1,
+        target_X=target_X,
+        target_y_task=target_y_task
     )
     print("Done!")
 
