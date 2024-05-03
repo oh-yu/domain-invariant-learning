@@ -8,8 +8,10 @@ def fit_kernel(x, y):
     """
     https://scikit-learn.org/stable/modules/generated/sklearn.gaussian_process.kernels.RBF.html
     """
+    x = x.cpu().detach().numpy()
+    y = y.cpu().detach().numpy()
     rbf = RBF(length_scale=1.0)
-    return rbf(x, y)
+    return torch.tensor(rbf(x, y), dtype=torch.float32).to(utils.DEVICE)
 
 def get_MMD(x, y):
     """
