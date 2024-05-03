@@ -58,6 +58,7 @@ def fit_coral(source_loader, target_loader, num_epochs, task_classifier, criteri
             loss_task = criterion(source_out, source_y_task_batch)
             # 1.2 CoRAL Loss
             cov_mat_source, cov_mat_target = get_covariance_matrix(source_out, target_out)
+            k = source_out.shape[1]
             loss_coral = get_MMD(cov_mat_source, cov_mat_target) * (1/(4*k**2))
             loss = loss_task + loss_coral * alpha
             # 2. Backward
