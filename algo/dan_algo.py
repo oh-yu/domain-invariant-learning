@@ -22,7 +22,7 @@ def get_MMD(x, y):
 
 def fit_dan(source_loader, target_loader, num_epochs,
             feature_extractor, task_classifier_source, task_classifier_target,
-            criterion, optimizer, is_psuedo_weights):
+            criterion, optimizer, is_psuedo_weights, alpha_feat, alpha_task):
 
     for epoch in range(1, num_epochs.item() + 1):
         feature_extractor.train()
@@ -60,8 +60,8 @@ def fit_dan(source_loader, target_loader, num_epochs,
             loss_task = criterion(source_out, source_y_task_batch)
 
             # 1.4 MMD Loss
-            loss_mmd = get_MMD(source_feat, target_feat)
-            loss_mmd += get_MMD(source_out, target_out)
+            loss_mmd = get_MMD(source_feat, target_feat) * alpha_feat
+            loss_mmd += get_MMD(source_out, target_out) * alpha_task
             loss = loss_task + loss_mmd
 
             # 2. Backward
