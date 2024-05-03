@@ -75,7 +75,7 @@ def fit_coral(source_loader, target_loader, num_epochs, task_classifier, criteri
             acc = sum(target_out == target_y_task) / len(target_y_task)
             if epoch % 10 == 0:
                 print(f"Epoch: {epoch}, Loss Coral: {loss_coral}, Loss Task: {loss_task}, Acc: {acc}")
-        return task_classifier
+    return task_classifier
 
 
 if __name__ == "__main__":
