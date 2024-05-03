@@ -60,7 +60,7 @@ class IsihDanns:
             self.num_epochs_dim1 = num_epochs_dim1
 
             self.task_classifier_dim2 = DomainDecoder(input_size=1728, output_size=10, fc1_size=100, fc2_size=100)
-            self.domain_classifier_dim2 = DomainDecoder(input_size=1728, output_size=1, fc2_size=100, fc1_size=10)
+            self.domain_classifier_dim2 = DomainDecoder(input_size=1728, output_size=1, fc1_size=100, fc2_size=10)
             self.feature_optimizer_dim2 = optim.Adam(self.feature_extractor.parameters(), lr=lr_dim2)
             self.domain_optimizer_dim2 = optim.Adam(self.domain_classifier_dim2.parameters(), lr=lr_dim2)
             self.task_optimizer_dim2 = optim.Adam(self.task_classifier_dim2.parameters(), lr=lr_dim2)
