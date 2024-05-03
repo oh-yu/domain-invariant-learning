@@ -1,7 +1,11 @@
 from sklearn.gaussian_process.kernels import RBF
 import numpy as np
 import torch
+from torch import nn, optim
+
+from ..networks import Decoder
 from ..utils import utils
+
 
 
 def fit_kernel(x, y):
@@ -33,31 +37,23 @@ def get_covariance_matrix(x, y):
     return cov_mat_x, cov_mat_y
 
 
-def fit_coral(source_loader, target_loader, num_epochs, task_classifier, criterion, optimizer, is_psuedo_weights, k, alpha):
-    for epoch in range(1, num_epochs.item() + 1):
+def fit_coral(source_loader, target_loader, num_epochs, task_classifier, criterion, optimizer, alpha, target_X, target_y_task):
+    for epoch in range(1, num_epochs + 1):
         task_classifier.train()
         for (source_X_batch, source_Y_batch), (target_X_batch, _) in zip(
             source_loader, target_loader
         ):
             # 0. Data
-            if task_classifier.output_size == 1:
-                source_y_task_batch = source_Y_batch[:, utils.COL_IDX_TASK] > 0.5
-                source_y_task_batch = source_y_task_batch.to(torch.float32)
-            else:
-                if is_psuedo_weights:
-                    output_size = source_Y_batch[:, :-1].shape[1]
-                    source_y_task_batch = source_Y_batch[:, :output_size]
-                    source_y_task_batch = torch.argmax(source_y_task_batch, dim=1)
-                    source_y_task_batch = source_y_task_batch.to(torch.long)
-                else:
-                    source_y_task_batch = source_Y_batch[:, utils.COL_IDX_TASK]
-                    source_y_task_batch = source_y_task_batch.to(torch.long)
+            source_y_task_batch = source_Y_batch[:, utils.COL_IDX_TASK] > 0.5
+            source_y_task_batch = source_y_task_batch.to(torch.float32)
+
             # 1. Forward
             source_out = task_classifier(source_X_batch)
             target_out = task_classifier(target_X_batch)
 
             # 1.1 Task Loss
-            loss_task = criterion(source_out, source_y_task_batch)
+            source_preds = torch.sigmoid(source_out).reshape(-1)
+            loss_task = criterion(source_preds, source_y_task_batch)
             # 1.2 CoRAL Loss
             cov_mat_source, cov_mat_target = get_covariance_matrix(source_out, target_out)
             k = source_out.shape[1]
@@ -70,4 +66,49 @@ def fit_coral(source_loader, target_loader, num_epochs, task_classifier, criteri
             optimizer.step()
 
         # 4. Eval
-        # TODO: Implement
+        with torch.no_grad():
+            task_classifier.eval()
+            target_out = task_classifier(target_X)
+            target_out = torch.sigmoid(target_out).reshape(-1)
+            target_out = target_out > 0.5
+            acc = sum(target_out == target_y_task) / len(target_y_task)
+            if epoch % 10 == 0:
+                print(f"Epoch: {epoch}, Loss Coral: {loss_coral}, Loss Task: {loss_task}, Acc: {acc}")
+
+
+if __name__ == "__main__":
+    # Load Data
+    (
+        source_X,
+        target_X,
+        source_y_task,
+        target_y_task,
+        x_grid,
+        x1_grid,
+        x2_grid,
+    ) = utils.get_source_target_from_make_moons()
+    source_loader, target_loader, source_y_task, source_X, target_X, target_y_task = utils.get_loader(
+        source_X, target_X, source_y_task, target_y_task
+    )
+
+    # Init NN
+    num_classes = 1
+    task_classifier = Decoder(input_size=2, output_size=num_classes, fc1_size=50, fc2_size=10).to(utils.DEVICE)
+    learning_rate = 0.01
+
+    criterion = nn.BCELoss()
+    task_optimizer = optim.Adam(task_classifier.parameters(), lr=learning_rate)
+
+    # Fit CoRAL
+    fit_coral(
+        source_loader,
+        target_loader,
+        num_epochs=500,
+        task_classifier=task_classifier,
+        criterion=criterion,
+        optimizer=task_optimizer,
+        alpha=1,
+        target_X=target_X,
+        target_y_task=target_y_task,
+    )
+    print("Done!")
