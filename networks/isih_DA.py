@@ -37,6 +37,7 @@ class IsihDanns:
             self.criterion = nn.BCELoss()
             self.num_epochs_dim1 = num_epochs_dim1
 
+            
             self.task_classifier_dim2 = TaskDecoder(input_size=hidden_size, output_size=output_size).to(DEVICE)
             self.domain_classifier_dim2 = DomainDecoder(input_size=hidden_size, output_size=1, dropout_ratio=0.3).to(DEVICE)
             self.feature_optimizer_dim2 = optim.Adam(self.feature_extractor.parameters(), lr=lr_dim2)
@@ -51,17 +52,18 @@ class IsihDanns:
 
         elif experiment in ["MNIST"]:
             self.feature_extractor = Conv2d()
-            self.task_classifier_dim1 = DomainDecoder(input_size=1728, output_size=10, fc1_size=100, fc2_size=100)
-            self.domain_classifier_dim1 = DomainDecoder(input_size=1728, output_size=1, fc1_size=100, fc2_size=10)
+            self.task_classifier_dim1 = DomainDecoder(input_size=1152, output_size=10, fc1_size=3072, fc2_size=2048)
+            self.domain_classifier_dim1 = DomainDecoder(input_size=1152, output_size=1, fc1_size=1024, fc2_size=1024)
             self.feature_optimizer_dim1 = optim.Adam(self.feature_extractor.parameters(), lr=lr_dim1)
             self.domain_optimizer_dim1 = optim.Adam(self.domain_classifier_dim1.parameters(), lr=lr_dim1)
             self.task_optimizer_dim1 = optim.Adam(self.task_classifier_dim1.parameters(), lr=lr_dim1)
             self.criterion = nn.BCELoss()
             self.num_epochs_dim1 = num_epochs_dim1
 
-            self.task_classifier_dim2 = DomainDecoder(input_size=1728, output_size=10, fc1_size=100, fc2_size=100)
-            self.domain_classifier_dim2 = DomainDecoder(input_size=1728, output_size=1, fc1_size=100, fc2_size=10)
-            self.feature_optimizer_dim2 = optim.Adam(self.feature_extractor.parameters(), lr=lr_dim2)
+            self.feature_extractor_dim2 = Conv2d()
+            self.task_classifier_dim2 = DomainDecoder(input_size=1152, output_size=10, fc1_size=3072, fc2_size=2048)
+            self.domain_classifier_dim2 = DomainDecoder(input_size=1152, output_size=1, fc1_size=1024, fc2_size=1024)
+            self.feature_optimizer_dim2 = optim.Adam(self.feature_extractor_dim2.parameters(), lr=lr_dim2)
             self.domain_optimizer_dim2 = optim.Adam(self.domain_classifier_dim2.parameters(), lr=lr_dim2)
             self.task_optimizer_dim2 = optim.Adam(self.task_classifier_dim2.parameters(), lr=lr_dim2)
             self.num_epochs_dim2 = num_epochs_dim2
@@ -94,7 +96,7 @@ class IsihDanns:
             target_loader,
             test_target_X,
             test_target_y_task,
-            self.feature_extractor,
+            self.feature_extractor_dim2,
             self.domain_classifier_dim2,
             self.task_classifier_dim2,
             self.criterion,
