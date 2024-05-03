@@ -100,7 +100,7 @@ if __name__ == "__main__":
         lr_dim1=0.001,
         lr_dim2=0.0005,
         num_epochs_dim1=100,
-        num_epochs_dim2=25,
+        num_epochs_dim2=100,
         experiment="MNIST",
         is_target_weights=False
     )
@@ -114,6 +114,8 @@ if __name__ == "__main__":
     pred_y_task = isih_dann.predict_proba(target_X, is_1st_dim=True)
 
     # Algo2 inter-reals DA
+    domain_labels = torch.ones(pred_y_task.shape[0]).reshape(-1, 1)
+    pred_y_task = torch.cat((pred_y_task, domain_labels), dim=1)
     source_ds = TensorDataset(target_X, pred_y_task)
     source_loader = DataLoader(source_ds, batch_size=128, shuffle=True)
     test_target_prime_X = torch.cat([X for X, _ in test_target_prime_loader_gt], dim=0)
