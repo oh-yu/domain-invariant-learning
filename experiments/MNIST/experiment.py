@@ -87,7 +87,7 @@ def get_image_data_for_uda(name="MNIST"):
         return train_loader, test_loader
 
 
-def isih_da_real():
+def isih_da():
     # Load Data
     source_loader = get_image_data_for_uda("MNIST")
     target_loader, target_loader_gt = get_image_data_for_uda("MNIST-M")
