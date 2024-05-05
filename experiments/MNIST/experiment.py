@@ -136,16 +136,31 @@ def dann():
 
     # Model Init
     dann = Dann(
-        fc1_size=3072,
-        fc2_size=2048,
+        task_fc1_size=3072,
+        task_fc2_size=2048,
+        domain_fc1_size=1024,
+        domain_fc2_size=1024,
         output_size=10,
         input_size=1152,
         lr=1e-4,
         num_epochs=10,
     )
     # Fit DANN
+    test_target_prime_X = torch.cat([X for X, _ in test_target_prime_loader_gt], dim=0)
+    test_target_prime_y_task = torch.cat([y[:, 0] for _, y in test_target_prime_loader_gt], dim=0)
+    dann.fit(
+        source_loader,
+        train_target_prime_loader,
+        test_target_prime_X,
+        test_target_prime_y_task,
+    )
 
     # Eval
+    dann.set_eval()
+    pred_y_task = dann.predict(test_target_prime_X)
+    acc = sum(pred_y_task == test_target_prime_y_task) / len(test_target_prime_y_task)
+    return acc.item()
+
 
 if __name__ == "__main__":
     pass

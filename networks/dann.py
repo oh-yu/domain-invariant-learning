@@ -9,10 +9,10 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 class Dann:
-    def __init__(self, fc1_size: int, fc2_size: int, output_size: int, input_size: int = 1600, lr: int = 1e-3, num_epochs: int = 100):
+    def __init__(self, domain_fc1_size: int, domain_fc2_size: int, task_fc1_size: int, task_fc2_size: int, output_size: int, input_size: int = 1600, lr: int = 1e-3, num_epochs: int = 100):
         self.feature_extractor = Conv2d().to(DEVICE)
-        self.task_classifier = DomainDecoder(input_size=input_size, output_size=output_size, fc1_size=fc1_size, fc2_size=fc2_size).to(DEVICE)
-        self.domain_classifier = DomainDecoder(input_size=input_size, output_size=1, fc1_size=fc1_size, fc2_size=fc2_size).to(DEVICE)
+        self.task_classifier = DomainDecoder(input_size=input_size, output_size=output_size, fc1_size=task_fc1_size, fc2_size=task_fc2_size).to(DEVICE)
+        self.domain_classifier = DomainDecoder(input_size=input_size, output_size=1, fc1_size=domain_fc1_size, fc2_size=domain_fc2_size).to(DEVICE)
         self.domain_criterion = nn.BCELoss()
 
         self.feature_otimizer = optim.Adam(self.feature_extractor.parameters(), lr=lr)
