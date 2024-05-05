@@ -114,6 +114,7 @@ def isih_da():
         hidden_size=None,
         lr_dim1=0.0001,
         lr_dim2=0.0005,
+        # TODO: currently lr_dim2 is dummy in IsihDanns
         num_epochs_dim1=100,
         num_epochs_dim2=100,
         experiment="MNIST",
@@ -132,7 +133,7 @@ def isih_da():
     domain_labels = torch.ones(pred_y_task.shape[0]).reshape(-1, 1)
     pred_y_task = torch.cat((pred_y_task, domain_labels), dim=1)
     source_ds = TensorDataset(target_X, pred_y_task)
-    source_loader = DataLoader(source_ds, batch_size=128, shuffle=True)
+    source_loader = DataLoader(source_ds, batch_size=64, shuffle=True)
     test_target_prime_X = torch.cat([X for X, _ in test_target_prime_loader_gt], dim=0)
     test_target_prime_y_task = torch.cat([y[:, 0] for _, y in test_target_prime_loader_gt], dim=0)
     isih_dann.fit_2nd_dim(source_loader, train_target_prime_loader, test_target_prime_X, test_target_prime_y_task)
