@@ -222,7 +222,7 @@ def train_on_target():
     return acc.item()
 
 
-def main(num_repeats):
+def main(num_repeats=1):
     isih_da_acc = 0
     dann_acc = 0
     without_adapt_acc = 0
