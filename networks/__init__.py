@@ -7,4 +7,5 @@ from .mlp_decoder_domain import DomainDecoder
 from .mlp_decoder_task import TaskDecoder
 from .mlp_encoder import Encoder
 from .dann import Dann
+from .dann_Fc import Dann_F_C
 

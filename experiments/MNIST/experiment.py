@@ -5,7 +5,7 @@ from torch.utils.data import DataLoader, TensorDataset
 import torchvision
 from torchvision import datasets, transforms
 from torchvision.datasets import ImageFolder
-from ...networks import IsihDanns, Dann
+from ...networks import IsihDanns, Dann, Dann_F_C
 
 from ...utils import utils
 
@@ -167,8 +167,17 @@ def without_adapt():
     train_target_prime_loader, test_target_prime_loader_gt = get_image_data_for_uda("SVHN")
 
     # Model Init
+    without_adapt = Dann_F_C()
+    without_adapt_optimizer = optim.Adam(without_adapt.parameters(), lr=1e-4)
+    criterion = nn.CrossEntropyLoss()
     # Fit
+    without_adapt = utils.fit_without_adaptation(source_loader, without_adapt, without_adapt_optimizer, criterion)
     # Eval
+    test_target_prime_X = torch.cat([X for X, _ in test_target_prime_loader_gt], dim=0)
+    test_target_prime_y_task = torch.cat([y[:, 0] for _, y in test_target_prime_loader_gt], dim=0)
+    pred_y_task = without_adapt.predict(test_target_prime_X)
+    acc = sum(pred_y_task == test_target_prime_y_task) / len(test_target_prime_y_task)
+    return acc.item()
 
 
 if __name__ == "__main__":

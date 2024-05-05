@@ -1,0 +1,22 @@
+import torch
+from torch import nn
+
+from .conv2d import Conv2d
+from .mlp_decoder_domain import DomainDecoder
+
+
+class Dann_F_C(nn.Module):
+    def __init__(self, input_size: int=1152, output_size: int = 1, fc1_size: int = 3072, fc2_size: int = 2048, device = torch.device("cpu")):
+        super().__init__()
+        self.conv2d = Conv2d().to(device)
+        self.decoder = DomainDecoder(input_size=input_size, output_size=output_size, fc1_size=fc1_size, fc2_size=fc2_size).to(device)
+        self.device = device
+    
+    def forward(self, x):
+        return self.decoder(self.conv2d(x))
+    
+    def predict(self, x):
+        return self.decoder.predict(self.conv2d(x))
+    
+    def predict_proba(self, x):
+        return self.decoder.predict_proba(self.conv2d(x))
