@@ -208,7 +208,7 @@ def train_on_target():
         for X, y in train_target_prime_loader:
             train_on_target_optimizer.zero_grad()
             pred_y_task = train_on_target.predict_proba(X)
-            loss = criterion(pred_y_task, y[:, 0])
+            loss = criterion(pred_y_task, y[:, 0].to(torch.long))
             loss.backward()
             train_on_target_optimizer.step()
 
@@ -220,4 +220,4 @@ def train_on_target():
     return acc.item()
 
 if __name__ == "__main__":
-    dann()
+    print(train_on_target())
