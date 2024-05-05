@@ -5,7 +5,7 @@ from torch.utils.data import DataLoader, TensorDataset
 import torchvision
 from torchvision import datasets, transforms
 from torchvision.datasets import ImageFolder
-from ...networks import IsihDanns
+from ...networks import IsihDanns, Dann
 
 from ...utils import utils
 
@@ -127,6 +127,25 @@ def isih_da_real():
     pred_y_task = isih_dann.predict(test_target_prime_X, is_1st_dim=False)
     acc = sum(pred_y_task == test_target_prime_y_task) / len(test_target_prime_y_task)
     return acc.item()
+
+
+def dann():
+    # Load Data
+    source_loader = get_image_data_for_uda("MNIST")
+    train_target_prime_loader, test_target_prime_loader_gt = get_image_data_for_uda("SVHN")
+
+    # Model Init
+    dann = Dann(
+        fc1_size=3072,
+        fc2_size=2048,
+        output_size=10,
+        input_size=1152,
+        lr=1e-4,
+        num_epochs=10,
+    )
+    # Fit DANN
+
+    # Eval
 
 if __name__ == "__main__":
     pass
