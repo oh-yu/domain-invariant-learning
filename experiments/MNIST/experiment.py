@@ -87,7 +87,7 @@ def get_image_data_for_uda(name="MNIST"):
         return train_loader, test_loader
 
 
-if __name__ == "__main__":
+def isih_da_real():
     # Load Data
     source_loader = get_image_data_for_uda("MNIST")
     target_loader, target_loader_gt = get_image_data_for_uda("MNIST-M")
@@ -126,4 +126,7 @@ if __name__ == "__main__":
     isih_dann.set_eval()
     pred_y_task = isih_dann.predict(test_target_prime_X, is_1st_dim=False)
     acc = sum(pred_y_task == test_target_prime_y_task) / len(test_target_prime_y_task)
-    print(acc.item())
+    return acc.item()
+
+if __name__ == "__main__":
+    pass
