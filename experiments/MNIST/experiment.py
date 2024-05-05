@@ -142,7 +142,6 @@ def dann():
         domain_fc2_size=1024,
         output_size=10,
         input_size=1152,
-        lr=1e-4,
         num_epochs=10,
     )
     # Fit DANN
@@ -163,4 +162,4 @@ def dann():
 
 
 if __name__ == "__main__":
-    pass
+    dann()
