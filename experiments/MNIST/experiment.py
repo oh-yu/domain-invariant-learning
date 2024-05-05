@@ -161,5 +161,15 @@ def dann():
     return acc.item()
 
 
+def without_adapt():
+    # Load Data
+    source_loader = get_image_data_for_uda("MNIST")
+    train_target_prime_loader, test_target_prime_loader_gt = get_image_data_for_uda("SVHN")
+
+    # Model Init
+    # Fit
+    # Eval
+
+
 if __name__ == "__main__":
     dann()
