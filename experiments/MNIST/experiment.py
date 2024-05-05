@@ -9,6 +9,10 @@ from ...networks import IsihDanns, Dann, Dann_F_C
 
 from ...utils import utils
 
+MNIST = get_image_data_for_uda("MNIST")
+MNIST_M = get_image_data_for_uda("MNIST-M")
+SVHN = get_image_data_for_uda("SVHN")
+SVHN_TRAIN_ON_TARGET = get_image_data_for_uda("SVHN-trainontarget")
 
 class Reshape(object):
     def __call__(self, img):
@@ -102,9 +106,9 @@ def get_image_data_for_uda(name="MNIST"):
 
 def isih_da():
     # Load Data
-    source_loader = get_image_data_for_uda("MNIST")
-    target_loader, target_loader_gt = get_image_data_for_uda("MNIST-M")
-    train_target_prime_loader, test_target_prime_loader_gt = get_image_data_for_uda("SVHN")
+    source_loader = MNIST
+    target_loader, target_loader_gt = MNIST_M
+    train_target_prime_loader, test_target_prime_loader_gt = SVHN
 
     # Model Init
     isih_dann = IsihDanns(
@@ -144,8 +148,8 @@ def isih_da():
 
 def dann():
     # Load Data
-    source_loader = get_image_data_for_uda("MNIST")
-    train_target_prime_loader, test_target_prime_loader_gt = get_image_data_for_uda("SVHN")
+    source_loader = MNIST
+    train_target_prime_loader, test_target_prime_loader_gt = SVHN
 
     # Model Init
     dann = Dann(
@@ -176,8 +180,8 @@ def dann():
 
 def without_adapt():
     # Load Data
-    source_loader = get_image_data_for_uda("MNIST")
-    _, test_target_prime_loader_gt = get_image_data_for_uda("SVHN")
+    source_loader = MNIST
+    _, test_target_prime_loader_gt = SVHN
 
     # Model Init
     without_adapt = Dann_F_C()
@@ -195,8 +199,8 @@ def without_adapt():
 
 def train_on_target():
     # Load Data
-    train_target_prime_loader = get_image_data_for_uda("SVHN-trainontarget")
-    _, test_target_prime_loader_gt = get_image_data_for_uda("SVHN")
+    train_target_prime_loader = SVHN_TRAIN_ON_TARGET
+    _, test_target_prime_loader_gt = SVHN
 
     # Model Init
     train_on_target = Dann_F_C()
