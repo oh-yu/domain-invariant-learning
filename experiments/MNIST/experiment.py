@@ -180,5 +180,15 @@ def without_adapt():
     return acc.item()
 
 
+def train_on_target():
+    # Load Data
+    train_target_prime_loader, test_target_prime_loader_gt = get_image_data_for_uda("SVHN")
+
+    # Model Init
+
+    # Fit
+
+    # Eval
+
 if __name__ == "__main__":
     dann()
