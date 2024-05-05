@@ -1,4 +1,6 @@
-import numpy as np
+from datetime import datetime
+
+import pandas as pd
 import torch
 from torch import nn, optim
 from torch.utils.data import DataLoader, TensorDataset
@@ -9,10 +11,6 @@ from ...networks import IsihDanns, Dann, Dann_F_C
 
 from ...utils import utils
 
-MNIST = get_image_data_for_uda("MNIST")
-MNIST_M = get_image_data_for_uda("MNIST-M")
-SVHN = get_image_data_for_uda("SVHN")
-SVHN_TRAIN_ON_TARGET = get_image_data_for_uda("SVHN-trainontarget")
 
 class Reshape(object):
     def __call__(self, img):
@@ -223,5 +221,34 @@ def train_on_target():
     acc = sum(pred_y_task == test_target_prime_y_task) / len(test_target_prime_y_task)
     return acc.item()
 
+
+def main(num_repeats):
+    isih_da_acc = 0
+    dann_acc = 0
+    without_adapt_acc = 0
+    train_on_target_acc = 0
+    for _ in range(num_repeats):
+        isih_da_acc += isih_da()
+        dann_acc += dann()
+        without_adapt_acc += without_adapt()
+        train_on_target_acc += train_on_target()
+    isih_da_acc /= num_repeats
+    dann_acc /= num_repeats
+    without_adapt_acc /= num_repeats
+    train_on_target_acc /= num_repeats
+
+    df = pd.DataFrame()
+    df["PAT"] = ["(non-color, non-real) -> (color, real)"]
+    df["isih-DA"] = [isih_da_acc]
+    df["DANN"] = [dann_acc]
+    df["Without Adapt"] = [without_adapt_acc]
+    df["Train on Target"] = [train_on_target_acc]
+    df.to_csv(f"MNIST_experiment_{str(datetime.now())}", index=False)
+
+MNIST = get_image_data_for_uda("MNIST")
+MNIST_M = get_image_data_for_uda("MNIST-M")
+SVHN = get_image_data_for_uda("SVHN")
+SVHN_TRAIN_ON_TARGET = get_image_data_for_uda("SVHN-trainontarget")
+
 if __name__ == "__main__":
-    print(train_on_target())
+    main()
