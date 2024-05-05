@@ -41,7 +41,7 @@ class CustomUDADataset(torch.utils.data.Dataset):
 
 
 def get_image_data_for_uda(name="MNIST"):
-    assert name in ["MNIST", "MNIST-M", "SVHN"]
+    assert name in ["MNIST", "MNIST-M", "SVHN", "SVHN-trainontarget"]
 
     if name == "MNIST":
         custom_transform = transforms.Compose([
@@ -51,7 +51,7 @@ def get_image_data_for_uda(name="MNIST"):
         # TODO: Understand transforms.Compose
         train_data = datasets.MNIST(root="./domain-invariant-learning/experiments/MNIST/data/MNIST", train=True, download=True, transform=custom_transform)
         train_data = CustomUDADataset(train_data, "source")
-        train_loader = torch.utils.data.DataLoader(train_data, batch_size=16, shuffle=True)
+        train_loader = torch.utils.data.DataLoader(train_data, batch_size=64, shuffle=True)
         return train_loader
     
     elif name == "MNIST-M":
@@ -60,7 +60,7 @@ def get_image_data_for_uda(name="MNIST"):
         ])
         imagefolder_data = ImageFolder(root='./domain-invariant-learning/experiments/MNIST/data/MNIST-M/training', transform=custom_transform)
         train_data = CustomUDADataset(imagefolder_data, "target")
-        train_loader = DataLoader(train_data, batch_size=16, shuffle=True)
+        train_loader = DataLoader(train_data, batch_size=64, shuffle=True)
 
         train_data_gt = CustomUDADataset(imagefolder_data, "source")
         train_loader_gt = DataLoader(train_data_gt, batch_size=128, shuffle=False)
@@ -76,7 +76,7 @@ def get_image_data_for_uda(name="MNIST"):
             download=True,
             transform=custom_transform)
         train_data = CustomUDADataset(train_data, "target")
-        train_loader = DataLoader(train_data, batch_size=16, shuffle=True)
+        train_loader = DataLoader(train_data, batch_size=64, shuffle=True)
         test_data = torchvision.datasets.SVHN(
             "./data/SVHN",
             split="test",
@@ -85,6 +85,19 @@ def get_image_data_for_uda(name="MNIST"):
         test_data = CustomUDADataset(test_data, "source")
         test_loader = DataLoader(test_data, batch_size=128, shuffle=False)
         return train_loader, test_loader
+    
+    elif name == "SVHN-trainontarget":
+        custom_transform = transforms.Compose([
+            transforms.ToTensor(),
+        ])
+        train_data = torchvision.datasets.SVHN(
+            './data/SVHN', 
+            split='train',
+            download=True,
+            transform=custom_transform)
+        train_data = CustomUDADataset(train_data, "source")
+        train_loader = DataLoader(train_data, batch_size=64, shuffle=True)
+        return train_loader
 
 
 def isih_da():
@@ -182,13 +195,29 @@ def without_adapt():
 
 def train_on_target():
     # Load Data
-    train_target_prime_loader, test_target_prime_loader_gt = get_image_data_for_uda("SVHN")
+    train_target_prime_loader = get_image_data_for_uda("SVHN-trainontarget")
+    _, test_target_prime_loader_gt = get_image_data_for_uda("SVHN")
 
     # Model Init
+    train_on_target = Dann_F_C()
+    train_on_target_optimizer = optim.Adam(train_on_target.parameters(), lr=1e-4)
+    criterion = nn.CrossEntropyLoss()
 
     # Fit
+    for _ in range(10):
+        for X, y in train_target_prime_loader:
+            train_on_target_optimizer.zero_grad()
+            pred_y_task = train_on_target.predict_proba(X)
+            loss = criterion(pred_y_task, y[:, 0])
+            loss.backward()
+            train_on_target_optimizer.step()
 
     # Eval
+    test_target_prime_X = torch.cat([X for X, _ in test_target_prime_loader_gt], dim=0)
+    test_target_prime_y_task = torch.cat([y[:, 0] for _, y in test_target_prime_loader_gt], dim=0)
+    pred_y_task = train_on_target.predict(test_target_prime_X)
+    acc = sum(pred_y_task == test_target_prime_y_task) / len(test_target_prime_y_task)
+    return acc.item()
 
 if __name__ == "__main__":
     dann()
