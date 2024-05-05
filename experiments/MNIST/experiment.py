@@ -171,7 +171,7 @@ def without_adapt():
     without_adapt_optimizer = optim.Adam(without_adapt.parameters(), lr=1e-4)
     criterion = nn.CrossEntropyLoss()
     # Fit
-    without_adapt = utils.fit_without_adaptation(source_loader, without_adapt, without_adapt_optimizer, criterion)
+    without_adapt = utils.fit_without_adaptation(source_loader, without_adapt, without_adapt_optimizer, criterion, output_size=10, num_epochs=10)
     # Eval
     test_target_prime_X = torch.cat([X for X, _ in test_target_prime_loader_gt], dim=0)
     test_target_prime_y_task = torch.cat([y[:, 0] for _, y in test_target_prime_loader_gt], dim=0)

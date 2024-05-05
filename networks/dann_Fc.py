@@ -6,7 +6,7 @@ from .mlp_decoder_domain import DomainDecoder
 
 
 class Dann_F_C(nn.Module):
-    def __init__(self, input_size: int=1152, output_size: int = 1, fc1_size: int = 3072, fc2_size: int = 2048, device = torch.device("cpu")):
+    def __init__(self, input_size: int=1152, output_size: int = 10, fc1_size: int = 3072, fc2_size: int = 2048, device = torch.device("cpu")):
         super().__init__()
         self.conv2d = Conv2d().to(device)
         self.decoder = DomainDecoder(input_size=input_size, output_size=output_size, fc1_size=fc1_size, fc2_size=fc2_size).to(device)
