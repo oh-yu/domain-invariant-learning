@@ -53,7 +53,7 @@ def get_image_data_for_uda(name="MNIST"):
         # TODO: Understand transforms.Compose
         train_data = datasets.MNIST(root="./domain-invariant-learning/experiments/MNIST/data/MNIST", train=True, download=True, transform=custom_transform)
         train_data = CustomUDADataset(train_data, "source")
-        train_loader = torch.utils.data.DataLoader(train_data, batch_size=64, shuffle=True)
+        train_loader = torch.utils.data.DataLoader(train_data, batch_size=16, shuffle=True)
         return train_loader
     
     elif name == "MNIST-M":
@@ -62,7 +62,7 @@ def get_image_data_for_uda(name="MNIST"):
         ])
         imagefolder_data = ImageFolder(root='./domain-invariant-learning/experiments/MNIST/data/MNIST-M/training', transform=custom_transform)
         train_data = CustomUDADataset(imagefolder_data, "target")
-        train_loader = DataLoader(train_data, batch_size=64, shuffle=True)
+        train_loader = DataLoader(train_data, batch_size=16, shuffle=True)
 
         train_data_gt = CustomUDADataset(imagefolder_data, "source")
         train_loader_gt = DataLoader(train_data_gt, batch_size=128, shuffle=False)
@@ -73,14 +73,14 @@ def get_image_data_for_uda(name="MNIST"):
             transforms.ToTensor(),
         ])
         train_data = torchvision.datasets.SVHN(
-            './data/SVHN', 
+            './domain-invariant-learning/experiments/MNIST/data/SVHN', 
             split='train',
             download=True,
             transform=custom_transform)
         train_data = CustomUDADataset(train_data, "target")
         train_loader = DataLoader(train_data, batch_size=64, shuffle=True)
         test_data = torchvision.datasets.SVHN(
-            "./data/SVHN",
+            "./domain-invariant-learning/experiments/MNIST/data/SVHN",
             split="test",
             download=True,
             transform=custom_transform)
@@ -93,7 +93,7 @@ def get_image_data_for_uda(name="MNIST"):
             transforms.ToTensor(),
         ])
         train_data = torchvision.datasets.SVHN(
-            './data/SVHN', 
+            './domain-invariant-learning/experiments/MNIST/data/SVHN', 
             split='train',
             download=True,
             transform=custom_transform)
