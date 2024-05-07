@@ -3,7 +3,9 @@ from torch import nn, optim
 
 from ..algo import algo
 from .conv1d import Conv1d
-from .mlp_decoder import Decoder
+from .mlp_decoder_domain import DomainDecoder
+from .mlp_decoder_task import TaskDecoder
+from .conv2d import Conv2d
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -21,22 +23,54 @@ class IsihDanns:
         lr_dim2: float,
         num_epochs_dim1: int,
         num_epochs_dim2: int,
+        output_size: int = 1,
+        experiment: str = "HHAR",
+        is_target_weights: bool = True,
     ):
-        self.feature_extractor = Conv1d(input_size=input_size).to(DEVICE)
-        self.domain_classifier_dim1 = Decoder(input_size=hidden_size, output_size=1).to(DEVICE)
-        self.task_classifier_dim1 = Decoder(input_size=hidden_size, output_size=1).to(DEVICE)
-        self.feature_optimizer_dim1 = optim.Adam(self.feature_extractor.parameters(), lr=lr_dim1)
-        self.domain_optimizer_dim1 = optim.Adam(self.domain_classifier_dim1.parameters(), lr=lr_dim1)
-        self.task_optimizer_dim1 = optim.Adam(self.task_classifier_dim1.parameters(), lr=lr_dim1)
-        self.criterion = nn.BCELoss()
-        self.num_epochs_dim1 = num_epochs_dim1
+        if experiment in ["HHAR", "ECOdataset", "ECOdataset_synthetic"]:
+            self.feature_extractor = Conv1d(input_size=input_size).to(DEVICE)
+            self.domain_classifier_dim1 = DomainDecoder(input_size=hidden_size, output_size=1, dropout_ratio=0.3).to(DEVICE)
+            self.task_classifier_dim1 = TaskDecoder(input_size=hidden_size, output_size=output_size).to(DEVICE)
+            self.feature_optimizer_dim1 = optim.Adam(self.feature_extractor.parameters(), lr=lr_dim1)
+            self.domain_optimizer_dim1 = optim.Adam(self.domain_classifier_dim1.parameters(), lr=lr_dim1)
+            self.task_optimizer_dim1 = optim.Adam(self.task_classifier_dim1.parameters(), lr=lr_dim1)
+            self.criterion = nn.BCELoss()
+            self.num_epochs_dim1 = num_epochs_dim1
 
-        self.domain_classifier_dim2 = Decoder(input_size=hidden_size, output_size=1).to(DEVICE)
-        self.task_classifier_dim2 = Decoder(input_size=hidden_size, output_size=1).to(DEVICE)
-        self.feature_optimizer_dim2 = optim.Adam(self.feature_extractor.parameters(), lr=lr_dim2)
-        self.domain_optimizer_dim2 = optim.Adam(self.domain_classifier_dim2.parameters(), lr=lr_dim2)
-        self.task_optimizer_dim2 = optim.Adam(self.task_classifier_dim2.parameters(), lr=lr_dim2)
-        self.num_epochs_dim2 = num_epochs_dim2
+            
+            self.task_classifier_dim2 = TaskDecoder(input_size=hidden_size, output_size=output_size).to(DEVICE)
+            self.domain_classifier_dim2 = DomainDecoder(input_size=hidden_size, output_size=1, dropout_ratio=0.3).to(DEVICE)
+            self.feature_optimizer_dim2 = optim.Adam(self.feature_extractor.parameters(), lr=lr_dim2)
+            self.domain_optimizer_dim2 = optim.Adam(self.domain_classifier_dim2.parameters(), lr=lr_dim2)
+            self.task_optimizer_dim2 = optim.Adam(self.task_classifier_dim2.parameters(), lr=lr_dim2)
+            self.num_epochs_dim2 = num_epochs_dim2
+            self.is_target_weights = is_target_weights
+
+            self.device = DEVICE
+            
+
+
+        elif experiment in ["MNIST"]:
+            self.feature_extractor = Conv2d()
+            self.task_classifier_dim1 = DomainDecoder(input_size=1152, output_size=10, fc1_size=3072, fc2_size=2048)
+            self.domain_classifier_dim1 = DomainDecoder(input_size=1152, output_size=1, fc1_size=1024, fc2_size=1024)
+            self.feature_optimizer_dim1 = optim.Adam(self.feature_extractor.parameters(), lr=lr_dim1)
+            self.domain_optimizer_dim1 = optim.Adam(self.domain_classifier_dim1.parameters(), lr=lr_dim1)
+            self.task_optimizer_dim1 = optim.Adam(self.task_classifier_dim1.parameters(), lr=lr_dim1)
+            self.criterion = nn.BCELoss()
+            self.num_epochs_dim1 = num_epochs_dim1
+
+
+            self.task_classifier_dim2 = DomainDecoder(input_size=1152, output_size=10, fc1_size=3072, fc2_size=2048)
+            self.domain_classifier_dim2 = DomainDecoder(input_size=1152, output_size=1, fc1_size=1024, fc2_size=1024)
+            self.feature_optimizer_dim2 = optim.Adam(self.feature_extractor.parameters(), lr=1e-4)
+            self.domain_optimizer_dim2 = optim.Adam(self.domain_classifier_dim2.parameters(), lr=1e-6)
+            self.task_optimizer_dim2 = optim.Adam(self.task_classifier_dim2.parameters(), lr=1e-4)
+            self.num_epochs_dim2 = num_epochs_dim2
+            self.is_target_weights = is_target_weights
+
+            self.device = torch.device("cpu")
+
 
     def fit_1st_dim(self, source_loader, target_loader, test_target_X: torch.Tensor, test_target_y_task: torch.Tensor):
         self.feature_extractor, self.task_classifier_dim1, _ = algo.fit(
@@ -52,6 +86,8 @@ class IsihDanns:
             self.domain_optimizer_dim1,
             self.task_optimizer_dim1,
             num_epochs=self.num_epochs_dim1,
+            is_target_weights=self.is_target_weights,
+            device=self.device,
         )
 
     def fit_2nd_dim(self, source_loader, target_loader, test_target_X: torch.Tensor, test_target_y_task: torch.Tensor):
@@ -69,17 +105,21 @@ class IsihDanns:
             self.task_optimizer_dim2,
             num_epochs=self.num_epochs_dim2,
             is_psuedo_weights=True,
+            is_target_weights=self.is_target_weights,
+            device=self.device,
         )
 
     def predict(self, X: torch.Tensor, is_1st_dim: bool) -> torch.Tensor:
         if is_1st_dim:
-            out = self.task_classifier_dim1(self.feature_extractor(X))
-            out = torch.sigmoid(out).reshape(-1)
-            return out
+            return self.task_classifier_dim1.predict(self.feature_extractor(X))
         else:
-            out = self.task_classifier_dim2(self.feature_extractor(X))
-            out = torch.sigmoid(out).reshape(-1)
-            return out
+            return self.task_classifier_dim2.predict(self.feature_extractor(X))
+
+    def predict_proba(self, X: torch.Tensor, is_1st_dim: bool) -> torch.Tensor:
+        if is_1st_dim:
+            return self.task_classifier_dim1.predict_proba(self.feature_extractor(X))
+        else:
+            return self.task_classifier_dim2.predict_proba(self.feature_extractor(X))
 
     def set_eval(self):
         self.task_classifier_dim2.eval()

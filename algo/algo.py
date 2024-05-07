@@ -1,5 +1,6 @@
 import torch
 from torch import nn
+from tqdm import tqdm
 
 from ..utils import utils
 
@@ -40,6 +41,8 @@ def fit(
     is_class_weights=False,
     is_psuedo_weights=False,
     do_plot=False,
+    do_print=False,
+    device=utils.DEVICE,
 ):
     # pylint: disable=too-many-arguments, too-many-locals
     # It seems reasonable in this case, since this method needs all of that.
@@ -86,10 +89,10 @@ def fit(
     loss_domains = []
     loss_tasks = []
     loss_task_evals = []
-    num_epochs = torch.tensor(num_epochs, dtype=torch.int32).to(utils.DEVICE)
+    num_epochs = torch.tensor(num_epochs, dtype=torch.int32).to(device)
 
-    for epoch in range(1, num_epochs.item() + 1):
-        epoch = torch.tensor(epoch, dtype=torch.float32).to(utils.DEVICE)
+    for epoch in tqdm(range(1, num_epochs.item() + 1)):
+        epoch = torch.tensor(epoch, dtype=torch.float32).to(device)
         feature_extractor.train()
         task_classifier.train()
         domain_optimizer, feature_optimizer, task_optimizer = utils._change_lr_during_dann_training(
@@ -100,10 +103,23 @@ def fit(
             source_loader, target_loader
         ):
             # 0. Data
-            source_y_task_batch = source_Y_batch[:, utils.COL_IDX_TASK] > 0.5
-            source_y_task_batch = source_y_task_batch.to(torch.float32)
-            psuedo_label_weights = utils._get_psuedo_label_weights(source_Y_batch)
-            source_y_domain_batch = source_Y_batch[:, utils.COL_IDX_DOMAIN]
+            if task_classifier.output_size == 1:
+                source_y_task_batch = source_Y_batch[:, utils.COL_IDX_TASK] > 0.5
+                source_y_task_batch = source_y_task_batch.to(torch.float32)
+                source_y_domain_batch = source_Y_batch[:, utils.COL_IDX_DOMAIN]
+            else:
+                if is_psuedo_weights:
+                    output_size = source_Y_batch[:, :-1].shape[1]
+                    source_y_task_batch = source_Y_batch[:, :output_size]
+                    source_y_task_batch = torch.argmax(source_y_task_batch, dim=1)
+                    source_y_task_batch = source_y_task_batch.to(torch.long)
+                    source_y_domain_batch = source_Y_batch[:, output_size]
+                else:
+                    source_y_task_batch = source_Y_batch[:, utils.COL_IDX_TASK]
+                    source_y_task_batch = source_y_task_batch.to(torch.long)
+                    source_y_domain_batch = source_Y_batch[:, utils.COL_IDX_DOMAIN]
+
+            psuedo_label_weights = utils._get_psuedo_label_weights(source_Y_batch=source_Y_batch, device=device)
 
             # 1. Forward
             # 1.1 Feature Extractor
@@ -123,8 +139,7 @@ def fit(
             loss_domains.append(loss_domain.item())
 
             # 1.3. Task Classifier
-            pred_y_task = task_classifier(source_X_batch)
-            pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
+            pred_y_task = task_classifier.predict_proba(source_X_batch)
             weights = utils._get_terminal_weights(
                 is_target_weights,
                 is_class_weights,
@@ -133,11 +148,19 @@ def fit(
                 source_y_task_batch,
                 psuedo_label_weights,
             )
-            criterion_weight = nn.BCELoss(weight=weights.detach())
-            loss_task = criterion_weight(pred_y_task, source_y_task_batch)
-            loss_tasks.append(loss_task.item())
+            if task_classifier.output_size == 1:
+                criterion_weight = nn.BCELoss(weight=weights.detach())
+                loss_task = criterion_weight(pred_y_task, source_y_task_batch)
+                loss_tasks.append(loss_task.item())
+            else:
+                criterion_weight = nn.CrossEntropyLoss(reduction="none")
+                loss_task = criterion_weight(pred_y_task, source_y_task_batch)
+                loss_task = loss_task * weights
+                loss_task = loss_task.mean()
+                loss_tasks.append(loss_task.item())
 
             # 2. Backward, Update Params
+
             domain_optimizer.zero_grad()
             task_optimizer.zero_grad()
             feature_optimizer.zero_grad()
@@ -154,10 +177,10 @@ def fit(
         task_classifier.eval()
         with torch.no_grad():
             target_feature_eval = feature_extractor(target_X)
-            pred_y_task_eval = task_classifier(target_feature_eval)
-            pred_y_task_eval = torch.sigmoid(pred_y_task_eval).reshape(-1)
-            pred_y_task_eval = pred_y_task_eval > 0.5
+            pred_y_task_eval = task_classifier.predict(target_feature_eval)
             acc = sum(pred_y_task_eval == target_y_task) / target_y_task.shape[0]
         loss_task_evals.append(acc.item())
+
+        print(f"Epoch: {epoch}, Loss Domain: {loss_domain}, Loss Task: {loss_task}, Acc: {acc}")
     utils._plot_dann_loss(do_plot, loss_domains, loss_tasks, loss_task_evals)
     return feature_extractor, task_classifier, loss_task_evals

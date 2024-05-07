@@ -77,7 +77,7 @@ def get_loader(
     source_y_task: np.ndarray,
     target_y_task: np.ndarray,
     batch_size: int = 34,
-    shuffle: bool = False,
+    shuffle: bool = False
 ):
     """
     Get instances of torch.utils.data.DataLoader for domain invariant learning,
@@ -105,8 +105,11 @@ def get_loader(
     target_y_task : torch.Tensor of shape(N, )
     """
     # 1. Create y_domain
-    source_y_domain = np.zeros_like(source_y_task).reshape(-1, 1)
-    source_y_task = source_y_task.reshape(-1, 1)
+    if source_y_task.ndim > 1:
+        source_y_domain = np.zeros(source_y_task.shape[0]).reshape(-1, 1)
+    else:
+        source_y_domain = np.zeros_like(source_y_task).reshape(-1, 1)
+        source_y_task = source_y_task.reshape(-1, 1)
     source_Y = np.concatenate([source_y_task, source_y_domain], axis=1)
     target_y_domain = np.ones_like(target_y_task)
 
@@ -134,31 +137,48 @@ def get_loader(
     return source_loader, target_loader, source_y_task, source_X, target_X, target_y_task
 
 
-def apply_sliding_window(X: np.ndarray, y: np.ndarray, filter_len: int = 3) -> (np.ndarray, np.ndarray):
+def apply_sliding_window(X: np.ndarray, y: np.ndarray, filter_len: int = 3, is_overlap: bool = True) -> (np.ndarray, np.ndarray):
     """
     Parameters
     ----------
     X : ndarray of shape(N, H)
     y : ndarray of shape(N, )
     filter_len : int
+    is_overlap: bool
 
     Returns
     -------
-    filtered_X : ndarray of shape(N', filter_len, H)
-    N' is N - filter_len + 1.
-    filtered_y : ndarray of shape(N', )
+    filtered_X : 
+        ndarray of shape(N - filter_len + 1, filter_len, H) when is_ovelap == True:
+        ndarray of shape(N//filter_len, filter_len, H) when is_ovelap == False:
+    filtered_y : 
+        ndarray of shape(N - filter_len + 1, ) when is_ovelap == True:
+        ndarray of shape(N//filter_len, ) when is_ovelap == False:
     """
     len_data, H = X.shape
-    N = len_data - filter_len + 1
-    filtered_X = np.zeros((N, filter_len, H))
-    for i in range(0, N):
-        # print(f"(Start, End) = {i, i+filter_len-1}")
-        start = i
-        end = i + filter_len
-        filtered_X[i] = X[start:end]
-    filtered_y = y[filter_len - 1:]
-    return filtered_X, filtered_y
-
+    if is_overlap:
+        N = len_data - filter_len + 1
+        filtered_X = np.zeros((N, filter_len, H))
+        for i in range(0, N):
+            # print(f"(Start, End) = {i, i+filter_len-1}")
+            start = i
+            end = i + filter_len
+            filtered_X[i] = X[start:end]
+        filtered_y = y[filter_len - 1:]
+        return filtered_X, filtered_y
+    
+    else:
+        X = np.expand_dims(X, axis=1)
+        i = 0
+        filtered_Xs = []
+        filtered_ys = []
+        while i < len_data-filter_len:
+            filtered_X = np.expand_dims(np.concatenate(X[i:i+filter_len], axis=0), axis=0)
+            filtered_Xs.append(filtered_X)
+            filtered_ys.append(y[i+filter_len-1])
+            i += filter_len
+        return np.vstack(filtered_Xs), np.array(filtered_ys).reshape(-1)
+            
 
 def _change_lr_during_dann_training(
     domain_optimizer: torch.optim.Adam,
@@ -182,7 +202,7 @@ def _change_lr_during_dann_training(
     return domain_optimizer, feature_optimizer, task_optimizer
 
 
-def _get_psuedo_label_weights(source_Y_batch: torch.Tensor, thr: float = 0.75, alpha: int = 1) -> torch.Tensor:
+def _get_psuedo_label_weights(source_Y_batch: torch.Tensor, thr: float = 0.75, alpha: int = 1, device=DEVICE) -> torch.Tensor:
     """
     # TODO: attach paper
 
@@ -195,20 +215,31 @@ def _get_psuedo_label_weights(source_Y_batch: torch.Tensor, thr: float = 0.75, a
     -------
     psuedo_label_weights : torch.Tensor of shape(N, )
     """
-    pred_y = source_Y_batch[:, COL_IDX_TASK]
+    output_size = source_Y_batch[:, :-1].shape[1]
     psuedo_label_weights = []
-    for i in pred_y:
-        if i > thr:
-            psuedo_label_weights.append(1)
-        elif i < 1 - thr:
-            psuedo_label_weights.append(1)
-        else:
-            if i > 0.5:
-                psuedo_label_weights.append(i**alpha + (1 - thr))
+
+    if output_size == 1:
+        pred_y = source_Y_batch[:, COL_IDX_TASK]        
+        for i in pred_y:
+            if i > thr:
+                psuedo_label_weights.append(1)
+            elif i < 1 - thr:
+                psuedo_label_weights.append(1)
             else:
-                psuedo_label_weights.append((1 - i)**alpha + (1 - thr))
-    psuedo_label_weights = torch.tensor(psuedo_label_weights, dtype=torch.float32).to(DEVICE)
-    return psuedo_label_weights
+                if i > 0.5:
+                    psuedo_label_weights.append(i**alpha + (1 - thr))
+                else:
+                    psuedo_label_weights.append((1 - i)**alpha + (1 - thr))
+
+    else:
+        pred_y = source_Y_batch[:, :output_size]
+        pred_y = torch.max(pred_y, axis=1).values
+        for i in pred_y:
+            if i > thr:
+                psuedo_label_weights.append(1)
+            else:
+                psuedo_label_weights.append(i**alpha + (1 - thr))
+    return torch.tensor(psuedo_label_weights, dtype=torch.float32).to(device)
 
 
 def _get_terminal_weights(
@@ -270,7 +301,7 @@ def _plot_dann_loss(
         plt.plot(loss_domains, label="loss_domain")
         plt.plot(loss_tasks, label="loss_task")
         plt.xlabel("batch")
-        plt.ylabel("binary cross entropy loss")
+        plt.ylabel("cross entropy loss")
         plt.legend()
 
         plt.figure()
@@ -281,7 +312,7 @@ def _plot_dann_loss(
         plt.show()
 
 
-def fit_without_adaptation(source_loader, task_classifier, task_optimizer, criterion, num_epochs=1000):
+def fit_without_adaptation(source_loader, task_classifier, task_optimizer, criterion, num_epochs=1000, output_size=1):
     """
     Deep Learning model's fit method without domain adaptation.
 
@@ -310,7 +341,12 @@ def fit_without_adaptation(source_loader, task_classifier, task_optimizer, crite
 
             # Forward
             pred_y_task = task_classifier(source_X_batch)
-            pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
+            if output_size == 1:
+                pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
+            else:
+                source_y_task_batch = source_y_task_batch.to(torch.long)
+                pred_y_task = torch.softmax(pred_y_task, dim=1)
+            
             loss_task = criterion(pred_y_task, source_y_task_batch)
 
             # Backward
