@@ -37,7 +37,7 @@ def fit(
     domain_optimizer,
     task_optimizer,
     num_epochs=1000,
-    is_target_weights=True,
+    is_target_weights=False,
     is_class_weights=False,
     is_psuedo_weights=False,
     do_plot=False,
