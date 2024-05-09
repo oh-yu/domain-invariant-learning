@@ -59,6 +59,9 @@ def main(argv):
         task_optimizer,
         num_epochs=num_epochs,
         do_plot=True,
+        is_changing_lr=True,
+        epoch_thr=200,
+        changed_lrs=[0.00005, 0.00005]
     )
     target_feature_eval = feature_extractor(target_X)
     pred_y_task = task_classifier(target_feature_eval)
