@@ -60,7 +60,7 @@ def main(argv):
         num_epochs=num_epochs,
         do_plot=True,
         is_changing_lr=True,
-        epoch_thr=200,
+        epoch_thr_for_changing_lr=200,
         changed_lrs=[0.00005, 0.00005]
     )
     target_feature_eval = feature_extractor(target_X)
