@@ -21,11 +21,12 @@ class Codats:
         hidden_size: int,
         lr: float,
         num_epochs: int,
+        experiment: str,
         num_domains: int = 1,
         num_classes: int = 1,
-        experiment: str = "ecodataset"
     ) -> None:
-        if experiment in ["ecodataset", "ecodataset_synthetic"]:
+        assert experiment in ["ECOdataset", "ECOdataset_synthetic", "HHAR"]
+        if experiment in ["ECOdataset", "ECOdataset_synthetic"]:
             self.feature_extractor = Conv1dTwoLayers(input_size=input_size).to(DEVICE)
         elif experiment == "HHAR":
             self.feature_extractor = Conv1dThreeLayers(input_size=input_size).to(DEVICE)

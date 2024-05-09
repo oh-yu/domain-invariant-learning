@@ -77,7 +77,8 @@ def isih_da_user(pattern):
         lr_dim2=0.0001,
         num_epochs_dim1=150,
         num_epochs_dim2=50,
-        output_size=len(GT_TO_INT)
+        output_size=len(GT_TO_INT),
+        experiment="HHAR"
     )
     isih_dann.fit_1st_dim(source_loader, target_loader, target_X, target_y_task)
     pred_y_task = isih_dann.predict_proba(target_X, is_1st_dim=True)
@@ -116,7 +117,8 @@ def isih_da_model(pattern):
         lr_dim2=0.0001,
         num_epochs_dim1=150,
         num_epochs_dim2=50,
-        output_size=len(GT_TO_INT)
+        output_size=len(GT_TO_INT),
+        experiment="HHAR"
     )
     isih_dann.fit_1st_dim(source_loader, target_loader, target_X, target_y_task)
     pred_y_task = isih_dann.predict_proba(target_X, is_1st_dim=True)
@@ -152,7 +154,14 @@ def codats(pattern):
     test_target_prime_X = test_target_prime_X.to(utils.DEVICE)
     test_target_prime_y_task = test_target_prime_y_task.to(utils.DEVICE)
 
-    codats = Codats(input_size=source_X.shape[2], hidden_size=128, lr=0.0001, num_epochs=200, num_classes=len(GT_TO_INT))
+    codats = Codats(
+        input_size=source_X.shape[2],
+        hidden_size=128,
+        lr=0.0001,
+        num_epochs=200,
+        num_classes=len(GT_TO_INT),
+        experiment="HHAR"
+    )
     codats.fit(source_loader, target_loader, test_target_prime_X, test_target_prime_y_task)
     codats.set_eval()
     pred_y_task = codats.predict(test_target_prime_X)
@@ -174,7 +183,7 @@ def without_adapt(pattern):
     test_target_prime_X = test_target_prime_X.to(utils.DEVICE)
     test_target_prime_y_task = test_target_prime_y_task.to(utils.DEVICE)
 
-    without_adapt = CoDATS_F_C(input_size=source_X.shape[2], output_size=len(GT_TO_INT))
+    without_adapt = CoDATS_F_C(input_size=source_X.shape[2], output_size=len(GT_TO_INT), experiment="HHAR")
     without_adapt_optimizer = optim.Adam(without_adapt.parameters(), lr=0.0001)
     criterion = nn.CrossEntropyLoss()
     without_adapt = utils.fit_without_adaptation(
@@ -202,7 +211,7 @@ def train_on_target(pattern):
     target_prime_ds = TensorDataset(train_target_prime_X, train_target_prime_y_task)
     target_prime_loader = DataLoader(target_prime_ds, batch_size=128, shuffle=True)
 
-    train_on_target = CoDATS_F_C(input_size=train_target_prime_X.shape[2], output_size=len(GT_TO_INT))
+    train_on_target = CoDATS_F_C(input_size=train_target_prime_X.shape[2], output_size=len(GT_TO_INT), experiment="HHAR")
     train_on_target_optimizer = optim.Adam(train_on_target.parameters(), lr=0.0001)
     criterion = nn.CrossEntropyLoss()
 

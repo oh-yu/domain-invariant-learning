@@ -24,10 +24,12 @@ class IsihDanns:
         lr_dim2: float,
         num_epochs_dim1: int,
         num_epochs_dim2: int,
+        experiment: str,
         output_size: int = 1,
-        experiment: str = "HHAR",
         is_target_weights: bool = True,
     ):
+        assert experiment in ["ECOdataset", "ECOdataset_synthetic", "HHAR", "MNIST"]
+
         if experiment in ["HHAR", "ECOdataset", "ECOdataset_synthetic"]:
             if experiment in ["ECOdataset", "ECOdataset_synthetic"]:
                 self.feature_extractor = Conv1dTwoLayers(input_size=input_size).to(DEVICE)

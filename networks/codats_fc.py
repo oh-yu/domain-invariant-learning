@@ -10,9 +10,10 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 class CoDATS_F_C(nn.Module):
-    def __init__(self, input_size: int, output_size: int = 1, experiment:str="ecodataset"):
+    def __init__(self, input_size: int, experiment:str, output_size: int = 1):
         super().__init__()
-        if experiment in ["ecodataset", "ecodataset_synthetic"]:
+        assert experiment in ["ECOdataset", "ECOdataset_synthetic", "HHAR"]
+        if experiment in ["ECOdataset", "ECOdataset_synthetic"]:
             self.conv1d = Conv1dTwoLayers(input_size=input_size).to(DEVICE)
         elif experiment == "HHAR":
             self.conv1d = Conv1dThreeLayers(input_size=input_size).to(DEVICE)
