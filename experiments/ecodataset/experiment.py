@@ -75,7 +75,7 @@ def isih_da_house(
             experiment="ECOdataset"
         )
         isih_dann.fit_1st_dim(source_loader, target_loader, test_target_X, test_target_y_task)
-        pred_y_task = isih_dann.predict(test_target_X, is_1st_dim=True)
+        pred_y_task = isih_dann.predict_proba(test_target_X, is_1st_dim=True)
 
         # Algo2. Inter-Seasons DA
         ## Prepare Data
@@ -180,7 +180,7 @@ def isih_da_season(
             experiment="ECOdataset"
         )
         isih_dann.fit_1st_dim(source_loader, target_loader, test_target_X, test_target_y_task)
-        pred_y_task = isih_dann.predict(test_target_X, is_1st_dim=True)
+        pred_y_task = isih_dann.predict_proba(test_target_X, is_1st_dim=True)
 
         # Algo2. Inter-Households DA
         ## Prepare Data
