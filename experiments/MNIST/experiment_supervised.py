@@ -37,13 +37,13 @@ def get_image_data_for_uda(name="MNIST"):
     elif name == "SVHN":
         transform = transforms.ToTensor()
         train_data = torchvision.datasets.SVHN(
-            './data/SVHN', 
+            './domain-invariant-learning/experiments/MNIST/data/SVHN', 
             split='train',
             download=True,
             transform=transform)
         train_loader = DataLoader(train_data, batch_size=128, shuffle=True)
         test_data = torchvision.datasets.SVHN(
-            "./data/SVHN",
+            "./domain-invariant-learning/experiments/MNIST/data/SVHN",
             split="test",
             download=True,
             transform=transform)
