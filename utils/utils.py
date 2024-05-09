@@ -373,8 +373,10 @@ def visualize_tSNE(target_feature, source_feature):
     """
     tsne = TSNE(n_components=2, learning_rate="auto", init="pca", perplexity=5)
     # TODO: Understand Argumetns for t-SNE
-    target_feature_tsne = tsne.fit_transform(target_feature)
-    source_feature_tsne = tsne.fit_transform(source_feature)
+    N_target = target_feature.shape[0]
+    feature = np.concatenate([target_feature, source_feature], axis=0)
+    feature_tsne = tsne.fit_transform(feature)
+    target_feature_tsne, source_feature_tsne = feature_tsne[:N_target], feature_tsne[N_target:]
 
     plt.figure()
     plt.scatter(source_feature_tsne[:, 0], source_feature_tsne[:, 1], label="Source")
