@@ -2,7 +2,7 @@ import torch
 from torch import nn, optim
 
 from ..algo import algo
-from .conv1d import Conv1d
+from .conv1d_three_layers import Conv1dThreeLayers
 from .mlp_decoder_three_layers import ThreeLayersDecoder
 from .mlp_decoder_one_layer import OneLayerDecoder
 from .conv2d import Conv2d
@@ -28,7 +28,7 @@ class IsihDanns:
         is_target_weights: bool = True,
     ):
         if experiment in ["HHAR", "ECOdataset", "ECOdataset_synthetic"]:
-            self.feature_extractor = Conv1d(input_size=input_size).to(DEVICE)
+            self.feature_extractor = Conv1dThreeLayers(input_size=input_size).to(DEVICE)
             self.domain_classifier_dim1 = ThreeLayersDecoder(input_size=hidden_size, output_size=1, dropout_ratio=0.3).to(DEVICE)
             self.task_classifier_dim1 = OneLayerDecoder(input_size=hidden_size, output_size=output_size).to(DEVICE)
             self.feature_optimizer_dim1 = optim.Adam(self.feature_extractor.parameters(), lr=lr_dim1)
