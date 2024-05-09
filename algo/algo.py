@@ -1,3 +1,6 @@
+from typing import List
+
+import matplotlib.pyplot as plt
 import torch
 from torch import nn
 from tqdm import tqdm
@@ -22,98 +25,6 @@ class ReverseGradient(torch.autograd.Function):
         scheduler = 2 / (1 + torch.exp(-10 * (step / (num_steps + 1)))) - 1
         # https://arxiv.org/pdf/1505.07818.pdf
         return grad_output * -1 * scheduler, None, None
-
-
-def _get_psuedo_label_weights(source_Y_batch: torch.Tensor, thr: float = 0.75, alpha: int = 1, device=utils.DEVICE) -> torch.Tensor:
-    """
-    # TODO: attach paper
-
-    Parameters
-    ----------
-    source_Y_batch : torch.Tensor of shape(N, 2)
-    thr : float
-
-    Returns
-    -------
-    psuedo_label_weights : torch.Tensor of shape(N, )
-    """
-    output_size = source_Y_batch[:, :-1].shape[1]
-    psuedo_label_weights = []
-
-    if output_size == 1:
-        pred_y = source_Y_batch[:, utils.COL_IDX_TASK]        
-        for i in pred_y:
-            if i > thr:
-                psuedo_label_weights.append(1)
-            elif i < 1 - thr:
-                psuedo_label_weights.append(1)
-            else:
-                if i > 0.5:
-                    psuedo_label_weights.append(i**alpha + (1 - thr))
-                else:
-                    psuedo_label_weights.append((1 - i)**alpha + (1 - thr))
-
-    else:
-        pred_y = source_Y_batch[:, :output_size]
-        pred_y = torch.max(pred_y, axis=1).values
-        for i in pred_y:
-            if i > thr:
-                psuedo_label_weights.append(1)
-            else:
-                psuedo_label_weights.append(i**alpha + (1 - thr))
-    return torch.tensor(psuedo_label_weights, dtype=torch.float32).to(device)
-
-
-def _get_terminal_weights(
-    is_target_weights: bool,
-    is_class_weights: bool,
-    is_psuedo_weights: bool,
-    pred_source_y_domain: torch.Tensor,
-    source_y_task_batch: torch.Tensor,
-    psuedo_label_weights: torch.Tensor,
-) -> torch.Tensor:
-    """
-    # TODO: attach paper
-
-    Parameters
-    ----------
-    is_target_weights: bool
-    is_class_weights: bool
-    is_psuedo_weights: bool
-    pred_source_y_domain : torch.Tensor of shape(N, )
-    source_y_task_batch : torch.Tensor of shape(N, )
-    psuedo_label_weights : torch.Tensor of shape(N, )
-
-    Returns
-    -------
-    weights : torch.Tensor of shape(N, )
-    terminal sample weights for nn.BCELoss
-    """
-    if is_target_weights:
-        target_weights = pred_source_y_domain / (1 - pred_source_y_domain)
-    else:
-        target_weights = 1
-    if is_class_weights:
-        class_weights = _get_class_weights(source_y_task_batch)
-    else:
-        class_weights = 1
-    if is_psuedo_weights:
-        weights = target_weights * class_weights * psuedo_label_weights
-    else:
-        weights = target_weights * class_weights
-    return weights
-
-
-def _get_class_weights(source_y_task_batch):
-    p_occupied = sum(source_y_task_batch) / source_y_task_batch.shape[0]
-    p_unoccupied = 1 - p_occupied
-    class_weights = torch.zeros_like(source_y_task_batch)
-    for i, y in enumerate(source_y_task_batch):
-        if y == 1:
-            class_weights[i] = p_unoccupied
-        elif y == 0:
-            class_weights[i] = p_occupied
-    return class_weights
 
 
 def fit(
@@ -287,3 +198,146 @@ def fit(
         print(f"Epoch: {epoch}, Loss Domain: {loss_domain}, Loss Task: {loss_task}, Acc: {acc}")
     utils._plot_dann_loss(do_plot, loss_domains, loss_tasks, loss_task_evals)
     return feature_extractor, task_classifier, loss_task_evals
+
+
+def _get_psuedo_label_weights(source_Y_batch: torch.Tensor, thr: float = 0.75, alpha: int = 1, device=utils.DEVICE) -> torch.Tensor:
+    """
+    # TODO: attach paper
+
+    Parameters
+    ----------
+    source_Y_batch : torch.Tensor of shape(N, 2)
+    thr : float
+
+    Returns
+    -------
+    psuedo_label_weights : torch.Tensor of shape(N, )
+    """
+    output_size = source_Y_batch[:, :-1].shape[1]
+    psuedo_label_weights = []
+
+    if output_size == 1:
+        pred_y = source_Y_batch[:, utils.COL_IDX_TASK]        
+        for i in pred_y:
+            if i > thr:
+                psuedo_label_weights.append(1)
+            elif i < 1 - thr:
+                psuedo_label_weights.append(1)
+            else:
+                if i > 0.5:
+                    psuedo_label_weights.append(i**alpha + (1 - thr))
+                else:
+                    psuedo_label_weights.append((1 - i)**alpha + (1 - thr))
+
+    else:
+        pred_y = source_Y_batch[:, :output_size]
+        pred_y = torch.max(pred_y, axis=1).values
+        for i in pred_y:
+            if i > thr:
+                psuedo_label_weights.append(1)
+            else:
+                psuedo_label_weights.append(i**alpha + (1 - thr))
+    return torch.tensor(psuedo_label_weights, dtype=torch.float32).to(device)
+
+
+def _get_terminal_weights(
+    is_target_weights: bool,
+    is_class_weights: bool,
+    is_psuedo_weights: bool,
+    pred_source_y_domain: torch.Tensor,
+    source_y_task_batch: torch.Tensor,
+    psuedo_label_weights: torch.Tensor,
+) -> torch.Tensor:
+    """
+    # TODO: attach paper
+
+    Parameters
+    ----------
+    is_target_weights: bool
+    is_class_weights: bool
+    is_psuedo_weights: bool
+    pred_source_y_domain : torch.Tensor of shape(N, )
+    source_y_task_batch : torch.Tensor of shape(N, )
+    psuedo_label_weights : torch.Tensor of shape(N, )
+
+    Returns
+    -------
+    weights : torch.Tensor of shape(N, )
+    terminal sample weights for nn.BCELoss
+    """
+    if is_target_weights:
+        target_weights = pred_source_y_domain / (1 - pred_source_y_domain)
+    else:
+        target_weights = 1
+    if is_class_weights:
+        class_weights = _get_class_weights(source_y_task_batch)
+    else:
+        class_weights = 1
+    if is_psuedo_weights:
+        weights = target_weights * class_weights * psuedo_label_weights
+    else:
+        weights = target_weights * class_weights
+    return weights
+
+
+def _get_class_weights(source_y_task_batch):
+    p_occupied = sum(source_y_task_batch) / source_y_task_batch.shape[0]
+    p_unoccupied = 1 - p_occupied
+    class_weights = torch.zeros_like(source_y_task_batch)
+    for i, y in enumerate(source_y_task_batch):
+        if y == 1:
+            class_weights[i] = p_unoccupied
+        elif y == 0:
+            class_weights[i] = p_occupied
+    return class_weights
+
+def _change_lr_during_dann_training(
+    domain_optimizer: torch.optim.Adam,
+    feature_optimizer: torch.optim.Adam,
+    task_optimizer: torch.optim.Adam,
+    epoch: torch.Tensor,
+    epoch_thr: int = 200,
+    changed_lrs: List[float] = [0.00005, 0.00005],
+):
+    """
+    Returns
+    -------
+    domain_optimizer : torch.optim.adam.Adam
+    feature_optimizer : torch.optim.adam.Adam
+    task_optimizer : torch.optim.adam.Adam
+    """
+    if epoch == epoch_thr:
+        domain_optimizer.param_groups[0]["lr"] = changed_lrs[1]
+        feature_optimizer.param_groups[0]["lr"] = changed_lrs[0]
+        task_optimizer.param_groups[0]["lr"] = changed_lrs[0]
+    return domain_optimizer, feature_optimizer, task_optimizer
+
+
+def _plot_dann_loss(
+    do_plot: bool, loss_domains: List[float], loss_tasks: List[float], loss_task_evals: List[float]
+) -> None:
+    """
+    plot domain&task losses for source, task loss for target.
+
+    Parameters
+    ----------
+    do_plot: bool
+    loss_domains: list of float
+    loss_tasks: list of float
+    loss_tasks_evals: list of float
+    task loss for target data.
+    """
+    if do_plot:
+        plt.figure()
+        plt.plot(loss_domains, label="loss_domain")
+        plt.plot(loss_tasks, label="loss_task")
+        plt.xlabel("batch")
+        plt.ylabel("cross entropy loss")
+        plt.legend()
+
+        plt.figure()
+        plt.plot(loss_task_evals, label="loss_task_eval")
+        plt.xlabel("epoch")
+        plt.ylabel("accuracy")
+        plt.legend()
+        plt.show()

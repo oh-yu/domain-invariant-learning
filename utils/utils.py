@@ -180,58 +180,6 @@ def apply_sliding_window(X: np.ndarray, y: np.ndarray, filter_len: int = 3, is_o
         return np.vstack(filtered_Xs), np.array(filtered_ys).reshape(-1)
             
 
-def _change_lr_during_dann_training(
-    domain_optimizer: torch.optim.Adam,
-    feature_optimizer: torch.optim.Adam,
-    task_optimizer: torch.optim.Adam,
-    epoch: torch.Tensor,
-    epoch_thr: int = 200,
-    changed_lrs: List[float] = [0.00005, 0.00005],
-):
-    """
-    Returns
-    -------
-    domain_optimizer : torch.optim.adam.Adam
-    feature_optimizer : torch.optim.adam.Adam
-    task_optimizer : torch.optim.adam.Adam
-    """
-    if epoch == epoch_thr:
-        domain_optimizer.param_groups[0]["lr"] = changed_lrs[1]
-        feature_optimizer.param_groups[0]["lr"] = changed_lrs[0]
-        task_optimizer.param_groups[0]["lr"] = changed_lrs[0]
-    return domain_optimizer, feature_optimizer, task_optimizer
-
-
-def _plot_dann_loss(
-    do_plot: bool, loss_domains: List[float], loss_tasks: List[float], loss_task_evals: List[float]
-) -> None:
-    """
-    plot domain&task losses for source, task loss for target.
-
-    Parameters
-    ----------
-    do_plot: bool
-    loss_domains: list of float
-    loss_tasks: list of float
-    loss_tasks_evals: list of float
-    task loss for target data.
-    """
-    if do_plot:
-        plt.figure()
-        plt.plot(loss_domains, label="loss_domain")
-        plt.plot(loss_tasks, label="loss_task")
-        plt.xlabel("batch")
-        plt.ylabel("cross entropy loss")
-        plt.legend()
-
-        plt.figure()
-        plt.plot(loss_task_evals, label="loss_task_eval")
-        plt.xlabel("epoch")
-        plt.ylabel("accuracy")
-        plt.legend()
-        plt.show()
-
-
 def fit_without_adaptation(source_loader, task_classifier, task_optimizer, criterion, num_epochs=1000, output_size=1):
     """
     Deep Learning model's fit method without domain adaptation.
