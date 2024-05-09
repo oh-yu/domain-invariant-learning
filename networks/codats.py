@@ -3,8 +3,8 @@ from torch import nn, optim
 
 from ..algo import algo
 from .conv1d import Conv1d
-from .mlp_decoder_domain import DomainDecoder
-from .mlp_decoder_task import TaskDecoder
+from .mlp_decoder_three_layers import ThreeLayersDecoder
+from .mlp_decoder_one_layer import OneLayerDecoder
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -18,8 +18,8 @@ class Codats:
         self, input_size: int, hidden_size: int, lr: float, num_epochs: int, num_domains: int = 1, num_classes: int = 1
     ) -> None:
         self.feature_extractor = Conv1d(input_size=input_size).to(DEVICE)
-        self.domain_classifier = DomainDecoder(input_size=hidden_size, output_size=num_domains, dropout_ratio=0, fc1_size=50, fc2_size=10).to(DEVICE)
-        self.task_classifier = TaskDecoder(input_size=hidden_size, output_size=num_classes).to(DEVICE)
+        self.domain_classifier = ThreeLayersDecoder(input_size=hidden_size, output_size=num_domains, dropout_ratio=0, fc1_size=50, fc2_size=10).to(DEVICE)
+        self.task_classifier = OneLayerDecoder(input_size=hidden_size, output_size=num_classes).to(DEVICE)
         self.criterion = nn.BCELoss()
 
         self.feature_optimizer = optim.Adam(self.feature_extractor.parameters(), lr=lr)

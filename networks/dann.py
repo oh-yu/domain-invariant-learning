@@ -3,7 +3,7 @@ from torch import nn, optim
 
 from ..algo import algo
 from .conv2d import Conv2d
-from .mlp_decoder_domain import DomainDecoder
+from .mlp_decoder_three_layers import ThreeLayersDecoder
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -11,8 +11,8 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 class Dann:
     def __init__(self, domain_fc1_size: int, domain_fc2_size: int, task_fc1_size: int, task_fc2_size: int, output_size: int, input_size: int = 1600, lr_fc: float = 1e-4, lr_d: float = 1e-6, num_epochs: int = 100, device=torch.device("cpu")):
         self.feature_extractor = Conv2d().to(device)
-        self.task_classifier = DomainDecoder(input_size=input_size, output_size=output_size, fc1_size=task_fc1_size, fc2_size=task_fc2_size).to(device)
-        self.domain_classifier = DomainDecoder(input_size=input_size, output_size=1, fc1_size=domain_fc1_size, fc2_size=domain_fc2_size).to(device)
+        self.task_classifier = ThreeLayersDecoder(input_size=input_size, output_size=output_size, fc1_size=task_fc1_size, fc2_size=task_fc2_size).to(device)
+        self.domain_classifier = ThreeLayersDecoder(input_size=input_size, output_size=1, fc1_size=domain_fc1_size, fc2_size=domain_fc2_size).to(device)
         self.domain_criterion = nn.BCELoss()
 
         self.feature_otimizer = optim.Adam(self.feature_extractor.parameters(), lr=lr_fc)

@@ -3,8 +3,8 @@ from torch import nn, optim
 
 from ..algo import algo
 from .conv1d import Conv1d
-from .mlp_decoder_domain import DomainDecoder
-from .mlp_decoder_task import TaskDecoder
+from .mlp_decoder_three_layers import ThreeLayersDecoder
+from .mlp_decoder_one_layer import OneLayerDecoder
 from .conv2d import Conv2d
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -29,8 +29,8 @@ class IsihDanns:
     ):
         if experiment in ["HHAR", "ECOdataset", "ECOdataset_synthetic"]:
             self.feature_extractor = Conv1d(input_size=input_size).to(DEVICE)
-            self.domain_classifier_dim1 = DomainDecoder(input_size=hidden_size, output_size=1, dropout_ratio=0.3).to(DEVICE)
-            self.task_classifier_dim1 = TaskDecoder(input_size=hidden_size, output_size=output_size).to(DEVICE)
+            self.domain_classifier_dim1 = ThreeLayersDecoder(input_size=hidden_size, output_size=1, dropout_ratio=0.3).to(DEVICE)
+            self.task_classifier_dim1 = OneLayerDecoder(input_size=hidden_size, output_size=output_size).to(DEVICE)
             self.feature_optimizer_dim1 = optim.Adam(self.feature_extractor.parameters(), lr=lr_dim1)
             self.domain_optimizer_dim1 = optim.Adam(self.domain_classifier_dim1.parameters(), lr=lr_dim1)
             self.task_optimizer_dim1 = optim.Adam(self.task_classifier_dim1.parameters(), lr=lr_dim1)
@@ -38,8 +38,8 @@ class IsihDanns:
             self.num_epochs_dim1 = num_epochs_dim1
 
             
-            self.task_classifier_dim2 = TaskDecoder(input_size=hidden_size, output_size=output_size).to(DEVICE)
-            self.domain_classifier_dim2 = DomainDecoder(input_size=hidden_size, output_size=1, dropout_ratio=0.3).to(DEVICE)
+            self.task_classifier_dim2 = OneLayerDecoder(input_size=hidden_size, output_size=output_size).to(DEVICE)
+            self.domain_classifier_dim2 = ThreeLayersDecoder(input_size=hidden_size, output_size=1, dropout_ratio=0.3).to(DEVICE)
             self.feature_optimizer_dim2 = optim.Adam(self.feature_extractor.parameters(), lr=lr_dim2)
             self.domain_optimizer_dim2 = optim.Adam(self.domain_classifier_dim2.parameters(), lr=lr_dim2)
             self.task_optimizer_dim2 = optim.Adam(self.task_classifier_dim2.parameters(), lr=lr_dim2)
@@ -52,8 +52,8 @@ class IsihDanns:
 
         elif experiment in ["MNIST"]:
             self.feature_extractor = Conv2d()
-            self.task_classifier_dim1 = DomainDecoder(input_size=1152, output_size=10, fc1_size=3072, fc2_size=2048)
-            self.domain_classifier_dim1 = DomainDecoder(input_size=1152, output_size=1, fc1_size=1024, fc2_size=1024)
+            self.task_classifier_dim1 = ThreeLayersDecoder(input_size=1152, output_size=10, fc1_size=3072, fc2_size=2048)
+            self.domain_classifier_dim1 = ThreeLayersDecoder(input_size=1152, output_size=1, fc1_size=1024, fc2_size=1024)
             self.feature_optimizer_dim1 = optim.Adam(self.feature_extractor.parameters(), lr=lr_dim1)
             self.domain_optimizer_dim1 = optim.Adam(self.domain_classifier_dim1.parameters(), lr=lr_dim1)
             self.task_optimizer_dim1 = optim.Adam(self.task_classifier_dim1.parameters(), lr=lr_dim1)
@@ -61,8 +61,8 @@ class IsihDanns:
             self.num_epochs_dim1 = num_epochs_dim1
 
 
-            self.task_classifier_dim2 = DomainDecoder(input_size=1152, output_size=10, fc1_size=3072, fc2_size=2048)
-            self.domain_classifier_dim2 = DomainDecoder(input_size=1152, output_size=1, fc1_size=1024, fc2_size=1024)
+            self.task_classifier_dim2 = ThreeLayersDecoder(input_size=1152, output_size=10, fc1_size=3072, fc2_size=2048)
+            self.domain_classifier_dim2 = ThreeLayersDecoder(input_size=1152, output_size=1, fc1_size=1024, fc2_size=1024)
             self.feature_optimizer_dim2 = optim.Adam(self.feature_extractor.parameters(), lr=1e-4)
             self.domain_optimizer_dim2 = optim.Adam(self.domain_classifier_dim2.parameters(), lr=1e-6)
             self.task_optimizer_dim2 = optim.Adam(self.task_classifier_dim2.parameters(), lr=1e-4)

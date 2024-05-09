@@ -5,7 +5,7 @@ from torch.utils.data import DataLoader
 import torchvision
 from torchvision import datasets, transforms
 from torchvision.datasets import ImageFolder
-from ...networks import Conv2d, DomainDecoder
+from ...networks import Conv2d, ThreeLayersDecoder
 
 
 class Reshape(object):
@@ -60,7 +60,7 @@ if __name__ == "__main__":
 
     # Model Init
     feature_extractor = Conv2d()
-    task_classifier = DomainDecoder(input_size=1600, output_size=10, fc2_size=50)
+    task_classifier = ThreeLayersDecoder(input_size=1600, output_size=10, fc2_size=50)
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(list(feature_extractor.parameters()) + list(task_classifier.parameters()), lr=1e-3)
 
