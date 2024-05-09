@@ -1,10 +1,8 @@
-import pickle
-
 from absl import app, flags
 import pandas as pd
 import torch
 from sklearn import preprocessing
-from sklearn.model_selection import KFold, train_test_split
+from sklearn.model_selection import train_test_split
 from torch import nn, optim
 from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
@@ -15,7 +13,6 @@ from ...utils import utils
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 HOUSEHOLD_IDXS = [1, 2, 3, 4, 5]
 FLAGS = flags.FLAGS
-flags.DEFINE_boolean("is_kfold_eval", False, "use kfold cross validation,  otherwise use train-test split. currently isih-DA is not supported")
 
 
 def isih_da_house(
