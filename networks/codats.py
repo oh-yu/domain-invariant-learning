@@ -3,6 +3,7 @@ from torch import nn, optim
 
 from ..algo import algo
 from .conv1d_three_layers import Conv1dThreeLayers
+from .conv1d_two_layers import Conv1dTwoLayers
 from .mlp_decoder_three_layers import ThreeLayersDecoder
 from .mlp_decoder_one_layer import OneLayerDecoder
 
@@ -15,9 +16,19 @@ class Codats:
     """
 
     def __init__(
-        self, input_size: int, hidden_size: int, lr: float, num_epochs: int, num_domains: int = 1, num_classes: int = 1
+        self,
+        input_size: int,
+        hidden_size: int,
+        lr: float,
+        num_epochs: int,
+        num_domains: int = 1,
+        num_classes: int = 1,
+        experiment: str = "ecodataset"
     ) -> None:
-        self.feature_extractor = Conv1dThreeLayers(input_size=input_size).to(DEVICE)
+        if experiment in ["ecodataset", "ecodataset_synthetic"]:
+            self.feature_extractor = Conv1dTwoLayers(input_size=input_size).to(DEVICE)
+        elif experiment == "HHAR":
+            self.feature_extractor = Conv1dThreeLayers(input_size=input_size).to(DEVICE)
         self.domain_classifier = ThreeLayersDecoder(input_size=hidden_size, output_size=num_domains, dropout_ratio=0, fc1_size=50, fc2_size=10).to(DEVICE)
         self.task_classifier = OneLayerDecoder(input_size=hidden_size, output_size=num_classes).to(DEVICE)
         self.criterion = nn.BCELoss()
