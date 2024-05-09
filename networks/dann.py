@@ -38,7 +38,7 @@ class Dann:
             device=self.device,
             is_changing_lr=True,
             epoch_thr=10,
-            changed_lr=[1e-5, 1e-6]
+            changed_lrs=[1e-5, 1e-6]
         )
     
     def predict(self, x):
