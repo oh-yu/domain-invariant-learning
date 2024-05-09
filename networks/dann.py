@@ -37,8 +37,10 @@ class Dann:
             num_epochs=self.num_ecochs,
             device=self.device,
             is_changing_lr=True,
-            epoch_thr=11,
-            changed_lrs=[1e-4, 1e-6]
+            epoch_thr_for_changing_lr=11,
+            changed_lrs=[1e-4, 1e-6],
+            stop_during_epochs=True,
+            epoch_thr_for_stopping=12
         )
     
     def predict(self, x):
