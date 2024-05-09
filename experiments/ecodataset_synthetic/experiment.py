@@ -172,7 +172,7 @@ def codats(source_idx=2, season_idx=0, n_splits: int = 5, is_kfold_eval: bool = 
             train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True
         )
         ## CoDATS fit, predict
-        codats = Codats(input_size=train_source_X.shape[2], hidden_size=128, lr=0.0001, num_epochs=300)
+        codats = Codats(input_size=train_source_X.shape[2], hidden_size=128, lr=0.0001, num_epochs=300, experiment="ECOdataset_synthetic")
         codats.fit(source_loader, target_loader, test_target_X, test_target_y_task)
         codats.set_eval()
         pred_y_task = codats.predict(test_target_X)
