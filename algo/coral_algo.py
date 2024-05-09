@@ -4,7 +4,7 @@ import numpy as np
 import torch
 from torch import nn, optim
 
-from ..networks import Decoder
+from ..networks import ThreeLayersDecoder
 from ..utils import utils
 
 
@@ -79,7 +79,7 @@ if __name__ == "__main__":
 
     # Init NN
     num_classes = 1
-    task_classifier = Decoder(input_size=2, output_size=num_classes, fc1_size=50, fc2_size=10).to(utils.DEVICE)
+    task_classifier = ThreeLayersDecoder(input_size=2, output_size=num_classes, fc1_size=50, fc2_size=10).to(utils.DEVICE)
     learning_rate = 0.01
 
     criterion = nn.BCELoss()
@@ -114,7 +114,7 @@ if __name__ == "__main__":
     plt.show()
 
     # Without DA
-    task_classifier = Decoder(input_size=source_X.shape[1], output_size=num_classes).to(utils.DEVICE)
+    task_classifier = ThreeLayersDecoder(input_size=source_X.shape[1], output_size=num_classes).to(utils.DEVICE)
     task_optimizer = optim.Adam(task_classifier.parameters(), lr=learning_rate)
     task_classifier = utils.fit_without_adaptation(
         source_loader, task_classifier, task_optimizer, criterion, num_epochs=500

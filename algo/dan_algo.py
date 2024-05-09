@@ -4,7 +4,7 @@ import torch
 from torch import nn, optim
 
 from ..utils import utils
-from ..networks import Decoder, Encoder
+from ..networks import ThreeLayersDecoder, Encoder
 
 def fit_kernel(x, y):
     """
@@ -104,8 +104,8 @@ if __name__ == "__main__":
     num_classes = 1
 
     feature_extractor = Encoder(input_size=source_X.shape[1], output_size=hidden_size).to(utils.DEVICE)
-    task_classifier_source = Decoder(input_size=hidden_size, output_size=num_classes, fc1_size=500, fc2_size=100).to(utils.DEVICE)
-    task_classifier_target = Decoder(input_size=hidden_size, output_size=num_classes, fc1_size=500, fc2_size=100).to(utils.DEVICE)
+    task_classifier_source = ThreeLayersDecoder(input_size=hidden_size, output_size=num_classes, fc1_size=500, fc2_size=100).to(utils.DEVICE)
+    task_classifier_target = ThreeLayersDecoder(input_size=hidden_size, output_size=num_classes, fc1_size=500, fc2_size=100).to(utils.DEVICE)
     learning_rate = 0.01
 
     criterion = nn.BCELoss()
@@ -150,7 +150,7 @@ if __name__ == "__main__":
     plt.show()
 
     # Without DA
-    task_classifier = Decoder(input_size=source_X.shape[1], output_size=num_classes).to(utils.DEVICE)
+    task_classifier = ThreeLayersDecoder(input_size=source_X.shape[1], output_size=num_classes).to(utils.DEVICE)
     task_optimizer = optim.Adam(task_classifier.parameters(), lr=learning_rate)
     task_classifier = utils.fit_without_adaptation(
         source_loader, task_classifier, task_optimizer, criterion, num_epochs=100
