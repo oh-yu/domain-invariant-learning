@@ -232,8 +232,6 @@ def codats(
     target_idx: int,
     winter_idx: int,
     summer_idx: int,
-    n_splits: int = 5,
-    is_kfold_eval: bool = False,
     num_repeats: int = 10,
 ) -> float:
     """
@@ -260,79 +258,39 @@ def codats(
     train_source_X = scaler.transform(train_source_X)
     train_source_X, train_source_y_task = utils.apply_sliding_window(train_source_X, train_source_y_task, filter_len=6)
 
-    if is_kfold_eval:
-        kfold = KFold(n_splits=n_splits, shuffle=False)
-        accs = []
-        for train_idx, test_idx in kfold.split(target_X):
-            train_target_X, test_target_X, train_target_y_task, test_target_y_task = (
-                target_X.values[train_idx],
-                target_X.values[test_idx],
-                target_y_task[train_idx],
-                target_y_task[test_idx],
-            )
-            scaler.fit(train_target_X)
-            train_target_X = scaler.transform(train_target_X)
-            test_target_X = scaler.transform(test_target_X)
-            train_target_X, train_target_y_task = utils.apply_sliding_window(
-                train_target_X, train_target_y_task, filter_len=6
-            )
-            test_target_X, test_target_y_task = utils.apply_sliding_window(
-                test_target_X, test_target_y_task, filter_len=6
-            )
-
-            source_loader, target_loader, _, _, _, _ = utils.get_loader(
-                train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True
-            )
-
-            test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
-            test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
-            test_target_X = test_target_X.to(DEVICE)
-            test_target_y_task = test_target_y_task.to(DEVICE)
-
-            ## CoDATS fit, predict
-            codats = Codats(input_size=train_source_X.shape[2], hidden_size=128, lr=0.0001, num_epochs=300)
-            codats.fit(source_loader, target_loader, test_target_X, test_target_y_task)
-            codats.set_eval()
-            pred_y_task = codats.predict(test_target_X)
-
-            pred_y_task = pred_y_task > 0.5
-            acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
-            accs.append(acc.item())
-        return sum(accs) / n_splits
-    else:
-        accs = []
-        train_target_X, test_target_X, train_target_y_task, test_target_y_task = train_test_split(
-            target_X, target_y_task, test_size=0.5, shuffle=False
+    accs = []
+    train_target_X, test_target_X, train_target_y_task, test_target_y_task = train_test_split(
+        target_X, target_y_task, test_size=0.5, shuffle=False
+    )
+    scaler.fit(train_target_X)
+    train_target_X = scaler.transform(train_target_X)
+    test_target_X = scaler.transform(test_target_X)
+    train_target_X, train_target_y_task = utils.apply_sliding_window(
+        train_target_X, train_target_y_task, filter_len=6
+    )
+    test_target_X, test_target_y_task = utils.apply_sliding_window(
+        test_target_X, test_target_y_task, filter_len=6
+    )
+    for _ in range(num_repeats):
+        source_loader, target_loader, _, _, _, _ = utils.get_loader(
+            train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True
         )
-        scaler.fit(train_target_X)
-        train_target_X = scaler.transform(train_target_X)
-        test_target_X = scaler.transform(test_target_X)
-        train_target_X, train_target_y_task = utils.apply_sliding_window(
-            train_target_X, train_target_y_task, filter_len=6
-        )
-        test_target_X, test_target_y_task = utils.apply_sliding_window(
-            test_target_X, test_target_y_task, filter_len=6
-        )
-        for _ in range(num_repeats):
-            source_loader, target_loader, _, _, _, _ = utils.get_loader(
-                train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True
-            )
 
-            test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
-            test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
-            test_target_X = test_target_X.to(DEVICE)
-            test_target_y_task = test_target_y_task.to(DEVICE)
+        test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
+        test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
+        test_target_X = test_target_X.to(DEVICE)
+        test_target_y_task = test_target_y_task.to(DEVICE)
 
-            ## CoDATS fit, predict
-            codats = Codats(input_size=train_source_X.shape[2], hidden_size=128, lr=0.0001, num_epochs=300)
-            codats.fit(source_loader, target_loader, test_target_X, test_target_y_task)
-            codats.set_eval()
-            pred_y_task = codats.predict(test_target_X)
+        ## CoDATS fit, predict
+        codats = Codats(input_size=train_source_X.shape[2], hidden_size=128, lr=0.0001, num_epochs=300)
+        codats.fit(source_loader, target_loader, test_target_X, test_target_y_task)
+        codats.set_eval()
+        pred_y_task = codats.predict(test_target_X)
 
-            pred_y_task = pred_y_task > 0.5
-            acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
-            accs.append(acc.item())
-        return sum(accs) / num_repeats
+        pred_y_task = pred_y_task > 0.5
+        acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
+        accs.append(acc.item())
+    return sum(accs) / num_repeats
 
 
 def without_adapt(
@@ -340,8 +298,6 @@ def without_adapt(
     target_idx: int,
     winter_idx: int,
     summer_idx: int,
-    n_splits: int = 5,
-    is_kfold_eval: bool = False,
     num_repeats: int = 10,
 ) -> float:
     train_source_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv")
@@ -362,99 +318,52 @@ def without_adapt(
     train_source_X = scaler.transform(train_source_X)
     train_source_X, train_source_y_task = utils.apply_sliding_window(train_source_X, train_source_y_task, filter_len=6)
 
-    if is_kfold_eval:
-        kfold = KFold(n_splits=n_splits, shuffle=False)
-        accs = []
-        for train_idx, test_idx in kfold.split(target_X):
-            train_target_X, test_target_X, train_target_y_task, test_target_y_task = (
-                target_X.values[train_idx],
-                target_X.values[test_idx],
-                target_y_task[train_idx],
-                target_y_task[test_idx],
-            )
-            scaler.fit(train_target_X)
-            train_target_X = scaler.transform(train_target_X)
-            test_target_X = scaler.transform(test_target_X)
-            train_target_X, train_target_y_task = utils.apply_sliding_window(
-                train_target_X, train_target_y_task, filter_len=6
-            )
-            test_target_X, test_target_y_task = utils.apply_sliding_window(
-                test_target_X, test_target_y_task, filter_len=6
-            )
+    accs = []
+    train_target_X, test_target_X, train_target_y_task, test_target_y_task = train_test_split(
+        target_X, target_y_task, test_size=0.5, shuffle=False
+    )
+    scaler.fit(train_target_X)
+    train_target_X = scaler.transform(train_target_X)
+    test_target_X = scaler.transform(test_target_X)
 
-            source_loader, _, _, _, _, _ = utils.get_loader(
-                train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True
-            )
+    train_target_X, train_target_y_task = utils.apply_sliding_window(
+        train_target_X, train_target_y_task, filter_len=6
+    )
+    test_target_X, test_target_y_task = utils.apply_sliding_window(
+        test_target_X, test_target_y_task, filter_len=6
+    )
+    for _ in range(num_repeats):
 
-            test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
-            test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
-            test_target_X = test_target_X.to(DEVICE)
-            test_target_y_task = test_target_y_task.to(DEVICE)
-
-            without_adapt = CoDATS_F_C(input_size=train_source_X.shape[2])
-            without_adapt_optimizer = optim.Adam(without_adapt.parameters(), lr=0.0001)
-            criterion = nn.BCELoss()
-            without_adapt = utils.fit_without_adaptation(
-                source_loader=source_loader,
-                task_classifier=without_adapt,
-                task_optimizer=without_adapt_optimizer,
-                criterion=criterion,
-                num_epochs=300,
-            )
-            without_adapt.eval()
-            pred_y_task = without_adapt(test_target_X)
-            pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
-            pred_y_task = pred_y_task > 0.5
-            acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
-            accs.append(acc.item())
-        return sum(accs) / n_splits
-    else:
-        accs = []
-        train_target_X, test_target_X, train_target_y_task, test_target_y_task = train_test_split(
-            target_X, target_y_task, test_size=0.5, shuffle=False
+        source_loader, _, _, _, _, _ = utils.get_loader(
+            train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True
         )
-        scaler.fit(train_target_X)
-        train_target_X = scaler.transform(train_target_X)
-        test_target_X = scaler.transform(test_target_X)
 
-        train_target_X, train_target_y_task = utils.apply_sliding_window(
-            train_target_X, train_target_y_task, filter_len=6
+        test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
+        test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
+        test_target_X = test_target_X.to(DEVICE)
+        test_target_y_task = test_target_y_task.to(DEVICE)
+
+        without_adapt = CoDATS_F_C(input_size=train_source_X.shape[2])
+        without_adapt_optimizer = optim.Adam(without_adapt.parameters(), lr=0.0001)
+        criterion = nn.BCELoss()
+        without_adapt = utils.fit_without_adaptation(
+            source_loader=source_loader,
+            task_classifier=without_adapt,
+            task_optimizer=without_adapt_optimizer,
+            criterion=criterion,
+            num_epochs=300,
         )
-        test_target_X, test_target_y_task = utils.apply_sliding_window(
-            test_target_X, test_target_y_task, filter_len=6
-        )
-        for _ in range(num_repeats):
-
-            source_loader, _, _, _, _, _ = utils.get_loader(
-                train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True
-            )
-
-            test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
-            test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
-            test_target_X = test_target_X.to(DEVICE)
-            test_target_y_task = test_target_y_task.to(DEVICE)
-
-            without_adapt = CoDATS_F_C(input_size=train_source_X.shape[2])
-            without_adapt_optimizer = optim.Adam(without_adapt.parameters(), lr=0.0001)
-            criterion = nn.BCELoss()
-            without_adapt = utils.fit_without_adaptation(
-                source_loader=source_loader,
-                task_classifier=without_adapt,
-                task_optimizer=without_adapt_optimizer,
-                criterion=criterion,
-                num_epochs=300,
-            )
-            without_adapt.eval()
-            pred_y_task = without_adapt(test_target_X)
-            pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
-            pred_y_task = pred_y_task > 0.5
-            acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
-            accs.append(acc.item())
-        return sum(accs) / num_repeats
+        without_adapt.eval()
+        pred_y_task = without_adapt(test_target_X)
+        pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
+        pred_y_task = pred_y_task > 0.5
+        acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
+        accs.append(acc.item())
+    return sum(accs) / num_repeats
 
 
 def train_on_target(
-    target_idx: int, summer_idx: int, n_splits: int = 5, is_kfold_eval: bool = False, num_repeats: int = 10
+    target_idx: int, summer_idx: int, num_repeats: int = 10
 ) -> float:
     target_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_X_train.csv")
     target_y_task = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_Y_train.csv")[
@@ -465,88 +374,46 @@ def train_on_target(
     scaler = preprocessing.StandardScaler()
     target_X = scaler.fit_transform(target_X)
     target_X, target_y_task = utils.apply_sliding_window(target_X, target_y_task, filter_len=6)
-    if is_kfold_eval:
-        kfold = KFold(n_splits=n_splits, shuffle=False)
-        accs = []
-        for train_idx, test_idx in kfold.split(target_X):
-            train_target_X, test_target_X, train_target_y_task, test_target_y_task = (
-                target_X[train_idx],
-                target_X[test_idx],
-                target_y_task[train_idx],
-                target_y_task[test_idx],
-            )
 
-            test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
-            test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
-            test_target_X = test_target_X.to(DEVICE)
-            test_target_y_task = test_target_y_task.to(DEVICE)
+    accs = []
+    train_target_X, test_target_X, train_target_y_task, test_target_y_task = train_test_split(
+        target_X, target_y_task, test_size=0.5, shuffle=False
+    )
 
-            train_target_X = torch.tensor(train_target_X, dtype=torch.float32)
-            train_target_y_task = torch.tensor(train_target_y_task, dtype=torch.float32)
-            train_target_X = train_target_X.to(DEVICE)
-            train_target_y_task = train_target_y_task.to(DEVICE)
-            target_ds = TensorDataset(train_target_X, train_target_y_task)
-            target_loader = DataLoader(target_ds, batch_size=32, shuffle=True)
-            ## Train on Target fit, predict
-            train_on_target = CoDATS_F_C(input_size=train_target_X.shape[2])
-            train_on_target_optimizer = optim.Adam(train_on_target.parameters(), lr=0.0001)
-            criterion = nn.BCELoss()
+    test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
+    test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
+    test_target_X = test_target_X.to(DEVICE)
+    test_target_y_task = test_target_y_task.to(DEVICE)
 
-            for _ in range(300):
-                for target_X_batch, target_y_task_batch in target_loader:
-                    pred_y_task = train_on_target(target_X_batch)
-                    pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
-                    loss = criterion(pred_y_task, target_y_task_batch)
+    train_target_X = torch.tensor(train_target_X, dtype=torch.float32)
+    train_target_y_task = torch.tensor(train_target_y_task, dtype=torch.float32)
+    train_target_X = train_target_X.to(DEVICE)
+    train_target_y_task = train_target_y_task.to(DEVICE)
+    target_ds = TensorDataset(train_target_X, train_target_y_task)
+    for _ in range(num_repeats):
+        target_loader = DataLoader(target_ds, batch_size=32, shuffle=True)
+        ## Train on Target fit, predict
+        train_on_target = CoDATS_F_C(input_size=train_target_X.shape[2])
+        train_on_target_optimizer = optim.Adam(train_on_target.parameters(), lr=0.0001)
+        criterion = nn.BCELoss()
 
-                    train_on_target_optimizer.zero_grad()
-                    loss.backward()
-                    train_on_target_optimizer.step()
-            pred_y_task = train_on_target(test_target_X)
-            pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
-            pred_y_task = pred_y_task > 0.5
-            acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
-            accs.append(acc.item())
-        return sum(accs) / n_splits, None
-    else:
-        accs = []
-        train_target_X, test_target_X, train_target_y_task, test_target_y_task = train_test_split(
-            target_X, target_y_task, test_size=0.5, shuffle=False
-        )
+        for _ in range(300):
+            for target_X_batch, target_y_task_batch in target_loader:
+                pred_y_task = train_on_target(target_X_batch)
+                pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
+                loss = criterion(pred_y_task, target_y_task_batch)
 
-        test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
-        test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
-        test_target_X = test_target_X.to(DEVICE)
-        test_target_y_task = test_target_y_task.to(DEVICE)
-
-        train_target_X = torch.tensor(train_target_X, dtype=torch.float32)
-        train_target_y_task = torch.tensor(train_target_y_task, dtype=torch.float32)
-        train_target_X = train_target_X.to(DEVICE)
-        train_target_y_task = train_target_y_task.to(DEVICE)
-        target_ds = TensorDataset(train_target_X, train_target_y_task)
-        for _ in range(num_repeats):
-            target_loader = DataLoader(target_ds, batch_size=32, shuffle=True)
-            ## Train on Target fit, predict
-            train_on_target = CoDATS_F_C(input_size=train_target_X.shape[2])
-            train_on_target_optimizer = optim.Adam(train_on_target.parameters(), lr=0.0001)
-            criterion = nn.BCELoss()
-
-            for _ in range(300):
-                for target_X_batch, target_y_task_batch in target_loader:
-                    pred_y_task = train_on_target(target_X_batch)
-                    pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
-                    loss = criterion(pred_y_task, target_y_task_batch)
-
-                    train_on_target_optimizer.zero_grad()
-                    loss.backward()
-                    train_on_target_optimizer.step()
-            train_on_target.eval()
-            pred_y_task = train_on_target(test_target_X)
-            pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
-            pred_y_task = pred_y_task > 0.5
-            acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
-            accs.append(acc.item())
-            ground_truth_ratio = sum(test_target_y_task) / test_target_y_task.shape[0]
-        return sum(accs) / num_repeats, ground_truth_ratio.item()
+                train_on_target_optimizer.zero_grad()
+                loss.backward()
+                train_on_target_optimizer.step()
+        train_on_target.eval()
+        pred_y_task = train_on_target(test_target_X)
+        pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
+        pred_y_task = pred_y_task > 0.5
+        acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
+        accs.append(acc.item())
+        ground_truth_ratio = sum(test_target_y_task) / test_target_y_task.shape[0]
+    return sum(accs) / num_repeats, ground_truth_ratio.item()
 
 
 def main(argv):
@@ -572,9 +439,9 @@ def main(argv):
                     continue
             isih_da_house_acc = isih_da_house(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
             isih_da_season_acc = isih_da_season(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
-            codats_acc = codats(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1, is_kfold_eval=FLAGS.is_kfold_eval)
-            without_adapt_acc = without_adapt(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1, is_kfold_eval=FLAGS.is_kfold_eval)
-            train_on_target_acc, ground_truth_ratio = train_on_target(target_idx=j, summer_idx=1, is_kfold_eval=FLAGS.is_kfold_eval)
+            codats_acc = codats(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
+            without_adapt_acc = without_adapt(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
+            train_on_target_acc, ground_truth_ratio = train_on_target(target_idx=j, summer_idx=1)
 
             isih_da_house_accs.append(isih_da_house_acc)
             isih_da_season_accs.append(isih_da_season_acc)
