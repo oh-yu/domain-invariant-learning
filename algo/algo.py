@@ -102,7 +102,7 @@ def fit(
         task_classifier.train()
     
     
-        if stop_during_epochs & (epoch == epoch_thr_for_stopping):
+        if stop_during_epochs & (epoch.item() == epoch_thr_for_stopping):
             break
         if is_changing_lr:
             domain_optimizer, feature_optimizer, task_optimizer = utils._change_lr_during_dann_training(
