@@ -44,8 +44,10 @@ def fit(
     do_print=False,
     device=utils.DEVICE,
     is_changing_lr=False,
-    epoch_thr=200,
-    changed_lrs=[1e-5, 1e-6]
+    epoch_thr_for_changing_lr=200,
+    changed_lrs=[1e-5, 1e-6],
+    stop_during_epochs=False,
+    epoch_thr_for_stopping=2,
 ):
     # pylint: disable=too-many-arguments, too-many-locals
     # It seems reasonable in this case, since this method needs all of that.
@@ -98,11 +100,15 @@ def fit(
         epoch = torch.tensor(epoch, dtype=torch.float32).to(device)
         feature_extractor.train()
         task_classifier.train()
-
+    
+    
+        if stop_during_epochs & (epoch == epoch_thr_for_stopping):
+            break
         if is_changing_lr:
             domain_optimizer, feature_optimizer, task_optimizer = utils._change_lr_during_dann_training(
-                domain_optimizer, feature_optimizer, task_optimizer, epoch, epoch_thr=epoch_thr, changed_lrs=changed_lrs
+                domain_optimizer, feature_optimizer, task_optimizer, epoch, epoch_thr=epoch_thr_for_changing_lr, changed_lrs=changed_lrs
             )
+
 
         for (source_X_batch, source_Y_batch), (target_X_batch, target_y_domain_batch) in zip(
             source_loader, target_loader

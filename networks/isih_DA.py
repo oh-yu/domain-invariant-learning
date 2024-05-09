@@ -47,6 +47,7 @@ class IsihDanns:
             self.is_target_weights = is_target_weights
 
             self.device = DEVICE
+            self.stop_during_epochs=False
             
 
 
@@ -70,6 +71,7 @@ class IsihDanns:
             self.is_target_weights = is_target_weights
 
             self.device = torch.device("cpu")
+            self.stop_during_epochs=True
 
 
     def fit_1st_dim(self, source_loader, target_loader, test_target_X: torch.Tensor, test_target_y_task: torch.Tensor):
@@ -88,6 +90,8 @@ class IsihDanns:
             num_epochs=self.num_epochs_dim1,
             is_target_weights=self.is_target_weights,
             device=self.device,
+            stop_during_epochs=self.stop_during_epochs,
+            epoch_thr_for_stopping=10,
         )
 
     def fit_2nd_dim(self, source_loader, target_loader, test_target_X: torch.Tensor, test_target_y_task: torch.Tensor):
@@ -107,6 +111,8 @@ class IsihDanns:
             is_psuedo_weights=True,
             is_target_weights=self.is_target_weights,
             device=self.device,
+            stop_during_epochs=self.stop_during_epochs,
+            epoch_thr_for_stopping=1,
         )
 
     def predict(self, X: torch.Tensor, is_1st_dim: bool) -> torch.Tensor:
