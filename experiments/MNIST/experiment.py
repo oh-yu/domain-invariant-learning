@@ -158,7 +158,7 @@ def dann():
         domain_fc2_size=1024,
         output_size=10,
         input_size=1152,
-        num_epochs=11,
+        num_epochs=100,
         lr_fc=1e-4,
         lr_d=1e-4
     )
