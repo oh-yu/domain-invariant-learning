@@ -35,7 +35,10 @@ class Dann:
             self.domain_optimzier,
             self.task_optimizer,
             num_epochs=self.num_ecochs,
-            device=self.device
+            device=self.device,
+            is_changing_lr=True,
+            epoch_thr=10,
+            changed_lr=[1e-5, 1e-6]
         )
     
     def predict(self, x):

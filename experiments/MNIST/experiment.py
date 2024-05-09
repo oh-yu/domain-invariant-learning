@@ -158,9 +158,9 @@ def dann():
         domain_fc2_size=1024,
         output_size=10,
         input_size=1152,
-        num_epochs=10,
-        lr_fc=1e-5,
-        lr_d=1e-6
+        num_epochs=11,
+        lr_fc=1e-4,
+        lr_d=1e-4
     )
     # Fit DANN
     test_target_prime_X = torch.cat([X for X, _ in test_target_prime_loader_gt], dim=0)

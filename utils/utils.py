@@ -186,7 +186,7 @@ def _change_lr_during_dann_training(
     task_optimizer: torch.optim.Adam,
     epoch: torch.Tensor,
     epoch_thr: int = 200,
-    lr: float = 0.00005,
+    changed_lrs: List[float] = [0.00005, 0.00005],
 ):
     """
     Returns
@@ -196,9 +196,9 @@ def _change_lr_during_dann_training(
     task_optimizer : torch.optim.adam.Adam
     """
     if epoch == epoch_thr:
-        domain_optimizer.param_groups[0]["lr"] = lr
-        feature_optimizer.param_groups[0]["lr"] = lr
-        task_optimizer.param_groups[0]["lr"] = lr
+        domain_optimizer.param_groups[0]["lr"] = changed_lrs[1]
+        feature_optimizer.param_groups[0]["lr"] = changed_lrs[0]
+        task_optimizer.param_groups[0]["lr"] = changed_lrs[0]
     return domain_optimizer, feature_optimizer, task_optimizer
 
 
