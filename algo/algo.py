@@ -94,7 +94,7 @@ def _get_terminal_weights(
     else:
         target_weights = 1
     if is_class_weights:
-        class_weights = get_class_weights(source_y_task_batch)
+        class_weights = _get_class_weights(source_y_task_batch)
     else:
         class_weights = 1
     if is_psuedo_weights:
@@ -104,7 +104,7 @@ def _get_terminal_weights(
     return weights
 
 
-def get_class_weights(source_y_task_batch):
+def _get_class_weights(source_y_task_batch):
     p_occupied = sum(source_y_task_batch) / source_y_task_batch.shape[0]
     p_unoccupied = 1 - p_occupied
     class_weights = torch.zeros_like(source_y_task_batch)
