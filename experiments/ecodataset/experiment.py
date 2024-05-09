@@ -75,6 +75,7 @@ def isih_da_house(
             lr_dim2=0.00005,
             num_epochs_dim1=200,
             num_epochs_dim2=100,
+            experiment="ECOdataset"
         )
         isih_dann.fit_1st_dim(source_loader, target_loader, test_target_X, test_target_y_task)
         pred_y_task = isih_dann.predict(test_target_X, is_1st_dim=True)
@@ -179,6 +180,7 @@ def isih_da_season(
             lr_dim2=0.00005,
             num_epochs_dim1=200,
             num_epochs_dim2=100,
+            experiment="ECOdataset"
         )
         isih_dann.fit_1st_dim(source_loader, target_loader, test_target_X, test_target_y_task)
         pred_y_task = isih_dann.predict(test_target_X, is_1st_dim=True)
@@ -282,7 +284,7 @@ def codats(
         test_target_y_task = test_target_y_task.to(DEVICE)
 
         ## CoDATS fit, predict
-        codats = Codats(input_size=train_source_X.shape[2], hidden_size=128, lr=0.0001, num_epochs=300)
+        codats = Codats(input_size=train_source_X.shape[2], hidden_size=128, lr=0.0001, num_epochs=300, experiment="ECOdataset")
         codats.fit(source_loader, target_loader, test_target_X, test_target_y_task)
         codats.set_eval()
         pred_y_task = codats.predict(test_target_X)
@@ -343,7 +345,7 @@ def without_adapt(
         test_target_X = test_target_X.to(DEVICE)
         test_target_y_task = test_target_y_task.to(DEVICE)
 
-        without_adapt = CoDATS_F_C(input_size=train_source_X.shape[2])
+        without_adapt = CoDATS_F_C(input_size=train_source_X.shape[2], experiment="ECOdataset")
         without_adapt_optimizer = optim.Adam(without_adapt.parameters(), lr=0.0001)
         criterion = nn.BCELoss()
         without_adapt = utils.fit_without_adaptation(
@@ -393,7 +395,7 @@ def train_on_target(
     for _ in range(num_repeats):
         target_loader = DataLoader(target_ds, batch_size=32, shuffle=True)
         ## Train on Target fit, predict
-        train_on_target = CoDATS_F_C(input_size=train_target_X.shape[2])
+        train_on_target = CoDATS_F_C(input_size=train_target_X.shape[2], experiment="ECOdataset")
         train_on_target_optimizer = optim.Adam(train_on_target.parameters(), lr=0.0001)
         criterion = nn.BCELoss()
 
