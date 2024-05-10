@@ -255,4 +255,31 @@ def visualize_tSNE(target_feature, source_feature):
     plt.show()
 
 
+def _plot_dann_loss(
+    do_plot: bool, loss_domains: List[float], loss_tasks: List[float], loss_task_evals: List[float]
+) -> None:
+    """
+    plot domain&task losses for source, task loss for target.
 
+    Parameters
+    ----------
+    do_plot: bool
+    loss_domains: list of float
+    loss_tasks: list of float
+    loss_tasks_evals: list of float
+    task loss for target data.
+    """
+    if do_plot:
+        plt.figure()
+        plt.plot(loss_domains, label="loss_domain")
+        plt.plot(loss_tasks, label="loss_task")
+        plt.xlabel("batch")
+        plt.ylabel("cross entropy loss")
+        plt.legend()
+
+        plt.figure()
+        plt.plot(loss_task_evals, label="loss_task_eval")
+        plt.xlabel("epoch")
+        plt.ylabel("accuracy")
+        plt.legend()
+        plt.show()
