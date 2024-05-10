@@ -24,6 +24,7 @@ class Codats:
         experiment: str,
         num_domains: int = 1,
         num_classes: int = 1,
+        is_target_weights: bool = True,
     ) -> None:
         assert experiment in ["ECOdataset", "ECOdataset_synthetic", "HHAR"]
         if experiment in ["ECOdataset", "ECOdataset_synthetic"]:
@@ -38,6 +39,7 @@ class Codats:
         self.domain_optimizer = optim.Adam(self.domain_classifier.parameters(), lr=lr)
         self.task_optimizer = optim.Adam(self.task_classifier.parameters(), lr=lr)
         self.num_epochs = num_epochs
+        self.is_target_weights = is_target_weights
 
     def fit(
         self,
@@ -59,6 +61,7 @@ class Codats:
             self.domain_optimizer,
             self.task_optimizer,
             num_epochs=self.num_epochs,
+            is_target_weights=self.is_target_weights,
         )
 
     def predict(self, x: torch.Tensor) -> torch.Tensor:

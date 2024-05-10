@@ -61,7 +61,8 @@ def main(argv):
         do_plot=True,
         is_changing_lr=True,
         epoch_thr_for_changing_lr=200,
-        changed_lrs=[0.00005, 0.00005]
+        changed_lrs=[0.00005, 0.00005],
+        is_target_weights=True
     )
     target_feature_eval = feature_extractor(target_X)
     pred_y_task = task_classifier(target_feature_eval)
