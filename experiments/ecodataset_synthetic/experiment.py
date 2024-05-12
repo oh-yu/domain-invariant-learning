@@ -4,7 +4,7 @@ import pandas as pd
 import torch
 from absl import app, flags
 from sklearn import preprocessing
-from sklearn.model_selection import KFold, train_test_split
+from sklearn.model_selection import train_test_split
 from torch import nn, optim
 from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
@@ -26,7 +26,6 @@ LAG_NUM_TO_TIME_LIST = {
 FLAGS = flags.FLAGS
 flags.DEFINE_integer("lag_1", 1, "time lag for intermediate domain")
 flags.DEFINE_integer("lag_2", 6, "time lag for terminal domain")
-flags.DEFINE_boolean("is_kfold_eval", False, "use kfold cross validation,  otherwise use train-test split. currently isih-DA is not supported.")
 flags.mark_flag_as_required("lag_1")
 flags.mark_flag_as_required("lag_2")
 
@@ -128,7 +127,7 @@ def isih_da(source_idx=2, season_idx=0, num_repeats: int = 10):
     return sum(accs) / num_repeats
 
 
-def codats(source_idx=2, season_idx=0, n_splits: int = 5, is_kfold_eval: bool = False, num_repeats: int = 10):
+def codats(source_idx=2, season_idx=0, num_repeats: int = 10):
     train_source_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv")
     train_source_y_task = pd.read_csv(
         f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_Y_train.csv"
@@ -183,7 +182,7 @@ def codats(source_idx=2, season_idx=0, n_splits: int = 5, is_kfold_eval: bool = 
     return sum(accs) / num_repeats
 
 
-def without_adapt(source_idx=2, season_idx=0, n_splits: int = 5, is_kfold_eval: bool = False, num_repeats: int = 10):
+def without_adapt(source_idx=2, season_idx=0, num_repeats: int = 10):
     train_source_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv")
     train_source_y_task = pd.read_csv(
         f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_Y_train.csv"
@@ -246,7 +245,7 @@ def without_adapt(source_idx=2, season_idx=0, n_splits: int = 5, is_kfold_eval: 
     return sum(accs) / num_repeats
 
 
-def train_on_target(source_idx=2, season_idx=0, n_splits: int = 5, is_kfold_eval: bool = False, num_repeats: int = 10):
+def train_on_target(source_idx=2, season_idx=0, num_repeats: int = 10):
     train_source_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv")
     train_source_y_task = pd.read_csv(
         f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_Y_train.csv"
@@ -318,9 +317,9 @@ def main(argv):
     for i in tqdm(HOUSEHOLD_IDX):
         for j in SEASON_IDX:
             acc_isih_da = isih_da(source_idx=i, season_idx=j)
-            acc_codats = codats(source_idx=i, season_idx=j, is_kfold_eval=FLAGS.is_kfold_eval)
-            acc_without_adapt = without_adapt(source_idx=i, season_idx=j, is_kfold_eval=FLAGS.is_kfold_eval)
-            acc_train_on_target = train_on_target(source_idx=i, season_idx=j, is_kfold_eval=FLAGS.is_kfold_eval)
+            acc_codats = codats(source_idx=i, season_idx=j)
+            acc_without_adapt = without_adapt(source_idx=i, season_idx=j)
+            acc_train_on_target = train_on_target(source_idx=i, season_idx=j)
             accs_isih_da.append(acc_isih_da)
             accs_codats.append(acc_codats)
             accs_without_adapt.append(acc_without_adapt)
