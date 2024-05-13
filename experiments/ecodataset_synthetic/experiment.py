@@ -88,8 +88,7 @@ def isih_da(source_idx=2, season_idx=0, num_repeats: int = 10):
             experiment="ECOdataset_synthetic"
         )
         isih_dann.fit_1st_dim(source_loader, target_loader, test_target_X, test_target_y_task)
-        pred_y_task = isih_dann.predict(test_target_X, is_1st_dim=True)
-        pred_y_task = pred_y_task > 0.5
+        pred_y_task = isih_dann.predict_proba(test_target_X, is_1st_dim=True)
         train_source_X = target_X
         train_source_y_task = pred_y_task.cpu().detach().numpy()
         target_X = target_prime_X.values
