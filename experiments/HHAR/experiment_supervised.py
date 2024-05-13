@@ -47,7 +47,7 @@ if __name__ == "__main__":
     data_loader = DataLoader(ds, batch_size=4, shuffle=True)
 
     # Model Init   
-    codats_f_c = CoDATS_F_C(input_size=X.shape[2], output_size=6)
+    codats_f_c = CoDATS_F_C(input_size=X.shape[2], output_size=6, experiment="HHAR")
     criterion = nn.CrossEntropyLoss()
     softmax = nn.Softmax(dim=1)
     optimizer = optim.Adam(codats_f_c.parameters(), lr=0.0001)
