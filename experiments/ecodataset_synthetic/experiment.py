@@ -1,3 +1,4 @@
+from datetime import datetime
 import pickle
 
 import pandas as pd
@@ -327,7 +328,7 @@ def main(argv):
     df["accs_codats"] = accs_codats
     df["accs_without_adapt"] = accs_without_adapt
     df["accs_train_on_target"] = accs_train_on_target
-    df.to_csv(f"ecodataset_synthetic_experiment_lag{FLAGS.lag_1}_lag{FLAGS.lag_2}.csv", index=False)
+    df.to_csv(f"ecodataset_synthetic_experiment_lag{FLAGS.lag_1}_lag{FLAGS.lag_2}_{str(datetime.now())}.csv", index=False)
 
 
 if __name__ == "__main__":

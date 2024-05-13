@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from absl import app, flags
 import pandas as pd
 import torch
@@ -488,7 +490,7 @@ def main(argv):
     df["Wtihout_Adapt"] = without_adapt_accs
     df["Train_on_Target"] = train_on_target_accs
     df["Ground Truth Ratio"] = ground_truth_ratios
-    df.to_csv("ecodataset_experiment.csv", index=False)
+    df.to_csv(f"ecodataset_experiment_{str(datetime.now())}.csv", index=False)
 
 
 if __name__ == "__main__":
