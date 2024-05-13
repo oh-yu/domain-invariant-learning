@@ -173,8 +173,6 @@ def codats(source_idx=2, season_idx=0, num_repeats: int = 10):
         codats.fit(source_loader, target_loader, test_target_X, test_target_y_task)
         codats.set_eval()
         pred_y_task = codats.predict(test_target_X)
-
-        pred_y_task = pred_y_task > 0.5
         acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
         accs.append(acc.item())
     return sum(accs) / num_repeats
