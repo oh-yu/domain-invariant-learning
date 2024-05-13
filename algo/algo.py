@@ -47,7 +47,7 @@ def fit(
     device=utils.DEVICE,
     is_changing_lr=False,
     epoch_thr_for_changing_lr=200,
-    changed_lrs=[1e-5, 1e-6],
+    changed_lrs=[0.00005, 0.00005],
     stop_during_epochs=False,
     epoch_thr_for_stopping=2,
 ):
