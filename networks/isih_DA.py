@@ -30,11 +30,30 @@ class IsihDanns:
     ):
         assert experiment in ["ECOdataset", "ECOdataset_synthetic", "HHAR", "MNIST"]
 
-        if experiment in ["HHAR", "ECOdataset", "ECOdataset_synthetic"]:
-            if experiment in ["ECOdataset", "ECOdataset_synthetic"]:
-                self.feature_extractor = Conv1dTwoLayers(input_size=input_size).to(DEVICE)
-            elif experiment == "HHAR":
-                self.feature_extractor = Conv1dThreeLayers(input_size=input_size).to(DEVICE)
+        if experiment in ["ECOdataset", "ECOdataset_synthetic"]:
+            self.feature_extractor = Conv1dTwoLayers(input_size=input_size).to(DEVICE)
+            self.domain_classifier_dim1 = ThreeLayersDecoder(input_size=hidden_size, output_size=1, dropout_ratio=0, fc1_size=50, fc2_size=10).to(DEVICE)
+            self.task_classifier_dim1 = ThreeLayersDecoder(input_size=hidden_size, output_size=1, dropout_ratio=0, fc1_size=50, fc2_size=10).to(DEVICE)
+
+            self.feature_optimizer_dim1 = optim.Adam(self.feature_extractor.parameters(), lr=lr_dim1)
+            self.domain_optimizer_dim1 = optim.Adam(self.domain_classifier_dim1.parameters(), lr=lr_dim1)
+            self.task_optimizer_dim1 = optim.Adam(self.task_classifier_dim1.parameters(), lr=lr_dim1)
+            self.criterion = nn.BCELoss()
+            self.num_epochs_dim1 = num_epochs_dim1
+
+            self.domain_classifier_dim2 = ThreeLayersDecoder(input_size=hidden_size, output_size=1, dropout_ratio=0, fc1_size=50, fc2_size=10).to(DEVICE)
+            self.task_classifier_dim2 = ThreeLayersDecoder(input_size=hidden_size, output_size=1, dropout_ratio=0, fc1_size=50, fc2_size=10).to(DEVICE)
+            self.feature_optimizer_dim2 = optim.Adam(self.feature_extractor.parameters(), lr=lr_dim2)
+            self.domain_optimizer_dim2 = optim.Adam(self.domain_classifier_dim2.parameters(), lr=lr_dim2)
+            self.task_optimizer_dim2 = optim.Adam(self.task_classifier_dim2.parameters(), lr=lr_dim2)
+            self.num_epochs_dim2 = num_epochs_dim2
+            self.is_target_weights = is_target_weights
+
+            self.device = DEVICE
+            self.stop_during_epochs=False
+
+        elif experiment == "HHAR":
+            self.feature_extractor = Conv1dThreeLayers(input_size=input_size).to(DEVICE)
             self.domain_classifier_dim1 = ThreeLayersDecoder(input_size=hidden_size, output_size=1, dropout_ratio=0.3).to(DEVICE)
             self.task_classifier_dim1 = OneLayerDecoder(input_size=hidden_size, output_size=output_size).to(DEVICE)
             self.feature_optimizer_dim1 = optim.Adam(self.feature_extractor.parameters(), lr=lr_dim1)
@@ -43,9 +62,9 @@ class IsihDanns:
             self.criterion = nn.BCELoss()
             self.num_epochs_dim1 = num_epochs_dim1
 
-            
-            self.task_classifier_dim2 = OneLayerDecoder(input_size=hidden_size, output_size=output_size).to(DEVICE)
             self.domain_classifier_dim2 = ThreeLayersDecoder(input_size=hidden_size, output_size=1, dropout_ratio=0.3).to(DEVICE)
+            self.task_classifier_dim2 = OneLayerDecoder(input_size=hidden_size, output_size=output_size).to(DEVICE)
+
             self.feature_optimizer_dim2 = optim.Adam(self.feature_extractor.parameters(), lr=lr_dim2)
             self.domain_optimizer_dim2 = optim.Adam(self.domain_classifier_dim2.parameters(), lr=lr_dim2)
             self.task_optimizer_dim2 = optim.Adam(self.task_classifier_dim2.parameters(), lr=lr_dim2)
