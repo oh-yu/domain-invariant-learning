@@ -120,7 +120,6 @@ def isih_da(source_idx=2, season_idx=0, num_repeats: int = 10):
         pred_y_task = isih_dann.predict(test_target_X, is_1st_dim=False)
 
         # Algo3. Evaluation
-        pred_y_task = pred_y_task > 0.5
         acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
         accs.append(acc.item())
     return sum(accs) / num_repeats
