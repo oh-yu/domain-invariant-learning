@@ -31,11 +31,12 @@ class Codats:
             self.feature_extractor = Conv1dTwoLayers(input_size=input_size).to(DEVICE)
             self.domain_classifier = ThreeLayersDecoder(input_size=hidden_size, output_size=num_domains, dropout_ratio=0, fc1_size=50, fc2_size=10).to(DEVICE)
             self.task_classifier = ThreeLayersDecoder(input_size=hidden_size, output_size=num_classes, dropout_ratio=0, fc1_size=50, fc2_size=10).to(DEVICE)
-
+            self.is_changing_lr = True
         elif experiment == "HHAR":
             self.feature_extractor = Conv1dThreeLayers(input_size=input_size).to(DEVICE)
             self.domain_classifier = ThreeLayersDecoder(input_size=hidden_size, output_size=num_domains, dropout_ratio=0.3).to(DEVICE)
             self.task_classifier = OneLayerDecoder(input_size=hidden_size, output_size=num_classes).to(DEVICE)
+            self.is_changing_lr = False
 
         self.criterion = nn.BCELoss()
         self.feature_optimizer = optim.Adam(self.feature_extractor.parameters(), lr=lr)
@@ -65,6 +66,7 @@ class Codats:
             self.task_optimizer,
             num_epochs=self.num_epochs,
             is_target_weights=self.is_target_weights,
+            is_changing_lr=self.is_changing_lr
         )
 
     def predict(self, x: torch.Tensor) -> torch.Tensor:
