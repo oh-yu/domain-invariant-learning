@@ -71,13 +71,6 @@ def isih_da_user(pattern):
         source_X, target_X, source_y_task, target_y_task, batch_size=128, shuffle=True
     )
     isih_dann = IsihDanns(
-        input_size = source_X.shape[2],
-        hidden_size=128,
-        lr_dim1 = 0.0001,
-        lr_dim2=0.0001,
-        num_epochs_dim1=150,
-        num_epochs_dim2=50,
-        output_size=len(GT_TO_INT),
         experiment="HHAR"
     )
     isih_dann.fit_1st_dim(source_loader, target_loader, target_X, target_y_task)
@@ -111,13 +104,6 @@ def isih_da_model(pattern):
         source_X, target_X, source_y_task, target_y_task, batch_size=128, shuffle=True
     )
     isih_dann = IsihDanns(
-        input_size = source_X.shape[2],
-        hidden_size=128,
-        lr_dim1 = 0.0001,
-        lr_dim2=0.0001,
-        num_epochs_dim1=150,
-        num_epochs_dim2=50,
-        output_size=len(GT_TO_INT),
         experiment="HHAR"
     )
     isih_dann.fit_1st_dim(source_loader, target_loader, target_X, target_y_task)
