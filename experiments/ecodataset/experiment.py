@@ -295,7 +295,7 @@ def without_adapt(
     target_idx: int,
     winter_idx: int,
     summer_idx: int,
-    num_repeats: int = 10,
+    num_repeats: int = 1,
 ) -> float:
     train_source_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv")
     target_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_X_train.csv")
@@ -352,7 +352,7 @@ def without_adapt(
 
 
 def train_on_target(
-    target_idx: int, summer_idx: int, num_repeats: int = 10
+    target_idx: int, summer_idx: int, num_repeats: int = 1
 ) -> float:
     target_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_X_train.csv")
     target_y_task = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_Y_train.csv")[
@@ -416,9 +416,9 @@ def main(argv):
             elif (i != 4) and (i != 5):
                 if (j == 4) or (j == 5):
                     continue
-            isih_da_house_acc = isih_da_house(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
-            isih_da_season_acc = isih_da_season(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
-            codats_acc = codats(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
+            isih_da_house_acc = 0
+            isih_da_season_acc = 0
+            codats_acc = 0
             without_adapt_acc = without_adapt(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
             train_on_target_acc, ground_truth_ratio = train_on_target(target_idx=j, summer_idx=1)
 
@@ -428,7 +428,8 @@ def main(argv):
             without_adapt_accs.append(without_adapt_acc)
             train_on_target_accs.append(train_on_target_acc)
             ground_truth_ratios.append(ground_truth_ratio)
-            patterns.append(f"({i}, w) -> ({j}, s)")
+            print(f"({i}, w) -> ({j}, s)")
+            print(without_adapt_acc, train_on_target_acc)
             if (i == 4) or (i == 5):
                 break
 
@@ -443,9 +444,9 @@ def main(argv):
             elif (i != 4) and (i != 5):
                 if (j == 4) or (j == 5):
                     continue
-            isih_da_house_acc = isih_da_house(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0)
-            isih_da_season_acc = isih_da_season(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0)
-            codats_acc = codats(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0)
+            isih_da_house_acc = 0
+            isih_da_season_acc = 0
+            codats_acc = 0
             without_adapt_acc = without_adapt(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0)
             train_on_target_acc, ground_truth_ratio = train_on_target(target_idx=j, summer_idx=0)
 
@@ -455,7 +456,9 @@ def main(argv):
             without_adapt_accs.append(without_adapt_acc)
             train_on_target_accs.append(train_on_target_acc)
             ground_truth_ratios.append(ground_truth_ratio)
-            patterns.append(f"({i}, s) -> ({j}, w)")
+            print(f"({i}, s) -> ({j}, w)")
+            print(without_adapt_acc, train_on_target_acc)
+
             if (i == 4) or (i == 5):
                 break
 
