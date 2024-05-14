@@ -23,8 +23,8 @@ class CoDATS_F_C(nn.Module):
             self.num_epochs = 300
 
         elif experiment == "HHAR":
-            self.conv1d = Conv1dThreeLayers(input_size=input_size).to(DEVICE)
-            self.decoder = OneLayerDecoder(input_size=128, output_size=output_size).to(DEVICE)
+            self.conv1d = Conv1dThreeLayers(input_size=6).to(DEVICE)
+            self.decoder = OneLayerDecoder(input_size=128, output_size=6).to(DEVICE)
             self.optimizer = optim.Adam(list(self.conv1d.parameters())+list(self.decoder.parameters()), lr=1e-4)
             self.criterion = nn.CrossEntropyLoss()
             self.num_epochs = 200
