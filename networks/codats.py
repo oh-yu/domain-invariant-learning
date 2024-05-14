@@ -71,6 +71,10 @@ class Codats:
 
     def predict(self, x: torch.Tensor) -> torch.Tensor:
         return self.task_classifier.predict(self.feature_extractor(x))
+    
+    def predict_proba(self, x: torch.Tensor) -> torch.Tensor:
+        return self.task_classifier.predict_proba(self.feature_extractor(x))
+
 
     def set_eval(self):
         self.task_classifier.eval()

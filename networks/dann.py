@@ -61,6 +61,9 @@ class Dann:
     def predict(self, x):
         return self.task_classifier.predict(self.feature_extractor(x))
     
+    def predict_proba(self, x):
+        return self.task_classifier.predict_proba(self.feature_extractor(x))
+    
     def set_eval(self):
         self.task_classifier.eval()
         self.feature_extractor.eval()
