@@ -184,17 +184,9 @@ def without_adapt(pattern):
     test_target_prime_y_task = test_target_prime_y_task.to(utils.DEVICE)
 
     without_adapt = CoDATS_F_C(input_size=source_X.shape[2], output_size=len(GT_TO_INT), experiment="HHAR")
-    without_adapt_optimizer = optim.Adam(without_adapt.parameters(), lr=0.0001)
-    criterion = nn.CrossEntropyLoss()
-    without_adapt = utils.fit_without_adaptation(
-        source_loader=source_loader,
-        task_classifier=without_adapt,
-        task_optimizer=without_adapt_optimizer,
-        criterion=criterion,
-        num_epochs=200,
-        output_size=len(GT_TO_INT),
-    )
+    without_adapt.fit_without_adapt(source_loader)
     without_adapt.eval()
+
     pred_y_task = without_adapt.predict(test_target_prime_X)
     acc = sum(pred_y_task == test_target_prime_y_task) / len(test_target_prime_y_task)
     return acc.item()
