@@ -17,14 +17,7 @@ class Codats:
 
     def __init__(
         self,
-        input_size: int,
-        hidden_size: int,
-        lr: float,
-        num_epochs: int,
-        experiment: str,
-        num_domains: int = 1,
-        num_classes: int = 1,
-        is_target_weights: bool = True,
+        experiment: str
     ) -> None:
         assert experiment in ["ECOdataset", "ECOdataset_synthetic", "HHAR"]
         if experiment in ["ECOdataset", "ECOdataset_synthetic"]:

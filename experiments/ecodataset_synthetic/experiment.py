@@ -80,12 +80,6 @@ def isih_da(source_idx=2, season_idx=0, num_repeats: int = 10):
         test_target_y_task = test_target_y_task.to(DEVICE)
 
         isih_dann = IsihDanns(
-            input_size=train_source_X.shape[2],
-            hidden_size=128,
-            lr_dim1=0.0001,
-            lr_dim2=0.00005,
-            num_epochs_dim1=200,
-            num_epochs_dim2=100,
             experiment="ECOdataset_synthetic"
         )
         isih_dann.fit_1st_dim(source_loader, target_loader, test_target_X, test_target_y_task)
@@ -170,7 +164,7 @@ def codats(source_idx=2, season_idx=0, num_repeats: int = 10):
             train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True
         )
         ## CoDATS fit, predict
-        codats = Codats(input_size=train_source_X.shape[2], hidden_size=128, lr=0.0001, num_epochs=300, experiment="ECOdataset_synthetic")
+        codats = Codats(experiment="ECOdataset_synthetic")
         codats.fit(source_loader, target_loader, test_target_X, test_target_y_task)
         codats.set_eval()
         pred_y_task = codats.predict(test_target_X)
@@ -223,7 +217,7 @@ def without_adapt(source_idx=2, season_idx=0, num_repeats: int = 10):
             train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True
         )
         ## Without Adapt fit, predict
-        without_adapt = CoDATS_F_C(input_size=train_source_X.shape[2], experiment="ECOdataset_synthetic")
+        without_adapt = CoDATS_F_C(experiment="ECOdataset_synthetic")
         without_adapt.fit_without_adapt(source_loader)
 
         without_adapt.eval()
@@ -272,7 +266,7 @@ def train_on_target(source_idx=2, season_idx=0, num_repeats: int = 10):
     for _ in range(num_repeats):
         target_loader = DataLoader(target_ds, batch_size=32, shuffle=True)
         ## Train on Target fit, predict
-        train_on_target = CoDATS_F_C(input_size=train_target_X.shape[2], experiment="ECOdataset_synthetic")
+        train_on_target = CoDATS_F_C(experiment="ECOdataset_synthetic")
         train_on_target.fit_on_target(target_loader)
         train_on_target.eval()
         pred_y_task = train_on_target(test_target_X)

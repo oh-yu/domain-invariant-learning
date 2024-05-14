@@ -12,7 +12,7 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 class CoDATS_F_C(nn.Module):
-    def __init__(self, input_size: int, experiment:str, output_size: int = 1):
+    def __init__(self, experiment:str):
         super().__init__()
         assert experiment in ["ECOdataset", "ECOdataset_synthetic", "HHAR"]
         if experiment in ["ECOdataset", "ECOdataset_synthetic"]:
