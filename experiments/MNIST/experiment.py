@@ -186,10 +186,7 @@ def without_adapt():
 
     # Model Init
     without_adapt = Dann_F_C()
-    without_adapt_optimizer = optim.Adam(without_adapt.parameters(), lr=1e-4)
-    criterion = nn.CrossEntropyLoss()
-    # Fit
-    without_adapt = utils.fit_without_adaptation(source_loader, without_adapt, without_adapt_optimizer, criterion, output_size=10, num_epochs=10)
+    without_adapt.fit_without_adapt(source_loader)
     # Eval
     test_target_prime_X = torch.cat([X for X, _ in test_target_prime_loader_gt], dim=0)
     test_target_prime_y_task = torch.cat([y[:, 0] for _, y in test_target_prime_loader_gt], dim=0)
@@ -205,17 +202,7 @@ def train_on_target():
 
     # Model Init
     train_on_target = Dann_F_C()
-    train_on_target_optimizer = optim.Adam(train_on_target.parameters(), lr=1e-4)
-    criterion = nn.CrossEntropyLoss()
-
-    # Fit
-    for _ in range(10):
-        for X, y in train_target_prime_loader:
-            train_on_target_optimizer.zero_grad()
-            pred_y_task = train_on_target.predict_proba(X)
-            loss = criterion(pred_y_task, y[:, 0].to(torch.long))
-            loss.backward()
-            train_on_target_optimizer.step()
+    train_on_target.fit_on_target(train_target_prime_loader)
 
     # Eval
     test_target_prime_X = torch.cat([X for X, _ in test_target_prime_loader_gt], dim=0)
