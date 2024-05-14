@@ -341,15 +341,7 @@ def without_adapt(
         test_target_y_task = test_target_y_task.to(DEVICE)
 
         without_adapt = CoDATS_F_C(input_size=train_source_X.shape[2], experiment="ECOdataset")
-        without_adapt_optimizer = optim.Adam(without_adapt.parameters(), lr=0.0001)
-        criterion = nn.BCELoss()
-        without_adapt = utils.fit_without_adaptation(
-            source_loader=source_loader,
-            task_classifier=without_adapt,
-            task_optimizer=without_adapt_optimizer,
-            criterion=criterion,
-            num_epochs=300,
-        )
+        without_adapt.fit_without_adapt(source_loader)
         without_adapt.eval()
         pred_y_task = without_adapt(test_target_X)
         pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
@@ -391,18 +383,8 @@ def train_on_target(
         target_loader = DataLoader(target_ds, batch_size=32, shuffle=True)
         ## Train on Target fit, predict
         train_on_target = CoDATS_F_C(input_size=train_target_X.shape[2], experiment="ECOdataset")
-        train_on_target_optimizer = optim.Adam(train_on_target.parameters(), lr=0.0001)
-        criterion = nn.BCELoss()
+        train_on_target.fit_on_target(target_loader)
 
-        for _ in range(300):
-            for target_X_batch, target_y_task_batch in target_loader:
-                pred_y_task = train_on_target(target_X_batch)
-                pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
-                loss = criterion(pred_y_task, target_y_task_batch)
-
-                train_on_target_optimizer.zero_grad()
-                loss.backward()
-                train_on_target_optimizer.step()
         train_on_target.eval()
         pred_y_task = train_on_target(test_target_X)
         pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)

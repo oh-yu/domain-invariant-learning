@@ -18,6 +18,9 @@ class CoDATS_F_C(nn.Module):
         if experiment in ["ECOdataset", "ECOdataset_synthetic"]:
             self.conv1d = Conv1dTwoLayers(input_size=input_size).to(DEVICE)
             self.decoder = ThreeLayersDecoder(input_size=128, output_size=1, dropout_ratio=0, fc1_size=50, fc2_size=10).to(DEVICE)
+            self.optimizer = optim.Adam(list(self.conv1d.parameters())+list(self.decoder.parameters()), lr=1e-4)
+            self.criterion = nn.BCELoss()
+            self.num_epochs = 300
 
         elif experiment == "HHAR":
             self.conv1d = Conv1dThreeLayers(input_size=input_size).to(DEVICE)
@@ -52,10 +55,9 @@ class CoDATS_F_C(nn.Module):
 
 
     def fit_on_target(self, target_prime_loader):
-        for _ in range(200):
+        for _ in range(self.num_epochs):
             for target_prime_X_batch, target_prime_y_task_batch in target_prime_loader:
                 pred_y_task = self.predict_proba(target_prime_X_batch)
-
                 loss = self.criterion(pred_y_task, target_prime_y_task_batch)
 
                 self.optimizer.zero_grad()
