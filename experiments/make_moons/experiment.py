@@ -84,7 +84,7 @@ def main(argv):
         x_grid,
         x1_grid,
         x2_grid,
-    ) = utils.get_source_target_from_make_moons(rotation_degree=FLAGS.rotation_degree)
+    ) = get_source_target_from_make_moons(rotation_degree=FLAGS.rotation_degree)
     source_loader, target_loader, source_y_task, source_X, target_X, target_y_task = utils.get_loader(
         source_X, target_X, source_y_task, target_y_task
     )
