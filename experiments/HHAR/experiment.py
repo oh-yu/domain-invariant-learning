@@ -204,20 +204,8 @@ def train_on_target(pattern):
     target_prime_loader = DataLoader(target_prime_ds, batch_size=128, shuffle=True)
 
     train_on_target = CoDATS_F_C(input_size=train_target_prime_X.shape[2], output_size=len(GT_TO_INT), experiment="HHAR")
-    train_on_target_optimizer = optim.Adam(train_on_target.parameters(), lr=0.0001)
-    criterion = nn.CrossEntropyLoss()
-
-    for _ in tqdm(range(200), disable=True):
-        for target_prime_X_batch, target_prime_y_task_batch in target_prime_loader:
-            pred_y_task = train_on_target.predict_proba(target_prime_X_batch)
-
-            loss = criterion(pred_y_task, target_prime_y_task_batch)
-
-            train_on_target_optimizer.zero_grad()
-            loss.backward()
-            train_on_target_optimizer.step()
+    train_on_target.fit_on_target(target_prime_loader)
     train_on_target.eval()
-    
     pred_y_task = train_on_target.predict(test_target_prime_X)
     acc = sum(pred_y_task == test_target_prime_y_task) / len(test_target_prime_y_task)
     return acc.item()

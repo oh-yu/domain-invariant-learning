@@ -51,6 +51,18 @@ class CoDATS_F_C(nn.Module):
                 self.optimizer.step()
 
 
+    def fit_on_target(self, target_prime_loader):
+        for _ in range(200):
+            for target_prime_X_batch, target_prime_y_task_batch in target_prime_loader:
+                pred_y_task = self.predict_proba(target_prime_X_batch)
+
+                loss = self.criterion(pred_y_task, target_prime_y_task_batch)
+
+                self.optimizer.zero_grad()
+                loss.backward()
+                self.optimizer.step()
+    
+
     def forward(self, x):
         return self.decoder(self.conv1d(x))
     
