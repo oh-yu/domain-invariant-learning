@@ -23,7 +23,7 @@ class Dann_F_C(nn.Module):
                 source_y_task_batch = source_Y_batch[:, utils.COL_IDX_TASK]
 
                 # Forward
-                pred_y_task = self.decoder(self.conv2d(x))
+                pred_y_task = self.decoder(self.conv2d(source_X_batch))
                 if self.decoder.output_size == 1:
                     pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
                 else:
