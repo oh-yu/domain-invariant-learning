@@ -16,7 +16,7 @@ class CoDATS_F_C(nn.Module):
         super().__init__()
         assert experiment in ["ECOdataset", "ECOdataset_synthetic", "HHAR"]
         if experiment in ["ECOdataset", "ECOdataset_synthetic"]:
-            self.conv1d = Conv1dTwoLayers(input_size=input_size).to(DEVICE)
+            self.conv1d = Conv1dTwoLayers(input_size=3).to(DEVICE)
             self.decoder = ThreeLayersDecoder(input_size=128, output_size=1, dropout_ratio=0, fc1_size=50, fc2_size=10).to(DEVICE)
             self.optimizer = optim.Adam(list(self.conv1d.parameters())+list(self.decoder.parameters()), lr=1e-4)
             self.criterion = nn.BCELoss()
