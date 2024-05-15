@@ -4,9 +4,7 @@ import pandas as pd
 import torch
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from torch import nn, optim
 from torch.utils.data import DataLoader, TensorDataset
-from tqdm import tqdm
 
 from ...networks import Codats, CoDATS_F_C, IsihDanns
 from ...utils import utils

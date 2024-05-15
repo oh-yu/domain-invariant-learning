@@ -1,5 +1,3 @@
-from typing import List
-
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
@@ -90,10 +88,10 @@ def apply_sliding_window(
 
     Returns
     -------
-    filtered_X : 
+    filtered_X :
         ndarray of shape(N - filter_len + 1, filter_len, H) when is_ovelap == True:
         ndarray of shape(N//filter_len, filter_len, H) when is_ovelap == False:
-    filtered_y : 
+    filtered_y :
         ndarray of shape(N - filter_len + 1, ) when is_ovelap == True:
         ndarray of shape(N//filter_len, ) when is_ovelap == False:
     """
