@@ -76,15 +76,9 @@ def get_source_target_from_make_moons(n_samples=100, noise=0.05, rotation_degree
 
 def main(argv):
     # Prepare Data
-    (
-        source_X,
-        target_X,
-        source_y_task,
-        target_y_task,
-        x_grid,
-        x1_grid,
-        x2_grid,
-    ) = get_source_target_from_make_moons(rotation_degree=FLAGS.rotation_degree)
+    (source_X, target_X, source_y_task, target_y_task, x_grid, x1_grid, x2_grid,) = get_source_target_from_make_moons(
+        rotation_degree=FLAGS.rotation_degree
+    )
     source_loader, target_loader, source_y_task, source_X, target_X, target_y_task = utils.get_loader(
         source_X, target_X, source_y_task, target_y_task
     )
@@ -95,8 +89,12 @@ def main(argv):
     num_classes = 1
 
     feature_extractor = Encoder(input_size=source_X.shape[1], output_size=hidden_size).to(device)
-    domain_classifier = ThreeLayersDecoder(input_size=hidden_size, output_size=num_domains, dropout_ratio=0, fc1_size=50, fc2_size=10).to(device)
-    task_classifier = ThreeLayersDecoder(input_size=hidden_size, output_size=num_classes, dropout_ratio=0, fc1_size=50, fc2_size=10).to(device)
+    domain_classifier = ThreeLayersDecoder(
+        input_size=hidden_size, output_size=num_domains, dropout_ratio=0, fc1_size=50, fc2_size=10
+    ).to(device)
+    task_classifier = ThreeLayersDecoder(
+        input_size=hidden_size, output_size=num_classes, dropout_ratio=0, fc1_size=50, fc2_size=10
+    ).to(device)
     learning_rate = 0.001
 
     criterion = nn.BCELoss()
@@ -123,7 +121,7 @@ def main(argv):
         is_changing_lr=True,
         epoch_thr_for_changing_lr=200,
         changed_lrs=[0.00005, 0.00005],
-        is_target_weights=True
+        is_target_weights=True,
     )
     target_feature_eval = feature_extractor(target_X)
     pred_y_task = task_classifier(target_feature_eval)
@@ -155,7 +153,9 @@ def main(argv):
     plt.show()
 
     # Without Adaptation
-    task_classifier = ThreeLayersDecoder(input_size=source_X.shape[1], output_size=num_classes, dropout_ratio=0, fc1_size=50, fc2_size=10).to(device)
+    task_classifier = ThreeLayersDecoder(
+        input_size=source_X.shape[1], output_size=num_classes, dropout_ratio=0, fc1_size=50, fc2_size=10
+    ).to(device)
     task_optimizer = optim.Adam(task_classifier.parameters(), lr=learning_rate)
     task_classifier = utils.fit_without_adaptation(
         source_loader, task_classifier, task_optimizer, criterion, num_epochs

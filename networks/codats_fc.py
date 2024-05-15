@@ -12,23 +12,24 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 class CoDATS_F_C(nn.Module):
-    def __init__(self, experiment:str):
+    def __init__(self, experiment: str):
         super().__init__()
         assert experiment in ["ECOdataset", "ECOdataset_synthetic", "HHAR"]
         if experiment in ["ECOdataset", "ECOdataset_synthetic"]:
             self.conv1d = Conv1dTwoLayers(input_size=3).to(DEVICE)
-            self.decoder = ThreeLayersDecoder(input_size=128, output_size=1, dropout_ratio=0, fc1_size=50, fc2_size=10).to(DEVICE)
-            self.optimizer = optim.Adam(list(self.conv1d.parameters())+list(self.decoder.parameters()), lr=1e-4)
+            self.decoder = ThreeLayersDecoder(
+                input_size=128, output_size=1, dropout_ratio=0, fc1_size=50, fc2_size=10
+            ).to(DEVICE)
+            self.optimizer = optim.Adam(list(self.conv1d.parameters()) + list(self.decoder.parameters()), lr=1e-4)
             self.criterion = nn.BCELoss()
             self.num_epochs = 300
 
         elif experiment == "HHAR":
             self.conv1d = Conv1dThreeLayers(input_size=6).to(DEVICE)
             self.decoder = OneLayerDecoder(input_size=128, output_size=6).to(DEVICE)
-            self.optimizer = optim.Adam(list(self.conv1d.parameters())+list(self.decoder.parameters()), lr=1e-4)
+            self.optimizer = optim.Adam(list(self.conv1d.parameters()) + list(self.decoder.parameters()), lr=1e-4)
             self.criterion = nn.CrossEntropyLoss()
             self.num_epochs = 200
-
 
     def fit_without_adapt(self, source_loader):
         for _ in range(self.num_epochs):
@@ -43,7 +44,7 @@ class CoDATS_F_C(nn.Module):
                 else:
                     source_y_task_batch = source_y_task_batch.to(torch.long)
                     pred_y_task = torch.softmax(pred_y_task, dim=1)
-                
+
                 loss_task = self.criterion(pred_y_task, source_y_task_batch)
 
                 # Backward
@@ -52,7 +53,6 @@ class CoDATS_F_C(nn.Module):
 
                 # Updata Params
                 self.optimizer.step()
-
 
     def fit_on_target(self, target_prime_loader):
         for _ in range(self.num_epochs):
@@ -63,13 +63,12 @@ class CoDATS_F_C(nn.Module):
                 self.optimizer.zero_grad()
                 loss.backward()
                 self.optimizer.step()
-    
 
     def forward(self, x):
         return self.decoder(self.conv1d(x))
-    
+
     def predict(self, x):
         return self.decoder.predict(self.conv1d(x))
-    
+
     def predict_proba(self, x):
         return self.decoder.predict_proba(self.conv1d(x))

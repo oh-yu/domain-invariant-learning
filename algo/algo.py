@@ -103,15 +103,18 @@ def fit(
         epoch = torch.tensor(epoch, dtype=torch.float32).to(device)
         feature_extractor.train()
         task_classifier.train()
-    
-    
+
         if stop_during_epochs & (epoch.item() == epoch_thr_for_stopping):
             break
         if is_changing_lr:
             domain_optimizer, feature_optimizer, task_optimizer = _change_lr_during_dann_training(
-                domain_optimizer, feature_optimizer, task_optimizer, epoch, epoch_thr=epoch_thr_for_changing_lr, changed_lrs=changed_lrs
+                domain_optimizer,
+                feature_optimizer,
+                task_optimizer,
+                epoch,
+                epoch_thr=epoch_thr_for_changing_lr,
+                changed_lrs=changed_lrs,
             )
-
 
         for (source_X_batch, source_Y_batch), (target_X_batch, target_y_domain_batch) in zip(
             source_loader, target_loader
@@ -200,7 +203,9 @@ def fit(
     return feature_extractor, task_classifier, loss_task_evals
 
 
-def _get_psuedo_label_weights(source_Y_batch: torch.Tensor, thr: float = 0.75, alpha: int = 1, device=utils.DEVICE) -> torch.Tensor:
+def _get_psuedo_label_weights(
+    source_Y_batch: torch.Tensor, thr: float = 0.75, alpha: int = 1, device=utils.DEVICE
+) -> torch.Tensor:
     """
     # TODO: attach paper
 
@@ -217,7 +222,7 @@ def _get_psuedo_label_weights(source_Y_batch: torch.Tensor, thr: float = 0.75, a
     psuedo_label_weights = []
 
     if output_size == 1:
-        pred_y = source_Y_batch[:, utils.COL_IDX_TASK]        
+        pred_y = source_Y_batch[:, utils.COL_IDX_TASK]
         for i in pred_y:
             if i > thr:
                 psuedo_label_weights.append(1)
@@ -225,9 +230,9 @@ def _get_psuedo_label_weights(source_Y_batch: torch.Tensor, thr: float = 0.75, a
                 psuedo_label_weights.append(1)
             else:
                 if i > 0.5:
-                    psuedo_label_weights.append(i**alpha + (1 - thr))
+                    psuedo_label_weights.append(i ** alpha + (1 - thr))
                 else:
-                    psuedo_label_weights.append((1 - i)**alpha + (1 - thr))
+                    psuedo_label_weights.append((1 - i) ** alpha + (1 - thr))
 
     else:
         pred_y = source_Y_batch[:, :output_size]
@@ -236,7 +241,7 @@ def _get_psuedo_label_weights(source_Y_batch: torch.Tensor, thr: float = 0.75, a
             if i > thr:
                 psuedo_label_weights.append(1)
             else:
-                psuedo_label_weights.append(i**alpha + (1 - thr))
+                psuedo_label_weights.append(i ** alpha + (1 - thr))
     return torch.tensor(psuedo_label_weights, dtype=torch.float32).to(device)
 
 
@@ -290,6 +295,7 @@ def _get_class_weights(source_y_task_batch):
         elif y == 0:
             class_weights[i] = p_occupied
     return class_weights
+
 
 def _change_lr_during_dann_training(
     domain_optimizer: torch.optim.Adam,

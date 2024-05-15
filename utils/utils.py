@@ -17,7 +17,7 @@ def get_loader(
     source_y_task: np.ndarray,
     target_y_task: np.ndarray,
     batch_size: int = 34,
-    shuffle: bool = False
+    shuffle: bool = False,
 ):
     """
     Get instances of torch.utils.data.DataLoader for domain invariant learning,
@@ -77,7 +77,9 @@ def get_loader(
     return source_loader, target_loader, source_y_task, source_X, target_X, target_y_task
 
 
-def apply_sliding_window(X: np.ndarray, y: np.ndarray, filter_len: int = 3, is_overlap: bool = True) -> (np.ndarray, np.ndarray):
+def apply_sliding_window(
+    X: np.ndarray, y: np.ndarray, filter_len: int = 3, is_overlap: bool = True
+) -> (np.ndarray, np.ndarray):
     """
     Parameters
     ----------
@@ -104,21 +106,21 @@ def apply_sliding_window(X: np.ndarray, y: np.ndarray, filter_len: int = 3, is_o
             start = i
             end = i + filter_len
             filtered_X[i] = X[start:end]
-        filtered_y = y[filter_len - 1:]
+        filtered_y = y[filter_len - 1 :]
         return filtered_X, filtered_y
-    
+
     else:
         X = np.expand_dims(X, axis=1)
         i = 0
         filtered_Xs = []
         filtered_ys = []
-        while i < len_data-filter_len:
-            filtered_X = np.expand_dims(np.concatenate(X[i:i+filter_len], axis=0), axis=0)
+        while i < len_data - filter_len:
+            filtered_X = np.expand_dims(np.concatenate(X[i : i + filter_len], axis=0), axis=0)
             filtered_Xs.append(filtered_X)
-            filtered_ys.append(y[i+filter_len-1])
+            filtered_ys.append(y[i + filter_len - 1])
             i += filter_len
         return np.vstack(filtered_Xs), np.array(filtered_ys).reshape(-1)
-            
+
 
 def fit_without_adaptation(source_loader, task_classifier, task_optimizer, criterion, num_epochs=1000, output_size=1):
     """
@@ -154,7 +156,7 @@ def fit_without_adaptation(source_loader, task_classifier, task_optimizer, crite
             else:
                 source_y_task_batch = source_y_task_batch.to(torch.long)
                 pred_y_task = torch.softmax(pred_y_task, dim=1)
-            
+
             loss_task = criterion(pred_y_task, source_y_task_batch)
 
             # Backward
@@ -193,5 +195,3 @@ def visualize_tSNE(target_feature, source_feature):
     plt.ylabel("tsne_X2")
     plt.legend()
     plt.show()
-
-

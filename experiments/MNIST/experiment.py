@@ -17,6 +17,7 @@ class Reshape(object):
         padding = torch.zeros(3, 32, 32)
         padding[:, 2:30, 2:30] = img.repeat(3, 1, 1)
         return padding
+
     # TODO: Understand this style implementation
 
 
@@ -28,8 +29,10 @@ class CustomUDADataset(torch.utils.data.Dataset):
             self.domain_label = 0
         elif source_or_target == "target":
             self.domain_label = 1
+
     def __len__(self):
         return len(self.dataset)
+
     def __getitem__(self, idx):
         image, label = self.dataset[idx]
         domain_label = self.domain_label
@@ -46,21 +49,23 @@ def get_image_data_for_uda(name="MNIST"):
     assert name in ["MNIST", "MNIST-M", "SVHN", "SVHN-trainontarget"]
 
     if name == "MNIST":
-        custom_transform = transforms.Compose([
-            transforms.ToTensor(),
-            Reshape(),
-        ])
+        custom_transform = transforms.Compose([transforms.ToTensor(), Reshape(),])
         # TODO: Understand transforms.Compose
-        train_data = datasets.MNIST(root="./domain-invariant-learning/experiments/MNIST/data/MNIST", train=True, download=True, transform=custom_transform)
+        train_data = datasets.MNIST(
+            root="./domain-invariant-learning/experiments/MNIST/data/MNIST",
+            train=True,
+            download=True,
+            transform=custom_transform,
+        )
         train_data = CustomUDADataset(train_data, "source")
         train_loader = torch.utils.data.DataLoader(train_data, batch_size=16, shuffle=True)
         return train_loader
-    
+
     elif name == "MNIST-M":
-        custom_transform = transforms.Compose([
-            transforms.ToTensor(),
-        ])
-        imagefolder_data = ImageFolder(root='./domain-invariant-learning/experiments/MNIST/data/MNIST-M/training', transform=custom_transform)
+        custom_transform = transforms.Compose([transforms.ToTensor(),])
+        imagefolder_data = ImageFolder(
+            root="./domain-invariant-learning/experiments/MNIST/data/MNIST-M/training", transform=custom_transform
+        )
         train_data = CustomUDADataset(imagefolder_data, "target")
         train_loader = DataLoader(train_data, batch_size=16, shuffle=True)
 
@@ -69,34 +74,33 @@ def get_image_data_for_uda(name="MNIST"):
         return train_loader, train_loader_gt
 
     elif name == "SVHN":
-        custom_transform = transforms.Compose([
-            transforms.ToTensor(),
-        ])
+        custom_transform = transforms.Compose([transforms.ToTensor(),])
         train_data = torchvision.datasets.SVHN(
-            './domain-invariant-learning/experiments/MNIST/data/SVHN', 
-            split='train',
+            "./domain-invariant-learning/experiments/MNIST/data/SVHN",
+            split="train",
             download=True,
-            transform=custom_transform)
+            transform=custom_transform,
+        )
         train_data = CustomUDADataset(train_data, "target")
         train_loader = DataLoader(train_data, batch_size=64, shuffle=True)
         test_data = torchvision.datasets.SVHN(
             "./domain-invariant-learning/experiments/MNIST/data/SVHN",
             split="test",
             download=True,
-            transform=custom_transform)
+            transform=custom_transform,
+        )
         test_data = CustomUDADataset(test_data, "source")
         test_loader = DataLoader(test_data, batch_size=128, shuffle=False)
         return train_loader, test_loader
-    
+
     elif name == "SVHN-trainontarget":
-        custom_transform = transforms.Compose([
-            transforms.ToTensor(),
-        ])
+        custom_transform = transforms.Compose([transforms.ToTensor(),])
         train_data = torchvision.datasets.SVHN(
-            './domain-invariant-learning/experiments/MNIST/data/SVHN', 
-            split='train',
+            "./domain-invariant-learning/experiments/MNIST/data/SVHN",
+            split="train",
             download=True,
-            transform=custom_transform)
+            transform=custom_transform,
+        )
         train_data = CustomUDADataset(train_data, "source")
         train_loader = DataLoader(train_data, batch_size=64, shuffle=True)
         return train_loader
@@ -109,9 +113,7 @@ def isih_da():
     train_target_prime_loader, test_target_prime_loader_gt = SVHN
 
     # Model Init
-    isih_dann = IsihDanns(
-        experiment="MNIST"
-    )
+    isih_dann = IsihDanns(experiment="MNIST")
 
     # Algo1 inter-colors DA
     target_X = torch.cat([X for X, _ in target_loader_gt], dim=0)
@@ -129,7 +131,7 @@ def isih_da():
     test_target_prime_X = torch.cat([X for X, _ in test_target_prime_loader_gt], dim=0)
     test_target_prime_y_task = torch.cat([y[:, 0] for _, y in test_target_prime_loader_gt], dim=0)
     isih_dann.fit_2nd_dim(source_loader, train_target_prime_loader, test_target_prime_X, test_target_prime_y_task)
-    
+
     # Algo3 Eval
     isih_dann.set_eval()
     pred_y_task = isih_dann.predict(test_target_prime_X, is_1st_dim=False)
@@ -148,10 +150,7 @@ def dann():
     test_target_prime_X = torch.cat([X for X, _ in test_target_prime_loader_gt], dim=0)
     test_target_prime_y_task = torch.cat([y[:, 0] for _, y in test_target_prime_loader_gt], dim=0)
     dann.fit(
-        source_loader,
-        train_target_prime_loader,
-        test_target_prime_X,
-        test_target_prime_y_task,
+        source_loader, train_target_prime_loader, test_target_prime_X, test_target_prime_y_task,
     )
 
     # Eval
@@ -216,6 +215,7 @@ def main(num_repeats=1):
     df["Without Adapt"] = [without_adapt_acc]
     df["Train on Target"] = [train_on_target_acc]
     df.to_csv(f"MNIST_experiment_{str(datetime.now())}", index=False)
+
 
 MNIST = get_image_data_for_uda("MNIST")
 MNIST_M = get_image_data_for_uda("MNIST-M")

@@ -13,45 +13,44 @@ class Reshape(object):
         padding = torch.zeros(3, 32, 32)
         padding[:, 2:30, 2:30] = img.repeat(3, 1, 1)
         return padding
+
     # TODO: Understand this style implementation
+
 
 def get_image_data_for_uda(name="MNIST"):
     assert name in ["MNIST", "MNIST-M", "SVHN"]
 
     if name == "MNIST":
-        custom_transform = transforms.Compose([
-            transforms.ToTensor(),
-            Reshape(),
-        ])
+        custom_transform = transforms.Compose([transforms.ToTensor(), Reshape(),])
         # TODO: Understand transforms.Compose
-        train_data = datasets.MNIST(root="./domain-invariant-learning/experiments/MNIST/data/MNIST", train=True, download=True, transform=custom_transform)
+        train_data = datasets.MNIST(
+            root="./domain-invariant-learning/experiments/MNIST/data/MNIST",
+            train=True,
+            download=True,
+            transform=custom_transform,
+        )
         train_loader = DataLoader(train_data, batch_size=128, shuffle=True)
         return train_loader
-    
+
     elif name == "MNIST-M":
         transform = transforms.ToTensor()
-        train_data = ImageFolder(root='./domain-invariant-learning/experiments/MNIST/data/MNIST-M/training', transform=transform)
+        train_data = ImageFolder(
+            root="./domain-invariant-learning/experiments/MNIST/data/MNIST-M/training", transform=transform
+        )
         train_loader = DataLoader(train_data, batch_size=32, shuffle=True)
         return train_loader
 
     elif name == "SVHN":
         transform = transforms.ToTensor()
         train_data = torchvision.datasets.SVHN(
-            './domain-invariant-learning/experiments/MNIST/data/SVHN', 
-            split='train',
-            download=True,
-            transform=transform)
+            "./domain-invariant-learning/experiments/MNIST/data/SVHN", split="train", download=True, transform=transform
+        )
         train_loader = DataLoader(train_data, batch_size=128, shuffle=True)
         test_data = torchvision.datasets.SVHN(
-            "./domain-invariant-learning/experiments/MNIST/data/SVHN",
-            split="test",
-            download=True,
-            transform=transform)
+            "./domain-invariant-learning/experiments/MNIST/data/SVHN", split="test", download=True, transform=transform
+        )
         test_loader = DataLoader(test_data, batch_size=128, shuffle=False)
         return train_loader, test_loader
-
-
-
 
 
 if __name__ == "__main__":

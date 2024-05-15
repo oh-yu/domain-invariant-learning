@@ -11,7 +11,7 @@ class OneLayerDecoder(nn.Module):
 
     def forward(self, x):
         return self.fc1(x)
-    
+
     def predict_proba(self, x):
         out = self.forward(x)
         if self.output_size == 1:
@@ -21,7 +21,7 @@ class OneLayerDecoder(nn.Module):
 
     def predict(self, x):
         out = self.predict_proba(x)
-        if self.output_size==1:
+        if self.output_size == 1:
             return out > 0.5
         else:
             return out.argmax(dim=1)

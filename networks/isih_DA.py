@@ -16,16 +16,17 @@ class IsihDanns:
     TODO: Attach paper
     """
 
-    def __init__(
-        self,
-        experiment: str
-    ):
+    def __init__(self, experiment: str):
         assert experiment in ["ECOdataset", "ECOdataset_synthetic", "HHAR", "MNIST"]
 
         if experiment in ["ECOdataset", "ECOdataset_synthetic"]:
             self.feature_extractor = Conv1dTwoLayers(input_size=3).to(DEVICE)
-            self.domain_classifier_dim1 = ThreeLayersDecoder(input_size=128, output_size=1, dropout_ratio=0, fc1_size=50, fc2_size=10).to(DEVICE)
-            self.task_classifier_dim1 = ThreeLayersDecoder(input_size=128, output_size=1, dropout_ratio=0, fc1_size=50, fc2_size=10).to(DEVICE)
+            self.domain_classifier_dim1 = ThreeLayersDecoder(
+                input_size=128, output_size=1, dropout_ratio=0, fc1_size=50, fc2_size=10
+            ).to(DEVICE)
+            self.task_classifier_dim1 = ThreeLayersDecoder(
+                input_size=128, output_size=1, dropout_ratio=0, fc1_size=50, fc2_size=10
+            ).to(DEVICE)
 
             self.feature_optimizer_dim1 = optim.Adam(self.feature_extractor.parameters(), lr=0.0001)
             self.domain_optimizer_dim1 = optim.Adam(self.domain_classifier_dim1.parameters(), lr=0.0001)
@@ -33,8 +34,12 @@ class IsihDanns:
             self.criterion = nn.BCELoss()
             self.num_epochs_dim1 = 200
 
-            self.domain_classifier_dim2 = ThreeLayersDecoder(input_size=128, output_size=1, dropout_ratio=0, fc1_size=50, fc2_size=10).to(DEVICE)
-            self.task_classifier_dim2 = ThreeLayersDecoder(input_size=128, output_size=1, dropout_ratio=0, fc1_size=50, fc2_size=10).to(DEVICE)
+            self.domain_classifier_dim2 = ThreeLayersDecoder(
+                input_size=128, output_size=1, dropout_ratio=0, fc1_size=50, fc2_size=10
+            ).to(DEVICE)
+            self.task_classifier_dim2 = ThreeLayersDecoder(
+                input_size=128, output_size=1, dropout_ratio=0, fc1_size=50, fc2_size=10
+            ).to(DEVICE)
             self.feature_optimizer_dim2 = optim.Adam(self.feature_extractor.parameters(), lr=0.00005)
             self.domain_optimizer_dim2 = optim.Adam(self.domain_classifier_dim2.parameters(), lr=0.00005)
             self.task_optimizer_dim2 = optim.Adam(self.task_classifier_dim2.parameters(), lr=0.00005)
@@ -42,11 +47,13 @@ class IsihDanns:
             self.is_target_weights = True
 
             self.device = DEVICE
-            self.stop_during_epochs=False
+            self.stop_during_epochs = False
 
         elif experiment == "HHAR":
             self.feature_extractor = Conv1dThreeLayers(input_size=6).to(DEVICE)
-            self.domain_classifier_dim1 = ThreeLayersDecoder(input_size=128, output_size=1, dropout_ratio=0.3).to(DEVICE)
+            self.domain_classifier_dim1 = ThreeLayersDecoder(input_size=128, output_size=1, dropout_ratio=0.3).to(
+                DEVICE
+            )
             self.task_classifier_dim1 = OneLayerDecoder(input_size=128, output_size=6).to(DEVICE)
             self.feature_optimizer_dim1 = optim.Adam(self.feature_extractor.parameters(), lr=0.0001)
             self.domain_optimizer_dim1 = optim.Adam(self.domain_classifier_dim1.parameters(), lr=0.0001)
@@ -54,7 +61,9 @@ class IsihDanns:
             self.criterion = nn.BCELoss()
             self.num_epochs_dim1 = 150
 
-            self.domain_classifier_dim2 = ThreeLayersDecoder(input_size=128, output_size=1, dropout_ratio=0.3).to(DEVICE)
+            self.domain_classifier_dim2 = ThreeLayersDecoder(input_size=128, output_size=1, dropout_ratio=0.3).to(
+                DEVICE
+            )
             self.task_classifier_dim2 = OneLayerDecoder(input_size=128, output_size=6).to(DEVICE)
 
             self.feature_optimizer_dim2 = optim.Adam(self.feature_extractor.parameters(), lr=0.0001)
@@ -64,23 +73,28 @@ class IsihDanns:
             self.is_target_weights = True
 
             self.device = DEVICE
-            self.stop_during_epochs=False
-            
-
+            self.stop_during_epochs = False
 
         elif experiment in ["MNIST"]:
             self.feature_extractor = Conv2d()
-            self.task_classifier_dim1 = ThreeLayersDecoder(input_size=1152, output_size=10, fc1_size=3072, fc2_size=2048)
-            self.domain_classifier_dim1 = ThreeLayersDecoder(input_size=1152, output_size=1, fc1_size=1024, fc2_size=1024)
+            self.task_classifier_dim1 = ThreeLayersDecoder(
+                input_size=1152, output_size=10, fc1_size=3072, fc2_size=2048
+            )
+            self.domain_classifier_dim1 = ThreeLayersDecoder(
+                input_size=1152, output_size=1, fc1_size=1024, fc2_size=1024
+            )
             self.feature_optimizer_dim1 = optim.Adam(self.feature_extractor.parameters(), lr=0.0001)
             self.domain_optimizer_dim1 = optim.Adam(self.domain_classifier_dim1.parameters(), lr=0.0001)
             self.task_optimizer_dim1 = optim.Adam(self.task_classifier_dim1.parameters(), lr=0.0001)
             self.criterion = nn.BCELoss()
             self.num_epochs_dim1 = 100
 
-
-            self.task_classifier_dim2 = ThreeLayersDecoder(input_size=1152, output_size=10, fc1_size=3072, fc2_size=2048)
-            self.domain_classifier_dim2 = ThreeLayersDecoder(input_size=1152, output_size=1, fc1_size=1024, fc2_size=1024)
+            self.task_classifier_dim2 = ThreeLayersDecoder(
+                input_size=1152, output_size=10, fc1_size=3072, fc2_size=2048
+            )
+            self.domain_classifier_dim2 = ThreeLayersDecoder(
+                input_size=1152, output_size=1, fc1_size=1024, fc2_size=1024
+            )
             self.feature_optimizer_dim2 = optim.Adam(self.feature_extractor.parameters(), lr=1e-4)
             self.domain_optimizer_dim2 = optim.Adam(self.domain_classifier_dim2.parameters(), lr=1e-6)
             self.task_optimizer_dim2 = optim.Adam(self.task_classifier_dim2.parameters(), lr=1e-4)
@@ -88,8 +102,7 @@ class IsihDanns:
             self.is_target_weights = False
 
             self.device = torch.device("cpu")
-            self.stop_during_epochs=True
-
+            self.stop_during_epochs = True
 
     def fit_1st_dim(self, source_loader, target_loader, test_target_X: torch.Tensor, test_target_y_task: torch.Tensor):
         self.feature_extractor, self.task_classifier_dim1, _ = algo.fit(

@@ -34,7 +34,9 @@ flags.mark_flag_as_required("lag_2")
 def isih_da(source_idx=2, season_idx=0, num_repeats: int = 10):
     accs = []
     for _ in range(num_repeats):
-        train_source_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv")
+        train_source_X = pd.read_csv(
+            f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv"
+        )
         train_source_y_task = pd.read_csv(
             f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_Y_train.csv"
         )[train_source_X.Season == season_idx]
@@ -61,7 +63,9 @@ def isih_da(source_idx=2, season_idx=0, num_repeats: int = 10):
         scaler.fit(target_X)
         target_X = scaler.transform(target_X)
 
-        train_source_X, train_source_y_task = utils.apply_sliding_window(train_source_X, train_source_y_task, filter_len=6)
+        train_source_X, train_source_y_task = utils.apply_sliding_window(
+            train_source_X, train_source_y_task, filter_len=6
+        )
         target_X, target_y_task = utils.apply_sliding_window(target_X, target_y_task, filter_len=6)
 
         train_target_X, test_target_X, train_target_y_task, test_target_y_task = (
@@ -79,9 +83,7 @@ def isih_da(source_idx=2, season_idx=0, num_repeats: int = 10):
         test_target_X = test_target_X.to(DEVICE)
         test_target_y_task = test_target_y_task.to(DEVICE)
 
-        isih_dann = IsihDanns(
-            experiment="ECOdataset_synthetic"
-        )
+        isih_dann = IsihDanns(experiment="ECOdataset_synthetic")
         isih_dann.fit_1st_dim(source_loader, target_loader, test_target_X, test_target_y_task)
         pred_y_task = isih_dann.predict_proba(test_target_X, is_1st_dim=True)
         train_source_X = target_X
@@ -89,7 +91,6 @@ def isih_da(source_idx=2, season_idx=0, num_repeats: int = 10):
         target_X = target_prime_X.values
         target_y_task = target_prime_y_task
 
-        
         train_target_X, test_target_X, train_target_y_task, test_target_y_task = train_test_split(
             target_X, target_y_task, test_size=0.5, shuffle=False
         )
@@ -99,9 +100,7 @@ def isih_da(source_idx=2, season_idx=0, num_repeats: int = 10):
         train_target_X, train_target_y_task = utils.apply_sliding_window(
             train_target_X, train_target_y_task, filter_len=6
         )
-        test_target_X, test_target_y_task = utils.apply_sliding_window(
-            test_target_X, test_target_y_task, filter_len=6
-        )
+        test_target_X, test_target_y_task = utils.apply_sliding_window(test_target_X, test_target_y_task, filter_len=6)
         test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
         test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
         test_target_X = test_target_X.to(DEVICE)
@@ -149,12 +148,8 @@ def codats(source_idx=2, season_idx=0, num_repeats: int = 10):
     scaler.fit(train_target_X)
     train_target_X = scaler.transform(train_target_X)
     test_target_X = scaler.transform(test_target_X)
-    train_target_X, train_target_y_task = utils.apply_sliding_window(
-        train_target_X, train_target_y_task, filter_len=6
-    )
-    test_target_X, test_target_y_task = utils.apply_sliding_window(
-        test_target_X, test_target_y_task, filter_len=6
-    )
+    train_target_X, train_target_y_task = utils.apply_sliding_window(train_target_X, train_target_y_task, filter_len=6)
+    test_target_X, test_target_y_task = utils.apply_sliding_window(test_target_X, test_target_y_task, filter_len=6)
     test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
     test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
     test_target_X = test_target_X.to(DEVICE)
@@ -202,12 +197,8 @@ def without_adapt(source_idx=2, season_idx=0, num_repeats: int = 10):
     scaler.fit(train_target_X)
     train_target_X = scaler.transform(train_target_X)
     test_target_X = scaler.transform(test_target_X)
-    train_target_X, train_target_y_task = utils.apply_sliding_window(
-        train_target_X, train_target_y_task, filter_len=6
-    )
-    test_target_X, test_target_y_task = utils.apply_sliding_window(
-        test_target_X, test_target_y_task, filter_len=6
-    )
+    train_target_X, train_target_y_task = utils.apply_sliding_window(train_target_X, train_target_y_task, filter_len=6)
+    test_target_X, test_target_y_task = utils.apply_sliding_window(test_target_X, test_target_y_task, filter_len=6)
     test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
     test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
     test_target_X = test_target_X.to(DEVICE)
@@ -302,7 +293,9 @@ def main(argv):
     df["accs_codats"] = accs_codats
     df["accs_without_adapt"] = accs_without_adapt
     df["accs_train_on_target"] = accs_train_on_target
-    df.to_csv(f"ecodataset_synthetic_experiment_lag{FLAGS.lag_1}_lag{FLAGS.lag_2}_{str(datetime.now())}.csv", index=False)
+    df.to_csv(
+        f"ecodataset_synthetic_experiment_lag{FLAGS.lag_1}_lag{FLAGS.lag_2}_{str(datetime.now())}.csv", index=False
+    )
 
 
 if __name__ == "__main__":

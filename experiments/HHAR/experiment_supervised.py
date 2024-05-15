@@ -17,18 +17,33 @@ MODEL_LIST = ["nexus4", "s3", "samsungold", "s3mini"]
 def get_data_for_uda(user):
     assert user in USER_LIST
 
-    accelerometer_df = pd.read_csv("./domain-invariant-learning/experiments/HHAR/data/heterogeneity+activity+recognition/Activity recognition exp/Activity recognition exp/Phones_accelerometer.csv")
-    accelerometer_df = accelerometer_df.add_suffix('_accele')
-    gyroscope_df = pd.read_csv("./domain-invariant-learning/experiments/HHAR/data/heterogeneity+activity+recognition/Activity recognition exp/Activity recognition exp/Phones_gyroscope.csv")
-    gyroscope_df = gyroscope_df.add_suffix('_gyro')
-    df = pd.merge(accelerometer_df, gyroscope_df, left_on=["Arrival_Time_accele", "User_accele", "Device_accele"], right_on=["Arrival_Time_gyro", "User_gyro", "Device_gyro"],how="left")
+    accelerometer_df = pd.read_csv(
+        "./domain-invariant-learning/experiments/HHAR/data/heterogeneity+activity+recognition/Activity recognition exp/Activity recognition exp/Phones_accelerometer.csv"
+    )
+    accelerometer_df = accelerometer_df.add_suffix("_accele")
+    gyroscope_df = pd.read_csv(
+        "./domain-invariant-learning/experiments/HHAR/data/heterogeneity+activity+recognition/Activity recognition exp/Activity recognition exp/Phones_gyroscope.csv"
+    )
+    gyroscope_df = gyroscope_df.add_suffix("_gyro")
+    df = pd.merge(
+        accelerometer_df,
+        gyroscope_df,
+        left_on=["Arrival_Time_accele", "User_accele", "Device_accele"],
+        right_on=["Arrival_Time_gyro", "User_gyro", "Device_gyro"],
+        how="left",
+    )
     df[["x_gyro", "y_gyro", "z_gyro"]] = df[["x_gyro", "y_gyro", "z_gyro"]].interpolate()
     df[["x_accele", "y_accele", "z_accele"]] = df[["x_accele", "y_accele", "z_accele"]].interpolate()
-    df = df[df.User_accele==user]
+    df = df[df.User_accele == user]
     df = df[["x_accele", "y_accele", "z_accele", "x_gyro", "y_gyro", "z_gyro", "gt_accele"]].dropna(how="any")
     df = df.reset_index()
     df["gt_accele"] = df["gt_accele"].apply(lambda x: GT_TO_INT[x])
-    X, y = utils.apply_sliding_window(df[["x_accele", "y_accele", "z_accele", "x_gyro", "y_gyro", "z_gyro"]].values, df["gt_accele"].values.reshape(-1), filter_len=128, is_overlap=False)
+    X, y = utils.apply_sliding_window(
+        df[["x_accele", "y_accele", "z_accele", "x_gyro", "y_gyro", "z_gyro"]].values,
+        df["gt_accele"].values.reshape(-1),
+        filter_len=128,
+        is_overlap=False,
+    )
     return X, y
 
 
@@ -46,7 +61,7 @@ if __name__ == "__main__":
     ds = TensorDataset(train_X, train_y)
     data_loader = DataLoader(ds, batch_size=4, shuffle=True)
 
-    # Model Init   
+    # Model Init
     codats_f_c = CoDATS_F_C(input_size=X.shape[2], output_size=6, experiment="HHAR")
     criterion = nn.CrossEntropyLoss()
     softmax = nn.Softmax(dim=1)
@@ -73,7 +88,7 @@ if __name__ == "__main__":
         out = softmax(out)
         accuracy = sum(out.argmax(dim=1) == test_y) / len(test_y)
         print(f"Accuracy: {accuracy}")
-    
+
     # Visualization
     for i in range(test_X.shape[0]):
         plt.plot(test_X[i, :, 0].cpu().detach().numpy(), label="x")

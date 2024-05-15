@@ -14,11 +14,8 @@ class Conv1dThreeLayers(nn.Module):
         )
         self.bn2 = nn.BatchNorm1d(out_channels2)
 
-        self.conv3 = nn.Conv1d(
-            in_channels=out_channels2, out_channels=128, kernel_size=3, stride=1, padding=0
-        )
+        self.conv3 = nn.Conv1d(in_channels=out_channels2, out_channels=128, kernel_size=3, stride=1, padding=0)
         self.bn3 = nn.BatchNorm1d(128)
-
 
     def forward(self, x):
         x = x.reshape(x.shape[0], x.shape[2], x.shape[1])

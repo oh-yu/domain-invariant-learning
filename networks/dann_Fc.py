@@ -12,10 +12,10 @@ class Dann_F_C(nn.Module):
         self.device = torch.device("cpu")
         self.conv2d = Conv2d().to(self.device)
         self.decoder = ThreeLayersDecoder(input_size=1152, output_size=10, fc1_size=3072, fc2_size=2048).to(self.device)
-        self.optimizer = optim.Adam(list(self.conv2d.parameters())+list(self.decoder.parameters()), lr=1e-4)
+        self.optimizer = optim.Adam(list(self.conv2d.parameters()) + list(self.decoder.parameters()), lr=1e-4)
         self.criterion = nn.CrossEntropyLoss()
-        self.num_epochs=10
-    
+        self.num_epochs = 10
+
     def fit_without_adapt(self, source_loader):
         for _ in range(self.num_epochs):
             for source_X_batch, source_Y_batch in source_loader:
@@ -29,7 +29,7 @@ class Dann_F_C(nn.Module):
                 else:
                     source_y_task_batch = source_y_task_batch.to(torch.long)
                     pred_y_task = torch.softmax(pred_y_task, dim=1)
-                
+
                 loss_task = self.criterion(pred_y_task, source_y_task_batch)
 
                 # Backward
@@ -38,6 +38,7 @@ class Dann_F_C(nn.Module):
 
                 # Updata Params
                 self.optimizer.step()
+
     def fit_on_target(self, train_target_prime_loader):
         # Fit
         for _ in range(10):
@@ -47,12 +48,12 @@ class Dann_F_C(nn.Module):
                 loss = self.criterion(pred_y_task, y[:, 0].to(torch.long))
                 loss.backward()
                 self.optimizer.step()
-    
+
     def forward(self, x):
         return self.decoder(self.conv2d(x))
-    
+
     def predict(self, x):
         return self.decoder.predict(self.conv2d(x))
-    
+
     def predict_proba(self, x):
         return self.decoder.predict_proba(self.conv2d(x))

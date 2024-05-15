@@ -15,15 +15,16 @@ class Codats:
     CoDATS model https://arxiv.org/abs/2005.10996
     """
 
-    def __init__(
-        self,
-        experiment: str
-    ) -> None:
+    def __init__(self, experiment: str) -> None:
         assert experiment in ["ECOdataset", "ECOdataset_synthetic", "HHAR"]
         if experiment in ["ECOdataset", "ECOdataset_synthetic"]:
             self.feature_extractor = Conv1dTwoLayers(input_size=3).to(DEVICE)
-            self.domain_classifier = ThreeLayersDecoder(input_size=128, output_size=1, dropout_ratio=0, fc1_size=50, fc2_size=10).to(DEVICE)
-            self.task_classifier = ThreeLayersDecoder(input_size=128, output_size=1, dropout_ratio=0, fc1_size=50, fc2_size=10).to(DEVICE)
+            self.domain_classifier = ThreeLayersDecoder(
+                input_size=128, output_size=1, dropout_ratio=0, fc1_size=50, fc2_size=10
+            ).to(DEVICE)
+            self.task_classifier = ThreeLayersDecoder(
+                input_size=128, output_size=1, dropout_ratio=0, fc1_size=50, fc2_size=10
+            ).to(DEVICE)
             self.is_changing_lr = True
 
             self.criterion = nn.BCELoss()
@@ -67,15 +68,14 @@ class Codats:
             self.task_optimizer,
             num_epochs=self.num_epochs,
             is_target_weights=self.is_target_weights,
-            is_changing_lr=self.is_changing_lr
+            is_changing_lr=self.is_changing_lr,
         )
 
     def predict(self, x: torch.Tensor) -> torch.Tensor:
         return self.task_classifier.predict(self.feature_extractor(x))
-    
+
     def predict_proba(self, x: torch.Tensor) -> torch.Tensor:
         return self.task_classifier.predict_proba(self.feature_extractor(x))
-
 
     def set_eval(self):
         self.task_classifier.eval()

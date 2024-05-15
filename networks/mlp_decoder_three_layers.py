@@ -20,7 +20,7 @@ class ThreeLayersDecoder(nn.Module):
         x = self.dropout2(x)
         x = self.fc3(x)
         return x
-    
+
     def predict_proba(self, x):
         out = self.forward(x)
         if self.output_size == 1:
@@ -30,7 +30,7 @@ class ThreeLayersDecoder(nn.Module):
 
     def predict(self, x):
         out = self.predict_proba(x)
-        if self.output_size==1:
+        if self.output_size == 1:
             return out > 0.5
         else:
             return out.argmax(dim=1)

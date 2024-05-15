@@ -9,4 +9,3 @@ from .mlp_decoder_one_layer import OneLayerDecoder
 from .mlp_encoder import Encoder
 from .dann import Dann
 from .dann_Fc import Dann_F_C
-

@@ -22,12 +22,12 @@ def get_covariance_matrix(x, y):
     return cov_mat_x, cov_mat_y
 
 
-def fit_coral(source_loader, target_loader, num_epochs, task_classifier, criterion, optimizer, alpha, target_X, target_y_task):
+def fit_coral(
+    source_loader, target_loader, num_epochs, task_classifier, criterion, optimizer, alpha, target_X, target_y_task
+):
     for epoch in range(1, num_epochs + 1):
         task_classifier.train()
-        for (source_X_batch, source_Y_batch), (target_X_batch, _) in zip(
-            source_loader, target_loader
-        ):
+        for (source_X_batch, source_Y_batch), (target_X_batch, _) in zip(source_loader, target_loader):
             # 0. Data
             source_y_task_batch = source_Y_batch[:, utils.COL_IDX_TASK] > 0.5
             source_y_task_batch = source_y_task_batch.to(torch.float32)
@@ -42,7 +42,7 @@ def fit_coral(source_loader, target_loader, num_epochs, task_classifier, criteri
             # 1.2 CoRAL Loss
             cov_mat_source, cov_mat_target = get_covariance_matrix(source_out, target_out)
             k = source_out.shape[1]
-            loss_coral = get_MSE(cov_mat_source, cov_mat_target) * (1/(4*k**2))
+            loss_coral = get_MSE(cov_mat_source, cov_mat_target) * (1 / (4 * k ** 2))
             loss = loss_task + loss_coral * alpha
             # 2. Backward
             optimizer.zero_grad()
@@ -79,7 +79,9 @@ if __name__ == "__main__":
 
     # Init NN
     num_classes = 1
-    task_classifier = ThreeLayersDecoder(input_size=2, output_size=num_classes, fc1_size=50, fc2_size=10).to(utils.DEVICE)
+    task_classifier = ThreeLayersDecoder(input_size=2, output_size=num_classes, fc1_size=50, fc2_size=10).to(
+        utils.DEVICE
+    )
     learning_rate = 0.01
 
     criterion = nn.BCELoss()
@@ -127,7 +129,6 @@ if __name__ == "__main__":
 
     y_grid = task_classifier(x_grid.T)
     y_grid = torch.sigmoid(y_grid).cpu().detach().numpy()
-
 
     plt.figure()
     plt.title("Without Adaptation Boundary")
