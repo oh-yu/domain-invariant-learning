@@ -1,5 +1,6 @@
 from typing import List
 
+import matplotlib.pyplot as plt
 import torch
 from torch import nn
 from tqdm import tqdm
@@ -195,7 +196,7 @@ def fit(
         loss_task_evals.append(acc.item())
 
         print(f"Epoch: {epoch}, Loss Domain: {loss_domain}, Loss Task: {loss_task}, Acc: {acc}")
-    utils._plot_dann_loss(do_plot, loss_domains, loss_tasks, loss_task_evals)
+    _plot_dann_loss(do_plot, loss_domains, loss_tasks, loss_task_evals)
     return feature_extractor, task_classifier, loss_task_evals
 
 
@@ -310,3 +311,33 @@ def _change_lr_during_dann_training(
         feature_optimizer.param_groups[0]["lr"] = changed_lrs[0]
         task_optimizer.param_groups[0]["lr"] = changed_lrs[0]
     return domain_optimizer, feature_optimizer, task_optimizer
+
+
+def _plot_dann_loss(
+    do_plot: bool, loss_domains: List[float], loss_tasks: List[float], loss_task_evals: List[float]
+) -> None:
+    """
+    plot domain&task losses for source, task loss for target.
+
+    Parameters
+    ----------
+    do_plot: bool
+    loss_domains: list of float
+    loss_tasks: list of float
+    loss_tasks_evals: list of float
+    task loss for target data.
+    """
+    if do_plot:
+        plt.figure()
+        plt.plot(loss_domains, label="loss_domain")
+        plt.plot(loss_tasks, label="loss_task")
+        plt.xlabel("batch")
+        plt.ylabel("cross entropy loss")
+        plt.legend()
+
+        plt.figure()
+        plt.plot(loss_task_evals, label="loss_task_eval")
+        plt.xlabel("epoch")
+        plt.ylabel("accuracy")
+        plt.legend()
+        plt.show()
