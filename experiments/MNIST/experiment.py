@@ -2,13 +2,13 @@ from datetime import datetime
 
 import pandas as pd
 import torch
+import torchvision
 from torch import nn, optim
 from torch.utils.data import DataLoader, TensorDataset
-import torchvision
 from torchvision import datasets, transforms
 from torchvision.datasets import ImageFolder
-from ...networks import IsihDanns, Dann, Dann_F_C
 
+from ...networks import Dann, Dann_F_C, IsihDanns
 from ...utils import utils
 
 

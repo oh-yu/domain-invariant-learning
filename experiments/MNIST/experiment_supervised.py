@@ -1,10 +1,11 @@
 import numpy as np
 import torch
+import torchvision
 from torch import nn, optim
 from torch.utils.data import DataLoader
-import torchvision
 from torchvision import datasets, transforms
 from torchvision.datasets import ImageFolder
+
 from ...networks import Conv2d, ThreeLayersDecoder
 
 

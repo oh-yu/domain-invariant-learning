@@ -1,12 +1,12 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from sklearn.datasets import make_moons
 import torch
 from absl import app, flags
+from sklearn.datasets import make_moons
 from torch import nn, optim
 
 from ...algo import algo
-from ...networks import ThreeLayersDecoder, Encoder
+from ...networks import Encoder, ThreeLayersDecoder
 from ...utils import utils
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

@@ -1,9 +1,9 @@
 import torch
 from torch import nn, optim
 
+from ..utils import utils
 from .conv2d import Conv2d
 from .mlp_decoder_three_layers import ThreeLayersDecoder
-from ..utils import utils
 
 
 class Dann_F_C(nn.Module):

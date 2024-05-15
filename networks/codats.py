@@ -4,8 +4,8 @@ from torch import nn, optim
 from ..algo import algo
 from .conv1d_three_layers import Conv1dThreeLayers
 from .conv1d_two_layers import Conv1dTwoLayers
-from .mlp_decoder_three_layers import ThreeLayersDecoder
 from .mlp_decoder_one_layer import OneLayerDecoder
+from .mlp_decoder_three_layers import ThreeLayersDecoder
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

@@ -1,13 +1,13 @@
 import matplotlib.pyplot as plt
 import pandas as pd
-from sklearn.model_selection import train_test_split
 import torch
+from sklearn.model_selection import train_test_split
 from torch import nn, optim
 from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 
-from ...utils import utils
 from ...networks import CoDATS_F_C
+from ...utils import utils
 
 GT_TO_INT = {"bike": 0, "stairsup": 1, "stairsdown": 2, "stand": 3, "walk": 4, "sit": 5}
 USER_LIST = ["a", "b", "c", "d", "e", "f", "g", "h", "i"]

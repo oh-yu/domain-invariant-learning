@@ -1,8 +1,8 @@
 from datetime import datetime
 
-from absl import app, flags
 import pandas as pd
 import torch
+from absl import app, flags
 from sklearn import preprocessing
 from sklearn.model_selection import train_test_split
 from torch import nn, optim

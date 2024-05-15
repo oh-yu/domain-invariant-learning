@@ -1,7 +1,7 @@
-from sklearn.gaussian_process.kernels import RBF
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from sklearn.gaussian_process.kernels import RBF
 from torch import nn, optim
 
 from ..networks import ThreeLayersDecoder

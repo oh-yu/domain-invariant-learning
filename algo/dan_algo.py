@@ -1,10 +1,10 @@
 import matplotlib.pyplot as plt
-from sklearn.gaussian_process.kernels import RBF
 import torch
+from sklearn.gaussian_process.kernels import RBF
 from torch import nn, optim
 
+from ..networks import Encoder, ThreeLayersDecoder
 from ..utils import utils
-from ..networks import ThreeLayersDecoder, Encoder
 
 
 def fit_kernel(x, y):

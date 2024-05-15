@@ -1,7 +1,8 @@
 import torch
-from networks.mlp_decoder_three_layers import ThreeLayersDecoder
 from rnn import ManyToOneRNN
 from torch import nn, optim
+
+from networks.mlp_decoder_three_layers import ThreeLayersDecoder
 
 from ..algo import algo
 
