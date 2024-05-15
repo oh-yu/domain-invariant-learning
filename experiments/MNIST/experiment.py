@@ -110,15 +110,7 @@ def isih_da():
 
     # Model Init
     isih_dann = IsihDanns(
-        input_size=None,
-        hidden_size=None,
-        lr_dim1=0.0001,
-        lr_dim2=0.0005,
-        # TODO: currently lr_dim2 is dummy in IsihDanns
-        num_epochs_dim1=100,
-        num_epochs_dim2=100,
-        experiment="MNIST",
-        is_target_weights=False
+        experiment="MNIST"
     )
 
     # Algo1 inter-colors DA
@@ -151,17 +143,7 @@ def dann():
     train_target_prime_loader, test_target_prime_loader_gt = SVHN
 
     # Model Init
-    dann = Dann(
-        task_fc1_size=3072,
-        task_fc2_size=2048,
-        domain_fc1_size=1024,
-        domain_fc2_size=1024,
-        output_size=10,
-        input_size=1152,
-        num_epochs=100,
-        lr_fc=1e-4,
-        lr_d=1e-4
-    )
+    dann = Dann()
     # Fit DANN
     test_target_prime_X = torch.cat([X for X, _ in test_target_prime_loader_gt], dim=0)
     test_target_prime_y_task = torch.cat([y[:, 0] for _, y in test_target_prime_loader_gt], dim=0)

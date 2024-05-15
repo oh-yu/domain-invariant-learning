@@ -7,11 +7,11 @@ from ..utils import utils
 
 
 class Dann_F_C(nn.Module):
-    def __init__(self, input_size: int=1152, output_size: int = 10, fc1_size: int = 3072, fc2_size: int = 2048, device = torch.device("cpu")):
+    def __init__(self):
         super().__init__()
-        self.conv2d = Conv2d().to(device)
-        self.decoder = ThreeLayersDecoder(input_size=input_size, output_size=output_size, fc1_size=fc1_size, fc2_size=fc2_size).to(device)
-        self.device = device
+        self.device = torch.device("cpu")
+        self.conv2d = Conv2d().to(self.device)
+        self.decoder = ThreeLayersDecoder(input_size=1152, output_size=10, fc1_size=3072, fc2_size=2048).to(self.device)
         self.optimizer = optim.Adam(list(self.conv2d.parameters())+list(self.decoder.parameters()), lr=1e-4)
         self.criterion = nn.CrossEntropyLoss()
         self.num_epochs=10

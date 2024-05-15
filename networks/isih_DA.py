@@ -18,15 +18,7 @@ class IsihDanns:
 
     def __init__(
         self,
-        input_size: int,
-        hidden_size: int,
-        lr_dim1: float,
-        lr_dim2: float,
-        num_epochs_dim1: int,
-        num_epochs_dim2: int,
-        experiment: str,
-        output_size: int = 1,
-        is_target_weights: bool = True,
+        experiment: str
     ):
         assert experiment in ["ECOdataset", "ECOdataset_synthetic", "HHAR", "MNIST"]
 
@@ -80,11 +72,11 @@ class IsihDanns:
             self.feature_extractor = Conv2d()
             self.task_classifier_dim1 = ThreeLayersDecoder(input_size=1152, output_size=10, fc1_size=3072, fc2_size=2048)
             self.domain_classifier_dim1 = ThreeLayersDecoder(input_size=1152, output_size=1, fc1_size=1024, fc2_size=1024)
-            self.feature_optimizer_dim1 = optim.Adam(self.feature_extractor.parameters(), lr=lr_dim1)
-            self.domain_optimizer_dim1 = optim.Adam(self.domain_classifier_dim1.parameters(), lr=lr_dim1)
-            self.task_optimizer_dim1 = optim.Adam(self.task_classifier_dim1.parameters(), lr=lr_dim1)
+            self.feature_optimizer_dim1 = optim.Adam(self.feature_extractor.parameters(), lr=0.0001)
+            self.domain_optimizer_dim1 = optim.Adam(self.domain_classifier_dim1.parameters(), lr=0.0001)
+            self.task_optimizer_dim1 = optim.Adam(self.task_classifier_dim1.parameters(), lr=0.0001)
             self.criterion = nn.BCELoss()
-            self.num_epochs_dim1 = num_epochs_dim1
+            self.num_epochs_dim1 = 100
 
 
             self.task_classifier_dim2 = ThreeLayersDecoder(input_size=1152, output_size=10, fc1_size=3072, fc2_size=2048)
@@ -92,8 +84,8 @@ class IsihDanns:
             self.feature_optimizer_dim2 = optim.Adam(self.feature_extractor.parameters(), lr=1e-4)
             self.domain_optimizer_dim2 = optim.Adam(self.domain_classifier_dim2.parameters(), lr=1e-6)
             self.task_optimizer_dim2 = optim.Adam(self.task_classifier_dim2.parameters(), lr=1e-4)
-            self.num_epochs_dim2 = num_epochs_dim2
-            self.is_target_weights = is_target_weights
+            self.num_epochs_dim2 = 100
+            self.is_target_weights = False
 
             self.device = torch.device("cpu")
             self.stop_during_epochs=True
