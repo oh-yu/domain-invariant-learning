@@ -1,7 +1,8 @@
 import torch
-from mlp_decoder import Decoder
 from rnn import ManyToOneRNN
 from torch import nn, optim
+
+from networks.mlp_decoder_three_layers import ThreeLayersDecoder
 
 from ..algo import algo
 
@@ -26,8 +27,8 @@ class Rdann:
         self.feature_extractor = ManyToOneRNN(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers).to(
             DEVICE
         )
-        self.domain_classifier = Decoder(input_size=hidden_size, output_size=num_domains).to(DEVICE)
-        self.task_classifier = Decoder(input_size=hidden_size, output_size=num_classes).to(DEVICE)
+        self.domain_classifier = ThreeLayersDecoder(input_size=hidden_size, output_size=num_domains).to(DEVICE)
+        self.task_classifier = ThreeLayersDecoder(input_size=hidden_size, output_size=num_classes).to(DEVICE)
         self.criterion = nn.BCELoss()
 
         self.feature_optimizer = optim.Adam(self.feature_extractor.parameters(), lr=lr)

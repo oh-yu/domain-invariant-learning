@@ -1,5 +1,9 @@
+from typing import List
+
+import matplotlib.pyplot as plt
 import torch
 from torch import nn
+from tqdm import tqdm
 
 from ..utils import utils
 
@@ -36,10 +40,17 @@ def fit(
     domain_optimizer,
     task_optimizer,
     num_epochs=1000,
-    is_target_weights=True,
+    is_target_weights=False,
     is_class_weights=False,
     is_psuedo_weights=False,
     do_plot=False,
+    do_print=False,
+    device=utils.DEVICE,
+    is_changing_lr=False,
+    epoch_thr_for_changing_lr=200,
+    changed_lrs=[0.00005, 0.00005],
+    stop_during_epochs=False,
+    epoch_thr_for_stopping=2,
 ):
     # pylint: disable=too-many-arguments, too-many-locals
     # It seems reasonable in this case, since this method needs all of that.
@@ -86,24 +97,46 @@ def fit(
     loss_domains = []
     loss_tasks = []
     loss_task_evals = []
-    num_epochs = torch.tensor(num_epochs, dtype=torch.int32).to(utils.DEVICE)
+    num_epochs = torch.tensor(num_epochs, dtype=torch.int32).to(device)
 
-    for epoch in range(1, num_epochs.item() + 1):
-        epoch = torch.tensor(epoch, dtype=torch.float32).to(utils.DEVICE)
+    for epoch in tqdm(range(1, num_epochs.item() + 1)):
+        epoch = torch.tensor(epoch, dtype=torch.float32).to(device)
         feature_extractor.train()
         task_classifier.train()
-        domain_optimizer, feature_optimizer, task_optimizer = utils._change_lr_during_dann_training(
-            domain_optimizer, feature_optimizer, task_optimizer, epoch
-        )
+
+        if stop_during_epochs & (epoch.item() == epoch_thr_for_stopping):
+            break
+        if is_changing_lr:
+            domain_optimizer, feature_optimizer, task_optimizer = _change_lr_during_dann_training(
+                domain_optimizer,
+                feature_optimizer,
+                task_optimizer,
+                epoch,
+                epoch_thr=epoch_thr_for_changing_lr,
+                changed_lrs=changed_lrs,
+            )
 
         for (source_X_batch, source_Y_batch), (target_X_batch, target_y_domain_batch) in zip(
             source_loader, target_loader
         ):
             # 0. Data
-            source_y_task_batch = source_Y_batch[:, utils.COL_IDX_TASK] > 0.5
-            source_y_task_batch = source_y_task_batch.to(torch.float32)
-            psuedo_label_weights = utils._get_psuedo_label_weights(source_Y_batch)
-            source_y_domain_batch = source_Y_batch[:, utils.COL_IDX_DOMAIN]
+            if task_classifier.output_size == 1:
+                source_y_task_batch = source_Y_batch[:, utils.COL_IDX_TASK] > 0.5
+                source_y_task_batch = source_y_task_batch.to(torch.float32)
+                source_y_domain_batch = source_Y_batch[:, utils.COL_IDX_DOMAIN]
+            else:
+                if is_psuedo_weights:
+                    output_size = source_Y_batch[:, :-1].shape[1]
+                    source_y_task_batch = source_Y_batch[:, :output_size]
+                    source_y_task_batch = torch.argmax(source_y_task_batch, dim=1)
+                    source_y_task_batch = source_y_task_batch.to(torch.long)
+                    source_y_domain_batch = source_Y_batch[:, output_size]
+                else:
+                    source_y_task_batch = source_Y_batch[:, utils.COL_IDX_TASK]
+                    source_y_task_batch = source_y_task_batch.to(torch.long)
+                    source_y_domain_batch = source_Y_batch[:, utils.COL_IDX_DOMAIN]
+
+            psuedo_label_weights = _get_psuedo_label_weights(source_Y_batch=source_Y_batch, device=device)
 
             # 1. Forward
             # 1.1 Feature Extractor
@@ -123,9 +156,8 @@ def fit(
             loss_domains.append(loss_domain.item())
 
             # 1.3. Task Classifier
-            pred_y_task = task_classifier(source_X_batch)
-            pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
-            weights = utils._get_terminal_weights(
+            pred_y_task = task_classifier.predict_proba(source_X_batch)
+            weights = _get_terminal_weights(
                 is_target_weights,
                 is_class_weights,
                 is_psuedo_weights,
@@ -133,11 +165,19 @@ def fit(
                 source_y_task_batch,
                 psuedo_label_weights,
             )
-            criterion_weight = nn.BCELoss(weight=weights.detach())
-            loss_task = criterion_weight(pred_y_task, source_y_task_batch)
-            loss_tasks.append(loss_task.item())
+            if task_classifier.output_size == 1:
+                criterion_weight = nn.BCELoss(weight=weights.detach())
+                loss_task = criterion_weight(pred_y_task, source_y_task_batch)
+                loss_tasks.append(loss_task.item())
+            else:
+                criterion_weight = nn.CrossEntropyLoss(reduction="none")
+                loss_task = criterion_weight(pred_y_task, source_y_task_batch)
+                loss_task = loss_task * weights
+                loss_task = loss_task.mean()
+                loss_tasks.append(loss_task.item())
 
             # 2. Backward, Update Params
+
             domain_optimizer.zero_grad()
             task_optimizer.zero_grad()
             feature_optimizer.zero_grad()
@@ -154,10 +194,156 @@ def fit(
         task_classifier.eval()
         with torch.no_grad():
             target_feature_eval = feature_extractor(target_X)
-            pred_y_task_eval = task_classifier(target_feature_eval)
-            pred_y_task_eval = torch.sigmoid(pred_y_task_eval).reshape(-1)
-            pred_y_task_eval = pred_y_task_eval > 0.5
+            pred_y_task_eval = task_classifier.predict(target_feature_eval)
             acc = sum(pred_y_task_eval == target_y_task) / target_y_task.shape[0]
         loss_task_evals.append(acc.item())
-    utils._plot_dann_loss(do_plot, loss_domains, loss_tasks, loss_task_evals)
+
+        print(f"Epoch: {epoch}, Loss Domain: {loss_domain}, Loss Task: {loss_task}, Acc: {acc}")
+    _plot_dann_loss(do_plot, loss_domains, loss_tasks, loss_task_evals)
     return feature_extractor, task_classifier, loss_task_evals
+
+
+def _get_psuedo_label_weights(
+    source_Y_batch: torch.Tensor, thr: float = 0.75, alpha: int = 1, device=utils.DEVICE
+) -> torch.Tensor:
+    """
+    # TODO: attach paper
+
+    Parameters
+    ----------
+    source_Y_batch : torch.Tensor of shape(N, 2)
+    thr : float
+
+    Returns
+    -------
+    psuedo_label_weights : torch.Tensor of shape(N, )
+    """
+    output_size = source_Y_batch[:, :-1].shape[1]
+    psuedo_label_weights = []
+
+    if output_size == 1:
+        pred_y = source_Y_batch[:, utils.COL_IDX_TASK]
+        for i in pred_y:
+            if i > thr:
+                psuedo_label_weights.append(1)
+            elif i < 1 - thr:
+                psuedo_label_weights.append(1)
+            else:
+                if i > 0.5:
+                    psuedo_label_weights.append(i ** alpha + (1 - thr))
+                else:
+                    psuedo_label_weights.append((1 - i) ** alpha + (1 - thr))
+
+    else:
+        pred_y = source_Y_batch[:, :output_size]
+        pred_y = torch.max(pred_y, axis=1).values
+        for i in pred_y:
+            if i > thr:
+                psuedo_label_weights.append(1)
+            else:
+                psuedo_label_weights.append(i ** alpha + (1 - thr))
+    return torch.tensor(psuedo_label_weights, dtype=torch.float32).to(device)
+
+
+def _get_terminal_weights(
+    is_target_weights: bool,
+    is_class_weights: bool,
+    is_psuedo_weights: bool,
+    pred_source_y_domain: torch.Tensor,
+    source_y_task_batch: torch.Tensor,
+    psuedo_label_weights: torch.Tensor,
+) -> torch.Tensor:
+    """
+    # TODO: attach paper
+
+    Parameters
+    ----------
+    is_target_weights: bool
+    is_class_weights: bool
+    is_psuedo_weights: bool
+    pred_source_y_domain : torch.Tensor of shape(N, )
+    source_y_task_batch : torch.Tensor of shape(N, )
+    psuedo_label_weights : torch.Tensor of shape(N, )
+
+    Returns
+    -------
+    weights : torch.Tensor of shape(N, )
+    terminal sample weights for nn.BCELoss
+    """
+    if is_target_weights:
+        target_weights = pred_source_y_domain / (1 - pred_source_y_domain)
+    else:
+        target_weights = 1
+    if is_class_weights:
+        class_weights = _get_class_weights(source_y_task_batch)
+    else:
+        class_weights = 1
+    if is_psuedo_weights:
+        weights = target_weights * class_weights * psuedo_label_weights
+    else:
+        weights = target_weights * class_weights
+    return weights
+
+
+def _get_class_weights(source_y_task_batch):
+    p_occupied = sum(source_y_task_batch) / source_y_task_batch.shape[0]
+    p_unoccupied = 1 - p_occupied
+    class_weights = torch.zeros_like(source_y_task_batch)
+    for i, y in enumerate(source_y_task_batch):
+        if y == 1:
+            class_weights[i] = p_unoccupied
+        elif y == 0:
+            class_weights[i] = p_occupied
+    return class_weights
+
+
+def _change_lr_during_dann_training(
+    domain_optimizer: torch.optim.Adam,
+    feature_optimizer: torch.optim.Adam,
+    task_optimizer: torch.optim.Adam,
+    epoch: torch.Tensor,
+    epoch_thr: int = 200,
+    changed_lrs: List[float] = [0.00005, 0.00005],
+):
+    """
+    Returns
+    -------
+    domain_optimizer : torch.optim.adam.Adam
+    feature_optimizer : torch.optim.adam.Adam
+    task_optimizer : torch.optim.adam.Adam
+    """
+    if epoch == epoch_thr:
+        domain_optimizer.param_groups[0]["lr"] = changed_lrs[1]
+        feature_optimizer.param_groups[0]["lr"] = changed_lrs[0]
+        task_optimizer.param_groups[0]["lr"] = changed_lrs[0]
+    return domain_optimizer, feature_optimizer, task_optimizer
+
+
+def _plot_dann_loss(
+    do_plot: bool, loss_domains: List[float], loss_tasks: List[float], loss_task_evals: List[float]
+) -> None:
+    """
+    plot domain&task losses for source, task loss for target.
+
+    Parameters
+    ----------
+    do_plot: bool
+    loss_domains: list of float
+    loss_tasks: list of float
+    loss_tasks_evals: list of float
+    task loss for target data.
+    """
+    if do_plot:
+        plt.figure()
+        plt.plot(loss_domains, label="loss_domain")
+        plt.plot(loss_tasks, label="loss_task")
+        plt.xlabel("batch")
+        plt.ylabel("cross entropy loss")
+        plt.legend()
+
+        plt.figure()
+        plt.plot(loss_task_evals, label="loss_task_eval")
+        plt.xlabel("epoch")
+        plt.ylabel("accuracy")
+        plt.legend()
+        plt.show()

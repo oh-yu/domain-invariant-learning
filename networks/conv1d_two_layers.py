@@ -3,7 +3,7 @@ import torch.nn.functional as F
 from torch import nn
 
 
-class Conv1d(nn.Module):
+class Conv1dTwoLayers(nn.Module):
     # TODO: Understand nn.Conv1d doumentation
     def __init__(self, input_size: int, out_channels1: int = 128, out_channels2: int = 128):
         super().__init__()
