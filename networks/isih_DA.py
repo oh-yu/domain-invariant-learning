@@ -54,22 +54,22 @@ class IsihDanns:
             self.domain_classifier_dim1 = ThreeLayersDecoder(input_size=128, output_size=1, dropout_ratio=0.3).to(
                 DEVICE
             )
-            self.task_classifier_dim1 = OneLayerDecoder(input_size=128, output_size=6).to(DEVICE)
+            self.task_classifier_dim1 = ThreeLayersDecoder(input_size=128, output_size=6, dropout_ratio=0.3).to(DEVICE)
             self.feature_optimizer_dim1 = optim.Adam(self.feature_extractor.parameters(), lr=0.0001)
             self.domain_optimizer_dim1 = optim.Adam(self.domain_classifier_dim1.parameters(), lr=0.0001)
             self.task_optimizer_dim1 = optim.Adam(self.task_classifier_dim1.parameters(), lr=0.0001)
             self.criterion = nn.BCELoss()
-            self.num_epochs_dim1 = 150
+            self.num_epochs_dim1 = 200
 
             self.domain_classifier_dim2 = ThreeLayersDecoder(input_size=128, output_size=1, dropout_ratio=0.3).to(
                 DEVICE
             )
-            self.task_classifier_dim2 = OneLayerDecoder(input_size=128, output_size=6).to(DEVICE)
+            self.task_classifier_dim2 = ThreeLayersDecoder(input_size=128, output_size=6, dropout_ratio=0.3).to(DEVICE)
 
-            self.feature_optimizer_dim2 = optim.Adam(self.feature_extractor.parameters(), lr=0.0001)
-            self.domain_optimizer_dim2 = optim.Adam(self.domain_classifier_dim2.parameters(), lr=0.0001)
-            self.task_optimizer_dim2 = optim.Adam(self.task_classifier_dim2.parameters(), lr=0.0001)
-            self.num_epochs_dim2 = 50
+            self.feature_optimizer_dim2 = optim.Adam(self.feature_extractor.parameters(), lr=0.00005)
+            self.domain_optimizer_dim2 = optim.Adam(self.domain_classifier_dim2.parameters(), lr=0.00005)
+            self.task_optimizer_dim2 = optim.Adam(self.task_classifier_dim2.parameters(), lr=0.00005)
+            self.num_epochs_dim2 = 100
             self.is_target_weights = True
 
             self.device = DEVICE

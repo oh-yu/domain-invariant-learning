@@ -37,14 +37,14 @@ class Codats:
         elif experiment == "HHAR":
             self.feature_extractor = Conv1dThreeLayers(input_size=6).to(DEVICE)
             self.domain_classifier = ThreeLayersDecoder(input_size=128, output_size=1, dropout_ratio=0.3).to(DEVICE)
-            self.task_classifier = OneLayerDecoder(input_size=128, output_size=6).to(DEVICE)
-            self.is_changing_lr = False
+            self.task_classifier = ThreeLayersDecoder(input_size=128, output_size=6, dropout_ratio=0.3).to(DEVICE)
+            self.is_changing_lr = True
 
             self.criterion = nn.BCELoss()
             self.feature_optimizer = optim.Adam(self.feature_extractor.parameters(), lr=0.0001)
             self.domain_optimizer = optim.Adam(self.domain_classifier.parameters(), lr=0.0001)
             self.task_optimizer = optim.Adam(self.task_classifier.parameters(), lr=0.0001)
-            self.num_epochs = 200
+            self.num_epochs = 300
             self.is_target_weights = True
 
     def fit(

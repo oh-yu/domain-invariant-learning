@@ -25,10 +25,10 @@ class CoDATS_F_C(nn.Module):
 
         elif experiment == "HHAR":
             self.conv1d = Conv1dThreeLayers(input_size=6).to(DEVICE)
-            self.decoder = OneLayerDecoder(input_size=128, output_size=6).to(DEVICE)
+            self.decoder = ThreeLayersDecoder(input_size=128, output_size=6, dropout_ratio=0.3).to(DEVICE)
             self.optimizer = optim.Adam(list(self.conv1d.parameters()) + list(self.decoder.parameters()), lr=1e-4)
             self.criterion = nn.CrossEntropyLoss()
-            self.num_epochs = 200
+            self.num_epochs = 300
 
     def fit_without_adapt(self, source_loader):
         for _ in range(self.num_epochs):
