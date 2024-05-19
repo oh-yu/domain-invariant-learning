@@ -17,13 +17,11 @@ implementations of experiment workflow (data load, preprocess, init NN, training
 |ecodataset|https://vs.inf.ethz.ch/res/show.html?what=eco-data|
 git clone https://github.com/oh-yu/deep_occupancy_detection/tree/feature/JSAI  
 run all cells of 01.ipynb - 05.ipynb  
-python -m domain-invariant-learning.experiments.ecodataset_synthetic.experiment  
-|
+python -m domain-invariant-learning.experiments.ecodataset_synthetic.experiment  |
 |ecodataset_synthetic|see experiment.py logic|
 git clone https://github.com/oh-yu/deep_occupancy_detection/tree/feature/JSAI  
 run all cells of 01.ipynb - 05.ipynb   
-python -m domain-invariant-learning.experiments.ecodataset_synthetic.experiment  
-|
+python -m domain-invariant-learning.experiments.ecodataset_synthetic.experiment  |
 
 ## networks/
 implementations of networks which include layers, fit method, predict method, predict_proba method.
