@@ -14,14 +14,8 @@ implementations of experiment workflow (data load, preprocess, init NN, training
 |dir name|data|execution|
 |---|---|---|
 |make_moons|https://scikit-learn.org/stable/modules/generated/sklearn.datasets.make_moons.html|python -m domain-invariant-learning.experiments.make_moons.experiment|
-|ecodataset|https://vs.inf.ethz.ch/res/show.html?what=eco-data|
-git clone https://github.com/oh-yu/deep_occupancy_detection/tree/feature/JSAI  
-run all cells of 01.ipynb - 05.ipynb  
-python -m domain-invariant-learning.experiments.ecodataset_synthetic.experiment  |
-|ecodataset_synthetic|see experiment.py logic|
-git clone https://github.com/oh-yu/deep_occupancy_detection/tree/feature/JSAI  
-run all cells of 01.ipynb - 05.ipynb   
-python -m domain-invariant-learning.experiments.ecodataset_synthetic.experiment  |
+|ecodataset|https://vs.inf.ethz.ch/res/show.html?what=eco-data|git clone https://github.com/oh-yu/deep_occupancy_detection/tree/feature/JSAI<br>run all cells of 01.ipynb - 05.ipynb<br>python -m domain-invariant-learning.experiments.ecodataset_synthetic.experiment|
+|ecodataset_synthetic|see experiment.py logic|git clone https://github.com/oh-yu/deep_occupancy_detection/tree/feature/JSAI<br>run all cells of 01.ipynb - 05.ipynb<br>python -m domain-invariant-learning.experiments.ecodataset_synthetic.experiment|
 
 ## networks/
 implementations of networks which include layers, fit method, predict method, predict_proba method.
