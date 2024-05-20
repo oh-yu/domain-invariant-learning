@@ -5,15 +5,22 @@ from absl import app, flags
 from sklearn.datasets import make_moons
 from torch import nn, optim
 
-from ...algo import dann_algo
+from ...algo import dann_algo, coral_algo
 from ...networks import Encoder, ThreeLayersDecoder
 from ...utils import utils
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 FLAGS = flags.FLAGS
 flags.DEFINE_integer("rotation_degree", -30, "rotation degree for target data")
+flags.DEFINE_string("algo_name", "DANN", "Which algo to use, DANN or CoRAL")
 flags.mark_flag_as_required("rotation_degree")
+flags.mark_flag_as_required("algo_name")
 
+
+ALGORYTHMS = {
+    "DANN": dann_algo,
+    "CoRAL": coral_algo,
+}
 
 def get_source_target_from_make_moons(n_samples=100, noise=0.05, rotation_degree=-30):
     # pylint: disable=too-many-locals
@@ -104,7 +111,7 @@ def main(argv):
 
     # Domain Invariant Learning
     num_epochs = 1000
-    feature_extractor, task_classifier, accs = dann_algo.fit(
+    feature_extractor, task_classifier, accs = ALGORYTHMS[FLAGS.algo_name].fit(
         source_loader,
         target_loader,
         target_X,
