@@ -29,26 +29,35 @@ class Dann:
         self.is_target_weights = False
 
     def fit(self, source_loader, target_loader, test_target_X, test_target_y_task):
+        data = {
+            "source_loader": source_loader,
+            "target_loader": target_loader,
+            "target_X": test_target_X,
+            "target_y_task": test_target_y_task,
+        }
+        network = {
+            "feature_extractor": self.feature_extractor,
+            "domain_classifier": self.domain_classifier,
+            "task_classifier": self.task_classifier,
+            "criterion": self.domain_criterion,
+            "feature_optimizer": self.feature_otimizer,
+            "domain_optimizer": self.domain_optimzier,
+            "task_optimizer": self.task_optimizer,
+        }
+        config = {
+            "num_epochs": self.num_ecochs,
+            "device": self.device,
+            "is_changing_lr": True,
+            "epoch_thr_for_changing_lr": 11,
+            "changed_lrs": [1e-4, 1e-6],
+            "stop_during_epochs": True,
+            "epoch_thr_for_stopping": 12,
+            "is_target_weights": self.is_target_weights
+        }
         self.feature_extractor, self.task_classifier, _ = dann_algo.fit(
-            source_loader,
-            target_loader,
-            test_target_X,
-            test_target_y_task,
-            self.feature_extractor,
-            self.domain_classifier,
-            self.task_classifier,
-            self.domain_criterion,
-            self.feature_otimizer,
-            self.domain_optimzier,
-            self.task_optimizer,
-            num_epochs=self.num_ecochs,
-            device=self.device,
-            is_changing_lr=True,
-            epoch_thr_for_changing_lr=11,
-            changed_lrs=[1e-4, 1e-6],
-            stop_during_epochs=True,
-            epoch_thr_for_stopping=12,
-            is_target_weights=self.is_target_weights,
+            data,
+            network,
+            **config
         )
 
     def predict(self, x):

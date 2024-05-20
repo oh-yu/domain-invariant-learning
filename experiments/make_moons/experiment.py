@@ -114,24 +114,36 @@ def main(argv):
 
     # Domain Invariant Learning
     num_epochs = 1000
+    data = {
+        "source_loader": source_loader,
+        "target_loader": target_loader,
+        "target_X": target_X,
+        "target_y_task": target_y_task,
+    }
+    if FLAGS.algo_name == "DANN":
+        network = {
+            "feature_extractor": feature_extractor,
+            "domain_classifier": domain_classifier,
+            "task_classifier": task_classifier,
+            "criterion": criterion,
+            "feature_optimizer": feature_optimizer,
+            "domain_optimizer": domain_optimizer,
+            "task_optimizer": task_optimizer,
+        }
+        config = {
+            "num_epochs": 1000,
+            "do_plot": True,
+            "is_changing_lr": True,
+            "epoch_thr_for_changing_lr": 200,
+            "changed_lrs": [0.00005, 0.00005],
+            "is_target_weights": True,
+        }
+    elif FLAGS.algo_name == "CoRAL":
+        # TODO: Implement
+        pass
+
     feature_extractor, task_classifier, accs = ALGORYTHMS[FLAGS.algo_name].fit(
-        source_loader,
-        target_loader,
-        target_X,
-        target_y_task,
-        feature_extractor,
-        domain_classifier,
-        task_classifier,
-        criterion,
-        feature_optimizer,
-        domain_optimizer,
-        task_optimizer,
-        num_epochs=num_epochs,
-        do_plot=True,
-        is_changing_lr=True,
-        epoch_thr_for_changing_lr=200,
-        changed_lrs=[0.00005, 0.00005],
-        is_target_weights=True,
+        data, network, **config
     )
     if FLAGS.algo_name == "CoRAL":
         feature_extractor = lambda x: x

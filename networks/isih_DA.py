@@ -105,44 +105,67 @@ class IsihDanns:
             self.stop_during_epochs = True
 
     def fit_1st_dim(self, source_loader, target_loader, test_target_X: torch.Tensor, test_target_y_task: torch.Tensor):
+        data = {
+            "source_loader": source_loader,
+            "target_loader": target_loader,
+            "target_X": test_target_X,
+            "target_y_task": test_target_y_task,
+        }
+        network = {
+            "feature_extractor": self.feature_extractor,
+            "domain_classifier": self.domain_classifier_dim1,
+            "task_classifier": self.task_classifier_dim1,
+            "criterion": self.criterion,
+            "feature_optimizer": self.feature_optimizer_dim1,
+            "domain_optimizer": self.domain_optimizer_dim1,
+            "task_optimizer": self.task_optimizer_dim1,
+        }
+        config = {
+            "num_epochs": self.num_epochs_dim1,
+            "is_target_weights": self.is_target_weights,
+            "device": self.device,
+            "stop_during_epochs": self.stop_during_epochs,
+            "epoch_thr_for_stopping": 11
+        }
+
+
         self.feature_extractor, self.task_classifier_dim1, _ = dann_algo.fit(
-            source_loader,
-            target_loader,
-            test_target_X,
-            test_target_y_task,
-            self.feature_extractor,
-            self.domain_classifier_dim1,
-            self.task_classifier_dim1,
-            self.criterion,
-            self.feature_optimizer_dim1,
-            self.domain_optimizer_dim1,
-            self.task_optimizer_dim1,
-            num_epochs=self.num_epochs_dim1,
-            is_target_weights=self.is_target_weights,
-            device=self.device,
-            stop_during_epochs=self.stop_during_epochs,
-            epoch_thr_for_stopping=11,
+            data,
+            network,
+            **config
         )
 
     def fit_2nd_dim(self, source_loader, target_loader, test_target_X: torch.Tensor, test_target_y_task: torch.Tensor):
+        data = {
+            "source_loader": source_loader,
+            "target_loader": target_loader,
+            "target_X": test_target_X,
+            "target_y_task": test_target_y_task,
+        }
+        network = {
+            "feature_extractor": self.feature_extractor,
+            "domain_classifier": self.domain_classifier_dim2,
+            "task_classifier": self.task_classifier_dim2,
+            "criterion": self.criterion,
+            "feature_optimizer": self.feature_optimizer_dim2,
+            "domain_optimizer": self.domain_optimizer_dim2,
+            "task_optimizer": self.task_optimizer_dim2,
+        }
+        config = {
+            "num_epochs": self.num_epochs_dim2,
+            "is_psuedo_weights": True,
+            "is_target_weights": self.is_target_weights,
+            "device": self.device,
+            "stop_during_epochs": self.stop_during_epochs,
+            "epoch_thr_for_stopping": 2
+        }
+
+
+
         self.feature_extractor, self.task_classifier_dim2, _ = dann_algo.fit(
-            source_loader,
-            target_loader,
-            test_target_X,
-            test_target_y_task,
-            self.feature_extractor,
-            self.domain_classifier_dim2,
-            self.task_classifier_dim2,
-            self.criterion,
-            self.feature_optimizer_dim2,
-            self.domain_optimizer_dim2,
-            self.task_optimizer_dim2,
-            num_epochs=self.num_epochs_dim2,
-            is_psuedo_weights=True,
-            is_target_weights=self.is_target_weights,
-            device=self.device,
-            stop_during_epochs=self.stop_during_epochs,
-            epoch_thr_for_stopping=2,
+            data,
+            network,
+            **config
         )
 
     def predict(self, X: torch.Tensor, is_1st_dim: bool) -> torch.Tensor:
