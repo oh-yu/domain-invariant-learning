@@ -1,7 +1,7 @@
 import torch
 from torch import nn, optim
 
-from ..algo import algo
+from ..algo import dann_algo
 from .conv1d_three_layers import Conv1dThreeLayers
 from .conv1d_two_layers import Conv1dTwoLayers
 from .mlp_decoder_one_layer import OneLayerDecoder
@@ -54,7 +54,7 @@ class Codats:
         test_target_X: torch.Tensor,
         test_target_y_task: torch.Tensor,
     ) -> None:
-        self.feature_extractor, self.task_classifier, _ = algo.fit(
+        self.feature_extractor, self.task_classifier, _ = dann_algo.fit(
             source_loader,
             target_loader,
             test_target_X,

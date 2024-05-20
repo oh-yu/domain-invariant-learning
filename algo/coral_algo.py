@@ -20,7 +20,7 @@ def get_covariance_matrix(x, y):
     return cov_mat_x, cov_mat_y
 
 
-def fit_coral(
+def fit(
     source_loader, target_loader, num_epochs, task_classifier, criterion, optimizer, alpha, target_X, target_y_task
 ):
     for epoch in range(1, num_epochs + 1):
@@ -86,7 +86,7 @@ if __name__ == "__main__":
     task_optimizer = optim.Adam(task_classifier.parameters(), lr=learning_rate)
 
     # Fit CoRAL
-    task_classifier = fit_coral(
+    task_classifier = fit(
         source_loader,
         target_loader,
         num_epochs=500,

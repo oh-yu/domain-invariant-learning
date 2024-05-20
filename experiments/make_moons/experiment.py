@@ -5,7 +5,7 @@ from absl import app, flags
 from sklearn.datasets import make_moons
 from torch import nn, optim
 
-from ...algo import algo
+from ...algo import dann_algo
 from ...networks import Encoder, ThreeLayersDecoder
 from ...utils import utils
 
@@ -104,7 +104,7 @@ def main(argv):
 
     # Domain Invariant Learning
     num_epochs = 1000
-    feature_extractor, task_classifier, accs = algo.fit(
+    feature_extractor, task_classifier, accs = dann_algo.fit(
         source_loader,
         target_loader,
         target_X,

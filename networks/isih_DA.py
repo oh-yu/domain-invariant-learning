@@ -1,7 +1,7 @@
 import torch
 from torch import nn, optim
 
-from ..algo import algo
+from ..algo import dann_algo
 from .conv1d_three_layers import Conv1dThreeLayers
 from .conv1d_two_layers import Conv1dTwoLayers
 from .conv2d import Conv2d
@@ -105,7 +105,7 @@ class IsihDanns:
             self.stop_during_epochs = True
 
     def fit_1st_dim(self, source_loader, target_loader, test_target_X: torch.Tensor, test_target_y_task: torch.Tensor):
-        self.feature_extractor, self.task_classifier_dim1, _ = algo.fit(
+        self.feature_extractor, self.task_classifier_dim1, _ = dann_algo.fit(
             source_loader,
             target_loader,
             test_target_X,
@@ -125,7 +125,7 @@ class IsihDanns:
         )
 
     def fit_2nd_dim(self, source_loader, target_loader, test_target_X: torch.Tensor, test_target_y_task: torch.Tensor):
-        self.feature_extractor, self.task_classifier_dim2, _ = algo.fit(
+        self.feature_extractor, self.task_classifier_dim2, _ = dann_algo.fit(
             source_loader,
             target_loader,
             test_target_X,

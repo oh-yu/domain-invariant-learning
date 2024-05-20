@@ -1,7 +1,7 @@
 import torch
 from torch import nn, optim
 
-from ..algo import algo
+from ..algo import dann_algo
 from .conv2d import Conv2d
 from .mlp_decoder_three_layers import ThreeLayersDecoder
 
@@ -29,7 +29,7 @@ class Dann:
         self.is_target_weights = False
 
     def fit(self, source_loader, target_loader, test_target_X, test_target_y_task):
-        self.feature_extractor, self.task_classifier, _ = algo.fit(
+        self.feature_extractor, self.task_classifier, _ = dann_algo.fit(
             source_loader,
             target_loader,
             test_target_X,

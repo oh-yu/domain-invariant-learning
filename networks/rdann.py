@@ -4,7 +4,7 @@ from torch import nn, optim
 
 from networks.mlp_decoder_three_layers import ThreeLayersDecoder
 
-from ..algo import algo
+from ..algo import dann_algo
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -43,7 +43,7 @@ class Rdann:
         test_target_X: torch.Tensor,
         test_target_y_task: torch.Tensor,
     ) -> None:
-        self.feature_extractor, self.task_classifier, _ = algo.fit(
+        self.feature_extractor, self.task_classifier, _ = dann_algo.fit(
             source_loader,
             target_loader,
             test_target_X,
