@@ -91,7 +91,10 @@ def main(argv):
     )
 
     # Instantiate Feature Extractor, Domain Classifier, Task Classifier
-    hidden_size = 10
+    if FLAGS.algo_name == "DANN":
+        hidden_size = 10
+    elif FLAGS.algo_name == "CoRAL":
+        hidden_size = source_X.shape[1]
     num_domains = 1
     num_classes = 1
 
@@ -130,6 +133,9 @@ def main(argv):
         changed_lrs=[0.00005, 0.00005],
         is_target_weights=True,
     )
+    if FLAGS.algo_name == "CoRAL":
+        feature_extractor = lambda x: x
+
     target_feature_eval = feature_extractor(target_X)
     pred_y_task = task_classifier(target_feature_eval)
     pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
