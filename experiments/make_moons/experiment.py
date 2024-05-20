@@ -139,9 +139,15 @@ def main(argv):
             "is_target_weights": True,
         }
     elif FLAGS.algo_name == "CoRAL":
-        # TODO: Implement
-        pass
-
+        network = {
+            "task_classifier": task_classifier,
+            "criterion": criterion,
+            "task_optimizer": task_optimizer,
+        }
+        config = {
+            "num_epochs": 1000,
+            "alpha": 1
+        }
     feature_extractor, task_classifier, accs = ALGORYTHMS[FLAGS.algo_name].fit(
         data, network, **config
     )

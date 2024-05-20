@@ -20,32 +20,24 @@ def get_covariance_matrix(x, y):
     return cov_mat_x, cov_mat_y
 
 
-def fit(
-        source_loader,
-        target_loader,
-        target_X,
-        target_y_task,
-        feature_extractor,
-        domain_classifier,
-        task_classifier,
-        criterion,
-        feature_optimizer,
-        domain_optimizer,
-        task_optimizer,
-        num_epochs=1000,
-        is_target_weights=False,
-        is_class_weights=False,
-        is_psuedo_weights=False,
-        do_plot=False,
-        do_print=False,
-        device=utils.DEVICE,
-        is_changing_lr=False,
-        epoch_thr_for_changing_lr=200,
-        changed_lrs=[0.00005, 0.00005],
-        stop_during_epochs=False,
-        epoch_thr_for_stopping=2,
-        alpha=1
-):
+def fit(data, network, **kwargs):
+    # Args
+    source_loader, target_loader = data["source_loader"], data["target_loader"]
+    target_X, target_y_task = data["target_X"], data["target_y_task"]
+
+    task_classifier = network["task_classifier"]
+    criterion = network["criterion"]
+    task_optimizer = network["task_optimizer"]
+
+    config = {
+        "num_epochs": 1000,
+        "alpha": 1
+    }
+    config.update(kwargs)
+    num_epochs = config["num_epochs"]
+    alpha = config["alpha"]
+
+    # Fit
     for epoch in range(1, num_epochs + 1):
         task_classifier.train()
         for (source_X_batch, source_Y_batch), (target_X_batch, _) in zip(source_loader, target_loader):
