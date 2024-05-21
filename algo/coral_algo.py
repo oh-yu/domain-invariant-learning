@@ -48,8 +48,18 @@ def fit(data, network, **kwargs):
         feature_extractor.train()
         for (source_X_batch, source_Y_batch), (target_X_batch, _) in zip(source_loader, target_loader):
             # 0. Data
-            source_y_task_batch = source_Y_batch[:, utils.COL_IDX_TASK] > 0.5
-            source_y_task_batch = source_y_task_batch.to(torch.float32)
+            if task_classifier.output_size == 1:
+                source_y_task_batch = source_Y_batch[:, utils.COL_IDX_TASK] > 0.5
+                source_y_task_batch = source_y_task_batch.to(torch.float32)
+            else:
+                if is_psuedo_weights:
+                    output_size = source_Y_batch[:, :-1].shape[1]
+                    source_y_task_batch = source_Y_batch[:, :output_size]
+                    source_y_task_batch = torch.argmax(source_y_task_batch, dim=1)
+                    source_y_task_batch = source_y_task_batch.to(torch.long)
+                else:
+                    source_y_task_batch = source_Y_batch[:, utils.COL_IDX_TASK]
+                    source_y_task_batch = source_y_task_batch.to(torch.long)
 
             if is_psuedo_weights:
                 weights = get_psuedo_label_weights(source_Y_batch=source_Y_batch, device=device).detach()
@@ -63,9 +73,16 @@ def fit(data, network, **kwargs):
             target_out = task_classifier(target_X_batch)
 
             # 1.1 Task Loss
-            source_preds = torch.sigmoid(source_out).reshape(-1)
-            criterion_weight = nn.BCELoss(weight=weights)
-            loss_task = criterion_weight(source_preds, source_y_task_batch)
+            if task_classifier.output_size == 1:
+                source_preds = torch.sigmoid(source_out).reshape(-1)
+                criterion_weight = nn.BCELoss(weight=weights)
+                loss_task = criterion_weight(source_preds, source_y_task_batch)
+            else:
+                source_preds = torch.softmax(source_out, dim=1)
+                criterion_weight = nn.CrossEntropyLoss(reduction="none")
+                loss_task = criterion_weight(source_preds, source_y_task_batch)
+                loss_task = loss_task * weights
+                loss_task = loss_task.mean()
 
             # 1.2 CoRAL Loss
             cov_mat_source, cov_mat_target = get_covariance_matrix(source_out, target_out)
