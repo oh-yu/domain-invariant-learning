@@ -1,8 +1,5 @@
-import matplotlib.pyplot as plt
 import torch
-from torch import nn, optim
 
-from ..networks import ThreeLayersDecoder
 from ..utils import utils
 
 

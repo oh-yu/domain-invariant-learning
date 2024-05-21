@@ -1,7 +1,8 @@
+from absl import flags
 import torch
 from torch import nn, optim
 
-from ..algo import dann_algo
+from ..algo import dann_algo, coral_algo
 from .conv1d_three_layers import Conv1dThreeLayers
 from .conv1d_two_layers import Conv1dTwoLayers
 from .conv2d import Conv2d
@@ -9,7 +10,11 @@ from .mlp_decoder_one_layer import OneLayerDecoder
 from .mlp_decoder_three_layers import ThreeLayersDecoder
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
+FLAGS = flags.FLAGS
+ALGORYTHMS = {
+    "DANN": dann_algo,
+    "CoRAL": coral_algo,
+}
 
 class IsihDanns:
     """
@@ -111,25 +116,35 @@ class IsihDanns:
             "target_X": test_target_X,
             "target_y_task": test_target_y_task,
         }
-        network = {
-            "feature_extractor": self.feature_extractor,
-            "domain_classifier": self.domain_classifier_dim1,
-            "task_classifier": self.task_classifier_dim1,
-            "criterion": self.criterion,
-            "feature_optimizer": self.feature_optimizer_dim1,
-            "domain_optimizer": self.domain_optimizer_dim1,
-            "task_optimizer": self.task_optimizer_dim1,
-        }
-        config = {
-            "num_epochs": self.num_epochs_dim1,
-            "is_target_weights": self.is_target_weights,
-            "device": self.device,
-            "stop_during_epochs": self.stop_during_epochs,
-            "epoch_thr_for_stopping": 11
-        }
-
-
-        self.feature_extractor, self.task_classifier_dim1, _ = dann_algo.fit(
+        if FLAGS.algo_name == "DANN":
+            network = {
+                "feature_extractor": self.feature_extractor,
+                "domain_classifier": self.domain_classifier_dim1,
+                "task_classifier": self.task_classifier_dim1,
+                "criterion": self.criterion,
+                "feature_optimizer": self.feature_optimizer_dim1,
+                "domain_optimizer": self.domain_optimizer_dim1,
+                "task_optimizer": self.task_optimizer_dim1,
+            }
+            config = {
+                "num_epochs": self.num_epochs_dim1,
+                "is_target_weights": self.is_target_weights,
+                "device": self.device,
+                "stop_during_epochs": self.stop_during_epochs,
+                "epoch_thr_for_stopping": 11
+            }
+        elif FLAGS.algo_name == "CoRAL":
+            network = {
+                "feature_extractor": self.feature_extractor,
+                "task_classifier": self.task_classifier_dim1,
+                "criterion": self.criterion,
+                "feature_optimizer": self.feature_optimizer_dim1,
+                "task_optimizer": self.task_optimizer_dim1,
+            }
+            config = {
+                "num_epochs": self.num_epochs_dim1,
+            }
+        self.feature_extractor, self.task_classifier_dim1, _ = ALGORYTHMS[FLAGS.algo_name].fit(
             data,
             network,
             **config
@@ -142,27 +157,37 @@ class IsihDanns:
             "target_X": test_target_X,
             "target_y_task": test_target_y_task,
         }
-        network = {
-            "feature_extractor": self.feature_extractor,
-            "domain_classifier": self.domain_classifier_dim2,
-            "task_classifier": self.task_classifier_dim2,
-            "criterion": self.criterion,
-            "feature_optimizer": self.feature_optimizer_dim2,
-            "domain_optimizer": self.domain_optimizer_dim2,
-            "task_optimizer": self.task_optimizer_dim2,
-        }
-        config = {
-            "num_epochs": self.num_epochs_dim2,
-            "is_psuedo_weights": True,
-            "is_target_weights": self.is_target_weights,
-            "device": self.device,
-            "stop_during_epochs": self.stop_during_epochs,
-            "epoch_thr_for_stopping": 2
-        }
+        if FLAGS.algo_name == "DANN":
+            network = {
+                "feature_extractor": self.feature_extractor,
+                "domain_classifier": self.domain_classifier_dim2,
+                "task_classifier": self.task_classifier_dim2,
+                "criterion": self.criterion,
+                "feature_optimizer": self.feature_optimizer_dim2,
+                "domain_optimizer": self.domain_optimizer_dim2,
+                "task_optimizer": self.task_optimizer_dim2,
+            }
+            config = {
+                "num_epochs": self.num_epochs_dim2,
+                "is_psuedo_weights": True,
+                "is_target_weights": self.is_target_weights,
+                "device": self.device,
+                "stop_during_epochs": self.stop_during_epochs,
+                "epoch_thr_for_stopping": 2
+            }
+        elif FLAGS.algo_name == "CoRAL":
+            network = {
+                "feature_extractor": self.feature_extractor,
+                "task_classifier": self.task_classifier_dim2,
+                "criterion": self.criterion,
+                "feature_optimizer": self.feature_optimizer_dim2,
+                "task_optimizer": self.task_optimizer_dim2,
+            }
+            config = {
+                "num_epochs": self.num_epochs_dim2,
+            }      
 
-
-
-        self.feature_extractor, self.task_classifier_dim2, _ = dann_algo.fit(
+        self.feature_extractor, self.task_classifier_dim2, _ = ALGORYTHMS[FLAGS.algo_name].fit(
             data,
             network,
             **config

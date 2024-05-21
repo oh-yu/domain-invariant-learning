@@ -14,6 +14,7 @@ from ...utils import utils
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 HOUSEHOLD_IDXS = [1, 2, 3, 4, 5]
 FLAGS = flags.FLAGS
+flags.DEFINE_string("algo_name", "DANN", "which algo to be used, DANN or CoRAL")
 
 
 def isih_da_house(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, num_repeats: int = 10,) -> float:
