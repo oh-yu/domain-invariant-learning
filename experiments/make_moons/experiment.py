@@ -91,10 +91,7 @@ def main(argv):
     )
 
     # Instantiate Feature Extractor, Domain Classifier, Task Classifier
-    if FLAGS.algo_name == "DANN":
-        hidden_size = 10
-    elif FLAGS.algo_name == "CoRAL":
-        hidden_size = source_X.shape[1]
+    hidden_size = 10
     num_domains = 1
     num_classes = 1
 
@@ -140,19 +137,19 @@ def main(argv):
         }
     elif FLAGS.algo_name == "CoRAL":
         network = {
+            "feature_extractor": feature_extractor,
             "task_classifier": task_classifier,
             "criterion": criterion,
             "task_optimizer": task_optimizer,
+            "feature_optimizer": feature_optimizer,
         }
         config = {
             "num_epochs": 1000,
             "alpha": 1
         }
-    feature_extractor, task_classifier, accs = ALGORYTHMS[FLAGS.algo_name].fit(
+    feature_extractor, task_classifier, _ = ALGORYTHMS[FLAGS.algo_name].fit(
         data, network, **config
     )
-    if FLAGS.algo_name == "CoRAL":
-        feature_extractor = lambda x: x
 
     target_feature_eval = feature_extractor(target_X)
     pred_y_task = task_classifier(target_feature_eval)
