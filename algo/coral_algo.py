@@ -52,9 +52,9 @@ def fit(data, network, **kwargs):
             source_y_task_batch = source_y_task_batch.to(torch.float32)
 
             if is_psuedo_weights:
-                weights = get_psuedo_label_weights(source_Y_batch=source_Y_batch, device=device)
+                weights = get_psuedo_label_weights(source_Y_batch=source_Y_batch, device=device).detach()
             else:
-                weights = 1
+                weights = torch.ones_like(source_y_task_batch)
 
             # 1. Forward
             source_X_batch = feature_extractor(source_X_batch)
@@ -64,7 +64,7 @@ def fit(data, network, **kwargs):
 
             # 1.1 Task Loss
             source_preds = torch.sigmoid(source_out).reshape(-1)
-            criterion_weight = nn.BCELoss(weight=weights.detach())
+            criterion_weight = nn.BCELoss(weight=weights)
             loss_task = criterion_weight(source_preds, source_y_task_batch)
 
             # 1.2 CoRAL Loss
