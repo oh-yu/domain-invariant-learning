@@ -293,7 +293,7 @@ def main(argv):
     df["accs_without_adapt"] = accs_without_adapt
     df["accs_train_on_target"] = accs_train_on_target
     df.to_csv(
-        f"ecodataset_synthetic_experiment_lag{FLAGS.lag_1}_lag{FLAGS.lag_2}_{str(datetime.now())}.csv", index=False
+        f"ecodataset_synthetic_lag{FLAGS.lag_1}_lag{FLAGS.lag_2}_{str(datetime.now())}_{FLAGS.algo_name}.csv", index=False
     )
 
 
