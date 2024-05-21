@@ -40,7 +40,7 @@ def fit(data, network, **kwargs):
     num_epochs = config["num_epochs"]
     alpha = config["alpha"]
     device = config["device"]
-    device = config["is_psuedo_weights"]
+    is_psuedo_weights = config["is_psuedo_weights"]
 
     # Fit
     for epoch in range(1, num_epochs + 1):
