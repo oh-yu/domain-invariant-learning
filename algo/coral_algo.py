@@ -1,6 +1,8 @@
 import torch
+from torch import nn
 
 from ..utils import utils
+from .algo_utils import get_psuedo_label_weights, get_terminal_weights
 
 
 def get_MSE(x, y):
@@ -30,11 +32,13 @@ def fit(data, network, **kwargs):
 
     config = {
         "num_epochs": 1000,
-        "alpha": 1
+        "alpha": 1,
+        "device": utils.DEVICE
     }
     config.update(kwargs)
     num_epochs = config["num_epochs"]
     alpha = config["alpha"]
+    device = config["device"]
 
     # Fit
     for epoch in range(1, num_epochs + 1):
@@ -44,6 +48,7 @@ def fit(data, network, **kwargs):
             # 0. Data
             source_y_task_batch = source_Y_batch[:, utils.COL_IDX_TASK] > 0.5
             source_y_task_batch = source_y_task_batch.to(torch.float32)
+            weights = get_psuedo_label_weights(source_Y_batch=source_Y_batch, device=device)
 
             # 1. Forward
             source_X_batch = feature_extractor(source_X_batch)
@@ -53,7 +58,9 @@ def fit(data, network, **kwargs):
 
             # 1.1 Task Loss
             source_preds = torch.sigmoid(source_out).reshape(-1)
-            loss_task = criterion(source_preds, source_y_task_batch)
+            criterion_weight = nn.BCELoss(weight=weights.detach())
+            loss_task = criterion_weight(source_preds, source_y_task_batch)
+
             # 1.2 CoRAL Loss
             cov_mat_source, cov_mat_target = get_covariance_matrix(source_out, target_out)
             k = source_out.shape[1]
