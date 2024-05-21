@@ -33,12 +33,14 @@ def fit(data, network, **kwargs):
     config = {
         "num_epochs": 1000,
         "alpha": 1,
-        "device": utils.DEVICE
+        "device": utils.DEVICE,
+        "is_psuedo_weights": False
     }
     config.update(kwargs)
     num_epochs = config["num_epochs"]
     alpha = config["alpha"]
     device = config["device"]
+    device = config["is_psuedo_weights"]
 
     # Fit
     for epoch in range(1, num_epochs + 1):
@@ -48,7 +50,11 @@ def fit(data, network, **kwargs):
             # 0. Data
             source_y_task_batch = source_Y_batch[:, utils.COL_IDX_TASK] > 0.5
             source_y_task_batch = source_y_task_batch.to(torch.float32)
-            weights = get_psuedo_label_weights(source_Y_batch=source_Y_batch, device=device)
+
+            if is_psuedo_weights:
+                weights = get_psuedo_label_weights(source_Y_batch=source_Y_batch, device=device)
+            else:
+                weights = 1
 
             # 1. Forward
             source_X_batch = feature_extractor(source_X_batch)

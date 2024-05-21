@@ -185,6 +185,7 @@ class IsihDanns:
             }
             config = {
                 "num_epochs": self.num_epochs_dim2,
+                "is_psuedo_weights": True,
             }      
 
         self.feature_extractor, self.task_classifier_dim2, _ = ALGORYTHMS[FLAGS.algo_name].fit(
