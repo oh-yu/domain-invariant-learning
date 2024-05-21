@@ -39,6 +39,7 @@ def fit(data, network, **kwargs):
     # Fit
     for epoch in range(1, num_epochs + 1):
         task_classifier.train()
+        feature_extractor.train()
         for (source_X_batch, source_Y_batch), (target_X_batch, _) in zip(source_loader, target_loader):
             # 0. Data
             source_y_task_batch = source_Y_batch[:, utils.COL_IDX_TASK] > 0.5
