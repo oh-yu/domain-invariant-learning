@@ -1,3 +1,5 @@
+from typing import List
+
 import torch
 from torch import nn
 
@@ -34,18 +36,33 @@ def fit(data, network, **kwargs):
         "num_epochs": 1000,
         "alpha": 1,
         "device": utils.DEVICE,
-        "is_psuedo_weights": False
+        "is_psuedo_weights": False,
+        "is_changing_lr": False,
+        "epoch_thr_for_changing_lr": 200,
+        "changed_lrs": [0.00005, 0.00005],
     }
     config.update(kwargs)
     num_epochs = config["num_epochs"]
     alpha = config["alpha"]
     device = config["device"]
     is_psuedo_weights = config["is_psuedo_weights"]
+    is_changing_lr = config["is_changing_lr"]
+    epoch_thr_for_changing_lr = config["epoch_thr_for_changing_lr"]
+    changed_lrs = config["changed_lrs"]
 
     # Fit
     for epoch in range(1, num_epochs + 1):
         task_classifier.train()
         feature_extractor.train()
+        if is_changing_lr:
+            feature_optimizer, task_optimizer = _change_lr_during_coral_training(
+                feature_optimizer,
+                task_optimizer,
+                epoch,
+                epoch_thr=epoch_thr_for_changing_lr,
+                changed_lrs=changed_lrs,
+            )
+
         for (source_X_batch, source_Y_batch), (target_X_batch, _) in zip(source_loader, target_loader):
             # 0. Data
             if task_classifier.output_size == 1:
@@ -106,3 +123,16 @@ def fit(data, network, **kwargs):
             if epoch % 10 == 0:
                 print(f"Epoch: {epoch}, Loss Coral: {loss_coral}, Loss Task: {loss_task}, Acc: {acc}")
     return feature_extractor, task_classifier, None
+
+
+def _change_lr_during_coral_training(
+    feature_optimizer: torch.optim.Adam,
+    task_optimizer: torch.optim.Adam,
+    epoch: torch.Tensor,
+    epoch_thr: int = 200,
+    changed_lrs: List[float] = [0.00005],
+):
+    if epoch == epoch_thr:
+        feature_optimizer.param_groups[0]["lr"] = changed_lrs[0]
+        task_optimizer.param_groups[0]["lr"] = changed_lrs[0]
+    return feature_optimizer, task_optimizer

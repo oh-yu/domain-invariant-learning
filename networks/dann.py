@@ -70,7 +70,10 @@ class Dann:
             }
             config = {
                 "num_epochs": self.num_ecochs,
-                "device": self.device
+                "device": self.device,
+                "is_changing_lr": True,
+                "epoch_thr_for_changing_lr": 11,
+                "changed_lrs": [1e-4],
             }
         self.feature_extractor, self.task_classifier, _ = ALGORYTHMS[FLAGS.algo_name].fit(
             data,

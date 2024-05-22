@@ -90,6 +90,7 @@ class Codats:
             }
             config = {
                 "num_epochs": self.num_epochs,
+                "is_changing_lr": self.is_changing_lr
             }
 
 
