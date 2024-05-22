@@ -101,9 +101,7 @@ def fit(data, network, **kwargs):
         with torch.no_grad():
             feature_extractor.eval()
             task_classifier.eval()
-            target_out = task_classifier(feature_extractor(target_X))
-            target_out = torch.sigmoid(target_out).reshape(-1)
-            target_out = target_out > 0.5
+            target_out = task_classifier.predict(feature_extractor(target_X))
             acc = sum(target_out == target_y_task) / len(target_y_task)
             if epoch % 10 == 0:
                 print(f"Epoch: {epoch}, Loss Coral: {loss_coral}, Loss Task: {loss_task}, Acc: {acc}")
