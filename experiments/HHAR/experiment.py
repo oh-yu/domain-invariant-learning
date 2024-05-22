@@ -253,7 +253,7 @@ def main(argv):
     df["Isih-DA(User => Model)"] = isihda_user_accs
     df["CoDATS"] = codats_accs
     df["Without Adapt"] = without_adapt_accs
-    df.to_csv(f"HHAR_experiment_{str(datetime.now())}.csv", index=False)
+    df.to_csv(f"HHAR_{str(datetime.now())}_{FLAGS.algo_name}.csv", index=False)
 
 
 def get_experimental_PAT():
