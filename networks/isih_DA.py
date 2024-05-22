@@ -143,7 +143,9 @@ class IsihDanns:
             }
             config = {
                 "num_epochs": self.num_epochs_dim1,
-                "device": self.device
+                "device": self.device,
+                "stop_during_epochs": self.stop_during_epochs,
+                "epoch_thr_for_stopping": 11
             }
         self.feature_extractor, self.task_classifier_dim1, _ = ALGORYTHMS[FLAGS.algo_name].fit(
             data,
@@ -187,7 +189,9 @@ class IsihDanns:
             config = {
                 "num_epochs": self.num_epochs_dim2,
                 "is_psuedo_weights": True,
-                "device": self.device
+                "device": self.device,
+                "stop_during_epochs": self.stop_during_epochs,
+                "epoch_thr_for_stopping": 2
             }      
 
         self.feature_extractor, self.task_classifier_dim2, _ = ALGORYTHMS[FLAGS.algo_name].fit(

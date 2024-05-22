@@ -40,6 +40,8 @@ def fit(data, network, **kwargs):
         "is_changing_lr": False,
         "epoch_thr_for_changing_lr": 200,
         "changed_lrs": [0.00005, 0.00005],
+        "stop_during_epochs": False,
+        "epoch_thr_for_stopping": 2,
     }
     config.update(kwargs)
     num_epochs = config["num_epochs"]
@@ -49,11 +51,15 @@ def fit(data, network, **kwargs):
     is_changing_lr = config["is_changing_lr"]
     epoch_thr_for_changing_lr = config["epoch_thr_for_changing_lr"]
     changed_lrs = config["changed_lrs"]
+    stop_during_epochs = config["stop_during_epochs"]
+    epoch_thr_for_stopping = config["epoch_thr_for_stopping"]
 
     # Fit
     for epoch in range(1, num_epochs + 1):
         task_classifier.train()
         feature_extractor.train()
+        if stop_during_epochs & (epoch.item() == epoch_thr_for_stopping):
+            break
         if is_changing_lr:
             feature_optimizer, task_optimizer = _change_lr_during_coral_training(
                 feature_optimizer,

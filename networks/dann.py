@@ -74,6 +74,8 @@ class Dann:
                 "is_changing_lr": True,
                 "epoch_thr_for_changing_lr": 11,
                 "changed_lrs": [1e-4],
+                "stop_during_epochs": True,
+                "epoch_thr_for_stopping": 12,
             }
         self.feature_extractor, self.task_classifier, _ = ALGORYTHMS[FLAGS.algo_name].fit(
             data,
