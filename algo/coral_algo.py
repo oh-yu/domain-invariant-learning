@@ -58,7 +58,7 @@ def fit(data, network, **kwargs):
     for epoch in range(1, num_epochs + 1):
         task_classifier.train()
         feature_extractor.train()
-        if stop_during_epochs & (epoch.item() == epoch_thr_for_stopping):
+        if stop_during_epochs & (epoch == epoch_thr_for_stopping):
             break
         if is_changing_lr:
             feature_optimizer, task_optimizer = _change_lr_during_coral_training(
