@@ -56,8 +56,9 @@ def isih_da_house(source_idx: int, target_idx: int, winter_idx: int, summer_idx:
             target_y_task,
         )
         source_loader, target_loader, _, _, _, _ = utils.get_loader(
-            train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True
+            train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True, batch_size=32
         )
+        # Note: batch_size=32, because exploding gradient when batch_size=34(this leads to one sample loss)
 
         test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
         test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
@@ -147,8 +148,9 @@ def isih_da_season(source_idx: int, target_idx: int, winter_idx: int, summer_idx
             target_y_task,
         )
         source_loader, target_loader, _, _, _, _ = utils.get_loader(
-            train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True
+            train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True, batch_size=32
         )
+        # Note: batch_size=32, because exploding gradient when batch_size=34(this leads to one sample loss)
 
         test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
         test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
@@ -424,7 +426,7 @@ def main(argv):
     df["Wtihout_Adapt"] = without_adapt_accs
     df["Train_on_Target"] = train_on_target_accs
     df["Ground Truth Ratio"] = ground_truth_ratios
-    df.to_csv(f"ecodataset_{str(datetime.now())}_{FLAGS.model_name}.csv", index=False)
+    df.to_csv(f"ecodataset_{str(datetime.now())}_{FLAGS.algo_name}.csv", index=False)
 
 
 if __name__ == "__main__":
