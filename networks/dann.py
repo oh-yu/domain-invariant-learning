@@ -1,8 +1,8 @@
-from absl import flags
 import torch
+from absl import flags
 from torch import nn, optim
 
-from ..algo import dann_algo, coral_algo
+from ..algo import coral_algo, dann_algo
 from .conv2d import Conv2d
 from .mlp_decoder_three_layers import ThreeLayersDecoder
 
@@ -12,6 +12,7 @@ ALGORYTHMS = {
     "DANN": dann_algo,
     "CoRAL": coral_algo,
 }
+
 
 class Dann:
     def __init__(self):
@@ -58,7 +59,7 @@ class Dann:
                 "changed_lrs": [1e-4, 1e-6],
                 "stop_during_epochs": True,
                 "epoch_thr_for_stopping": 12,
-                "is_target_weights": self.is_target_weights
+                "is_target_weights": self.is_target_weights,
             }
         elif FLAGS.algo_name == "CoRAL":
             network = {
@@ -77,11 +78,7 @@ class Dann:
                 "stop_during_epochs": True,
                 "epoch_thr_for_stopping": 12,
             }
-        self.feature_extractor, self.task_classifier, _ = ALGORYTHMS[FLAGS.algo_name].fit(
-            data,
-            network,
-            **config
-        )
+        self.feature_extractor, self.task_classifier, _ = ALGORYTHMS[FLAGS.algo_name].fit(data, network, **config)
 
     def predict(self, x):
         return self.task_classifier.predict(self.feature_extractor(x))

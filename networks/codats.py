@@ -1,8 +1,8 @@
-from absl import flags
 import torch
+from absl import flags
 from torch import nn, optim
 
-from ..algo import dann_algo, coral_algo
+from ..algo import coral_algo, dann_algo
 from .conv1d_three_layers import Conv1dThreeLayers
 from .conv1d_two_layers import Conv1dTwoLayers
 from .mlp_decoder_one_layer import OneLayerDecoder
@@ -14,6 +14,7 @@ ALGORYTHMS = {
     "DANN": dann_algo,
     "CoRAL": coral_algo,
 }
+
 
 class Codats:
     """
@@ -78,7 +79,7 @@ class Codats:
             config = {
                 "num_epochs": self.num_epochs,
                 "is_target_weights": self.is_target_weights,
-                "is_changing_lr": self.is_changing_lr
+                "is_changing_lr": self.is_changing_lr,
             }
         elif FLAGS.algo_name == "CoRAL":
             network = {
@@ -88,17 +89,9 @@ class Codats:
                 "feature_optimizer": self.feature_optimizer,
                 "task_optimizer": self.task_optimizer,
             }
-            config = {
-                "num_epochs": self.num_epochs,
-                "is_changing_lr": self.is_changing_lr
-            }
+            config = {"num_epochs": self.num_epochs, "is_changing_lr": self.is_changing_lr}
 
-
-        self.feature_extractor, self.task_classifier, _ = ALGORYTHMS[FLAGS.algo_name].fit(
-            data,
-            network,
-            **config
-        )
+        self.feature_extractor, self.task_classifier, _ = ALGORYTHMS[FLAGS.algo_name].fit(data, network, **config)
 
     def predict(self, x: torch.Tensor) -> torch.Tensor:
         return self.task_classifier.predict(self.feature_extractor(x))

@@ -1,8 +1,8 @@
-from absl import flags
 import torch
+from absl import flags
 from torch import nn, optim
 
-from ..algo import dann_algo, coral_algo
+from ..algo import coral_algo, dann_algo
 from .conv1d_three_layers import Conv1dThreeLayers
 from .conv1d_two_layers import Conv1dTwoLayers
 from .conv2d import Conv2d
@@ -15,6 +15,7 @@ ALGORYTHMS = {
     "DANN": dann_algo,
     "CoRAL": coral_algo,
 }
+
 
 class IsihDanns:
     """
@@ -131,7 +132,7 @@ class IsihDanns:
                 "is_target_weights": self.is_target_weights,
                 "device": self.device,
                 "stop_during_epochs": self.stop_during_epochs,
-                "epoch_thr_for_stopping": 11
+                "epoch_thr_for_stopping": 11,
             }
         elif FLAGS.algo_name == "CoRAL":
             network = {
@@ -145,13 +146,9 @@ class IsihDanns:
                 "num_epochs": self.num_epochs_dim1,
                 "device": self.device,
                 "stop_during_epochs": self.stop_during_epochs,
-                "epoch_thr_for_stopping": 11
+                "epoch_thr_for_stopping": 11,
             }
-        self.feature_extractor, self.task_classifier_dim1, _ = ALGORYTHMS[FLAGS.algo_name].fit(
-            data,
-            network,
-            **config
-        )
+        self.feature_extractor, self.task_classifier_dim1, _ = ALGORYTHMS[FLAGS.algo_name].fit(data, network, **config)
 
     def fit_2nd_dim(self, source_loader, target_loader, test_target_X: torch.Tensor, test_target_y_task: torch.Tensor):
         data = {
@@ -176,7 +173,7 @@ class IsihDanns:
                 "is_target_weights": self.is_target_weights,
                 "device": self.device,
                 "stop_during_epochs": self.stop_during_epochs,
-                "epoch_thr_for_stopping": 2
+                "epoch_thr_for_stopping": 2,
             }
         elif FLAGS.algo_name == "CoRAL":
             network = {
@@ -191,14 +188,10 @@ class IsihDanns:
                 "is_psuedo_weights": True,
                 "device": self.device,
                 "stop_during_epochs": self.stop_during_epochs,
-                "epoch_thr_for_stopping": 2
-            }      
+                "epoch_thr_for_stopping": 2,
+            }
 
-        self.feature_extractor, self.task_classifier_dim2, _ = ALGORYTHMS[FLAGS.algo_name].fit(
-            data,
-            network,
-            **config
-        )
+        self.feature_extractor, self.task_classifier_dim2, _ = ALGORYTHMS[FLAGS.algo_name].fit(data, network, **config)
 
     def predict(self, X: torch.Tensor, is_1st_dim: bool) -> torch.Tensor:
         if is_1st_dim:

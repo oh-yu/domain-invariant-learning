@@ -61,9 +61,7 @@ class Rdann:
         config = {
             "num_epochs": self.num_epochs,
         }
-        self.feature_extractor, self.task_classifier, _ = dann_algo.fit(
-            data, network, **config
-        )
+        self.feature_extractor, self.task_classifier, _ = dann_algo.fit(data, network, **config)
 
     def predict(self, x: torch.Tensor) -> torch.Tensor:
         pred_y_task = self.task_classifier(self.feature_extractor(x))

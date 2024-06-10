@@ -43,9 +43,17 @@ def fit(data, network, **kwargs):
     source_loader, target_loader = data["source_loader"], data["target_loader"]
     target_X, target_y_task = data["target_X"], data["target_y_task"]
 
-    feature_extractor, domain_classifier, task_classifier = network["feature_extractor"], network["domain_classifier"], network["task_classifier"]
+    feature_extractor, domain_classifier, task_classifier = (
+        network["feature_extractor"],
+        network["domain_classifier"],
+        network["task_classifier"],
+    )
     criterion = network["criterion"]
-    feature_optimizer, domain_optimizer, task_optimizer = network["feature_optimizer"], network["domain_optimizer"], network["task_optimizer"]
+    feature_optimizer, domain_optimizer, task_optimizer = (
+        network["feature_optimizer"],
+        network["domain_optimizer"],
+        network["task_optimizer"],
+    )
 
     config = {
         "num_epochs": 1000,
@@ -59,16 +67,23 @@ def fit(data, network, **kwargs):
         "epoch_thr_for_changing_lr": 200,
         "changed_lrs": [0.00005, 0.00005],
         "stop_during_epochs": False,
-        "epoch_thr_for_stopping": 2
+        "epoch_thr_for_stopping": 2,
     }
     config.update(kwargs)
     num_epochs = config["num_epochs"]
-    is_target_weights, is_class_weights, is_psuedo_weights = config["is_target_weights"], config["is_class_weights"], config["is_psuedo_weights"]
+    is_target_weights, is_class_weights, is_psuedo_weights = (
+        config["is_target_weights"],
+        config["is_class_weights"],
+        config["is_psuedo_weights"],
+    )
     do_plot, do_print = config["do_plot"], config["do_print"]
     device = config["device"]
-    is_changing_lr, epoch_thr_for_changing_lr, changed_lrs = config["is_changing_lr"], config["epoch_thr_for_changing_lr"], config["changed_lrs"]
+    is_changing_lr, epoch_thr_for_changing_lr, changed_lrs = (
+        config["is_changing_lr"],
+        config["epoch_thr_for_changing_lr"],
+        config["changed_lrs"],
+    )
     stop_during_epochs, epoch_thr_for_stopping = config["stop_during_epochs"], config["epoch_thr_for_stopping"]
-
 
     # Fit
     reverse_grad = ReverseGradient.apply

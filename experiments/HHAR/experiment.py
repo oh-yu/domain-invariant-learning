@@ -1,8 +1,8 @@
 from datetime import datetime
 
-from absl import app, flags
 import pandas as pd
 import torch
+from absl import app, flags
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from torch.utils.data import DataLoader, TensorDataset
@@ -24,6 +24,7 @@ GYROSCOPE_DF = GYROSCOPE_DF.add_suffix("_gyro")
 FLAGS = flags.FLAGS
 flags.DEFINE_string("algo_name", "DANN", "which algo to be used, DANN or CoRAL")
 flags.DEFINE_integer("num_repeat", 10, "the number of repetitions for hold-out test")
+
 
 class Pattern:
     def __init__(self, source_user, source_model, target_user, target_model):
@@ -259,6 +260,7 @@ def main(argv):
 def get_experimental_PAT():
     import itertools
     import random
+
     combinations = list(itertools.product(USER_LIST, MODEL_LIST))
     valid_combinations = [
         (u1, m1, u2, m2) for (u1, m1), (u2, m2) in itertools.combinations(combinations, 2) if u1 != u2 and m1 != m2

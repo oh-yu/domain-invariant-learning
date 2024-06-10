@@ -62,11 +62,7 @@ def fit(data, network, **kwargs):
             break
         if is_changing_lr:
             feature_optimizer, task_optimizer = _change_lr_during_coral_training(
-                feature_optimizer,
-                task_optimizer,
-                epoch,
-                epoch_thr=epoch_thr_for_changing_lr,
-                changed_lrs=changed_lrs,
+                feature_optimizer, task_optimizer, epoch, epoch_thr=epoch_thr_for_changing_lr, changed_lrs=changed_lrs,
             )
 
         for (source_X_batch, source_Y_batch), (target_X_batch, _) in zip(source_loader, target_loader):

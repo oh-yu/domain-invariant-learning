@@ -5,7 +5,7 @@ from absl import app, flags
 from sklearn.datasets import make_moons
 from torch import nn, optim
 
-from ...algo import dann_algo, coral_algo
+from ...algo import coral_algo, dann_algo
 from ...networks import Encoder, ThreeLayersDecoder
 from ...utils import utils
 
@@ -21,6 +21,7 @@ ALGORYTHMS = {
     "DANN": dann_algo,
     "CoRAL": coral_algo,
 }
+
 
 def get_source_target_from_make_moons(n_samples=100, noise=0.05, rotation_degree=-30):
     # pylint: disable=too-many-locals
@@ -143,13 +144,8 @@ def main(argv):
             "task_optimizer": task_optimizer,
             "feature_optimizer": feature_optimizer,
         }
-        config = {
-            "num_epochs": 1000,
-            "alpha": 1
-        }
-    feature_extractor, task_classifier, _ = ALGORYTHMS[FLAGS.algo_name].fit(
-        data, network, **config
-    )
+        config = {"num_epochs": 1000, "alpha": 1}
+    feature_extractor, task_classifier, _ = ALGORYTHMS[FLAGS.algo_name].fit(data, network, **config)
 
     target_feature_eval = feature_extractor(target_X)
     pred_y_task = task_classifier(target_feature_eval)

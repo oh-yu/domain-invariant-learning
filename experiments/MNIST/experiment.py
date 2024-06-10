@@ -1,17 +1,19 @@
 from datetime import datetime
 
-from absl import app, flags
 import pandas as pd
 import torch
 import torchvision
+from absl import app, flags
 from torch.utils.data import DataLoader, TensorDataset
 from torchvision import datasets, transforms
 from torchvision.datasets import ImageFolder
 
 from ...networks import Dann, Dann_F_C, IsihDanns
+
 FLAGS = flags.FLAGS
 flags.DEFINE_string("algo_name", "DANN", "which algo to be used, DANN or CoRAL")
 flags.DEFINE_integer("num_repeats", 10, "the number of repetitions for hold-out test")
+
 
 class Reshape(object):
     def __call__(self, img):
