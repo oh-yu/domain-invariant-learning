@@ -3,11 +3,16 @@ from datetime import datetime
 import pandas as pd
 import torch
 import torchvision
+from absl import app, flags
 from torch.utils.data import DataLoader, TensorDataset
 from torchvision import datasets, transforms
 from torchvision.datasets import ImageFolder
 
 from ...networks import Dann, Dann_F_C, IsihDanns
+
+FLAGS = flags.FLAGS
+flags.DEFINE_string("algo_name", "DANN", "which algo to be used, DANN or CoRAL")
+flags.DEFINE_integer("num_repeats", 10, "the number of repetitions for hold-out test")
 
 
 class Reshape(object):
@@ -191,7 +196,8 @@ def train_on_target():
     return acc.item()
 
 
-def main(num_repeats=1):
+def main(argv):
+    num_repeats = FLAGS.num_repeats
     isih_da_acc = 0
     dann_acc = 0
     without_adapt_acc = 0
@@ -212,7 +218,7 @@ def main(num_repeats=1):
     df["DANN"] = [dann_acc]
     df["Without Adapt"] = [without_adapt_acc]
     df["Train on Target"] = [train_on_target_acc]
-    df.to_csv(f"MNIST_experiment_{str(datetime.now())}", index=False)
+    df.to_csv(f"MNIST_{str(datetime.now())}_{FLAGS.algo_name}", index=False)
 
 
 MNIST = get_image_data_for_uda("MNIST")
@@ -221,4 +227,4 @@ SVHN = get_image_data_for_uda("SVHN")
 SVHN_TRAIN_ON_TARGET = get_image_data_for_uda("SVHN-trainontarget")
 
 if __name__ == "__main__":
-    main()
+    app.run(main)

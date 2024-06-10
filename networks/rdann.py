@@ -4,7 +4,7 @@ from torch import nn, optim
 
 from networks.mlp_decoder_three_layers import ThreeLayersDecoder
 
-from ..algo import algo
+from ..algo import dann_algo
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -43,20 +43,25 @@ class Rdann:
         test_target_X: torch.Tensor,
         test_target_y_task: torch.Tensor,
     ) -> None:
-        self.feature_extractor, self.task_classifier, _ = algo.fit(
-            source_loader,
-            target_loader,
-            test_target_X,
-            test_target_y_task,
-            self.feature_extractor,
-            self.domain_classifier,
-            self.task_classifier,
-            self.criterion,
-            self.feature_optimizer,
-            self.domain_optimizer,
-            self.task_optimizer,
-            num_epochs=self.num_epochs,
-        )
+        data = {
+            "source_loader": source_loader,
+            "target_loader": target_loader,
+            "target_X": test_target_X,
+            "target_y_task": test_target_y_task,
+        }
+        network = {
+            "feature_extractor": self.feature_extractor,
+            "domain_classifier": self.domain_classifier,
+            "task_classifier": self.task_classifier,
+            "criterion": self.criterion,
+            "feature_optimizer": self.feature_optimizer,
+            "domain_optimizer": self.domain_optimizer,
+            "task_optimizer": self.task_optimizer,
+        }
+        config = {
+            "num_epochs": self.num_epochs,
+        }
+        self.feature_extractor, self.task_classifier, _ = dann_algo.fit(data, network, **config)
 
     def predict(self, x: torch.Tensor) -> torch.Tensor:
         pred_y_task = self.task_classifier(self.feature_extractor(x))
