@@ -76,7 +76,7 @@ def fit(data, network, **kwargs):
         config["is_class_weights"],
         config["is_psuedo_weights"],
     )
-    do_plot, do_print = config["do_plot"], config["do_print"]
+    do_plot, _ = config["do_plot"], config["do_print"]
     device = config["device"]
     is_changing_lr, epoch_thr_for_changing_lr, changed_lrs = (
         config["is_changing_lr"],

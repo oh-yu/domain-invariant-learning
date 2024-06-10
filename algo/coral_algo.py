@@ -4,7 +4,7 @@ import torch
 from torch import nn
 
 from ..utils import utils
-from .algo_utils import get_psuedo_label_weights, get_terminal_weights
+from .algo_utils import get_psuedo_label_weights
 
 
 def get_MSE(x, y):
@@ -28,7 +28,6 @@ def fit(data, network, **kwargs):
 
     feature_extractor = network["feature_extractor"]
     task_classifier = network["task_classifier"]
-    criterion = network["criterion"]
     task_optimizer = network["task_optimizer"]
     feature_optimizer = network["feature_optimizer"]
 
