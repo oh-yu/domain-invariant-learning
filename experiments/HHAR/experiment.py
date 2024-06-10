@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from absl import app, flags
 import pandas as pd
 import torch
 from sklearn.model_selection import train_test_split
@@ -20,7 +21,9 @@ GYROSCOPE_DF = pd.read_csv(
     "./domain-invariant-learning/experiments/HHAR/data/heterogeneity+activity+recognition/Activity recognition exp/Activity recognition exp/Phones_gyroscope.csv"
 )
 GYROSCOPE_DF = GYROSCOPE_DF.add_suffix("_gyro")
-
+FLAGS = flags.FLAGS
+flags.DEFINE_string("algo_name", "DANN", "which algo to be used, DANN or CoRAL")
+flags.DEFINE_integer("num_repeat", 10, "the number of repetitions for hold-out test")
 
 class Pattern:
     def __init__(self, source_user, source_model, target_user, target_model):
@@ -215,15 +218,16 @@ def train_on_target(pattern):
     return acc.item()
 
 
-def main(patterns, num_repeat=10):
+def main(argv):
     train_on_taget_accs = []
     isihda_model_accs = []
     isihda_user_accs = []
     codats_accs = []
     without_adapt_accs = []
     executed_patterns = []
+    num_repeat = FLAGS.num_repeat
 
-    for pat in patterns:
+    for pat in get_experimental_PAT():
         train_on_taget_acc = 0
         isihda_model_acc = 0
         isihda_user_acc = 0
@@ -249,13 +253,12 @@ def main(patterns, num_repeat=10):
     df["Isih-DA(User => Model)"] = isihda_user_accs
     df["CoDATS"] = codats_accs
     df["Without Adapt"] = without_adapt_accs
-    df.to_csv(f"HHAR_experiment_{str(datetime.now())}.csv", index=False)
+    df.to_csv(f"HHAR_{str(datetime.now())}_{FLAGS.algo_name}.csv", index=False)
 
 
-if __name__ == "__main__":
+def get_experimental_PAT():
     import itertools
     import random
-
     combinations = list(itertools.product(USER_LIST, MODEL_LIST))
     valid_combinations = [
         (u1, m1, u2, m2) for (u1, m1), (u2, m2) in itertools.combinations(combinations, 2) if u1 != u2 and m1 != m2
@@ -265,4 +268,8 @@ if __name__ == "__main__":
         for u1, m1, u2, m2 in valid_combinations
     ]
     sampled_patterns = random.sample(patterns, 16)
-    main(sampled_patterns)
+    return sampled_patterns
+
+
+if __name__ == "__main__":
+    app.run(main)

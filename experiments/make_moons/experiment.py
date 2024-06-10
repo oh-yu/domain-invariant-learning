@@ -5,15 +5,22 @@ from absl import app, flags
 from sklearn.datasets import make_moons
 from torch import nn, optim
 
-from ...algo import algo
+from ...algo import dann_algo, coral_algo
 from ...networks import Encoder, ThreeLayersDecoder
 from ...utils import utils
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 FLAGS = flags.FLAGS
 flags.DEFINE_integer("rotation_degree", -30, "rotation degree for target data")
+flags.DEFINE_string("algo_name", "DANN", "Which algo to use, DANN or CoRAL")
 flags.mark_flag_as_required("rotation_degree")
+flags.mark_flag_as_required("algo_name")
 
+
+ALGORYTHMS = {
+    "DANN": dann_algo,
+    "CoRAL": coral_algo,
+}
 
 def get_source_target_from_make_moons(n_samples=100, noise=0.05, rotation_degree=-30):
     # pylint: disable=too-many-locals
@@ -104,25 +111,46 @@ def main(argv):
 
     # Domain Invariant Learning
     num_epochs = 1000
-    feature_extractor, task_classifier, accs = algo.fit(
-        source_loader,
-        target_loader,
-        target_X,
-        target_y_task,
-        feature_extractor,
-        domain_classifier,
-        task_classifier,
-        criterion,
-        feature_optimizer,
-        domain_optimizer,
-        task_optimizer,
-        num_epochs=num_epochs,
-        do_plot=True,
-        is_changing_lr=True,
-        epoch_thr_for_changing_lr=200,
-        changed_lrs=[0.00005, 0.00005],
-        is_target_weights=True,
+    data = {
+        "source_loader": source_loader,
+        "target_loader": target_loader,
+        "target_X": target_X,
+        "target_y_task": target_y_task,
+    }
+    if FLAGS.algo_name == "DANN":
+        network = {
+            "feature_extractor": feature_extractor,
+            "domain_classifier": domain_classifier,
+            "task_classifier": task_classifier,
+            "criterion": criterion,
+            "feature_optimizer": feature_optimizer,
+            "domain_optimizer": domain_optimizer,
+            "task_optimizer": task_optimizer,
+        }
+        config = {
+            "num_epochs": 1000,
+            "do_plot": True,
+            "is_changing_lr": True,
+            "epoch_thr_for_changing_lr": 200,
+            "changed_lrs": [0.00005, 0.00005],
+            "is_target_weights": True,
+        }
+    elif FLAGS.algo_name == "CoRAL":
+        network = {
+            "feature_extractor": feature_extractor,
+            "task_classifier": task_classifier,
+            "criterion": criterion,
+            "task_optimizer": task_optimizer,
+            "feature_optimizer": feature_optimizer,
+        }
+        config = {
+            "num_epochs": 1000,
+            "alpha": 1
+        }
+    feature_extractor, task_classifier, _ = ALGORYTHMS[FLAGS.algo_name].fit(
+        data, network, **config
     )
+
     target_feature_eval = feature_extractor(target_X)
     pred_y_task = task_classifier(target_feature_eval)
     pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)

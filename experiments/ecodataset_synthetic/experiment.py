@@ -25,6 +25,7 @@ LAG_NUM_TO_TIME_LIST = {
 FLAGS = flags.FLAGS
 flags.DEFINE_integer("lag_1", 1, "time lag for intermediate domain")
 flags.DEFINE_integer("lag_2", 6, "time lag for terminal domain")
+flags.DEFINE_string("algo_name", "DANN", "which algo to be used, DANN or CoRAL")
 flags.mark_flag_as_required("lag_1")
 flags.mark_flag_as_required("lag_2")
 
@@ -73,8 +74,9 @@ def isih_da(source_idx=2, season_idx=0, num_repeats: int = 10):
             target_y_task,
         )
         source_loader, target_loader, train_source_y_task, train_source_X, _, _ = utils.get_loader(
-            train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True
+            train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True, batch_size=32
         )
+        # Note: batch_size=32, because exploding gradient when batch_size=34(this leads to one sample loss)
 
         test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
         test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
@@ -292,7 +294,7 @@ def main(argv):
     df["accs_without_adapt"] = accs_without_adapt
     df["accs_train_on_target"] = accs_train_on_target
     df.to_csv(
-        f"ecodataset_synthetic_experiment_lag{FLAGS.lag_1}_lag{FLAGS.lag_2}_{str(datetime.now())}.csv", index=False
+        f"ecodataset_synthetic_lag{FLAGS.lag_1}_lag{FLAGS.lag_2}_{str(datetime.now())}_{FLAGS.algo_name}.csv", index=False
     )
 
 

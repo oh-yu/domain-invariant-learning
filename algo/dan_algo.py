@@ -27,7 +27,7 @@ def get_MMD(x, y):
     return mmd_xx + mmd_yy + mmd_xy
 
 
-def fit_dan(
+def fit(
     source_loader,
     target_loader,
     num_epochs,
@@ -131,7 +131,7 @@ if __name__ == "__main__":
     task_optimizer_source = optim.Adam(task_classifier_source.parameters(), lr=learning_rate)
 
     # Fit DAN
-    feature_extractor, task_classifier = fit_dan(
+    feature_extractor, task_classifier = fit(
         source_loader=source_loader,
         target_loader=target_loader,
         num_epochs=100,

@@ -1,12 +1,17 @@
+from absl import flags
 import torch
 from torch import nn, optim
 
-from ..algo import algo
+from ..algo import dann_algo, coral_algo
 from .conv2d import Conv2d
 from .mlp_decoder_three_layers import ThreeLayersDecoder
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
+FLAGS = flags.FLAGS
+ALGORYTHMS = {
+    "DANN": dann_algo,
+    "CoRAL": coral_algo,
+}
 
 class Dann:
     def __init__(self):
@@ -29,26 +34,53 @@ class Dann:
         self.is_target_weights = False
 
     def fit(self, source_loader, target_loader, test_target_X, test_target_y_task):
-        self.feature_extractor, self.task_classifier, _ = algo.fit(
-            source_loader,
-            target_loader,
-            test_target_X,
-            test_target_y_task,
-            self.feature_extractor,
-            self.domain_classifier,
-            self.task_classifier,
-            self.domain_criterion,
-            self.feature_otimizer,
-            self.domain_optimzier,
-            self.task_optimizer,
-            num_epochs=self.num_ecochs,
-            device=self.device,
-            is_changing_lr=True,
-            epoch_thr_for_changing_lr=11,
-            changed_lrs=[1e-4, 1e-6],
-            stop_during_epochs=True,
-            epoch_thr_for_stopping=12,
-            is_target_weights=self.is_target_weights,
+        data = {
+            "source_loader": source_loader,
+            "target_loader": target_loader,
+            "target_X": test_target_X,
+            "target_y_task": test_target_y_task,
+        }
+        if FLAGS.algo_name == "DANN":
+            network = {
+                "feature_extractor": self.feature_extractor,
+                "domain_classifier": self.domain_classifier,
+                "task_classifier": self.task_classifier,
+                "criterion": self.domain_criterion,
+                "feature_optimizer": self.feature_otimizer,
+                "domain_optimizer": self.domain_optimzier,
+                "task_optimizer": self.task_optimizer,
+            }
+            config = {
+                "num_epochs": self.num_ecochs,
+                "device": self.device,
+                "is_changing_lr": True,
+                "epoch_thr_for_changing_lr": 11,
+                "changed_lrs": [1e-4, 1e-6],
+                "stop_during_epochs": True,
+                "epoch_thr_for_stopping": 12,
+                "is_target_weights": self.is_target_weights
+            }
+        elif FLAGS.algo_name == "CoRAL":
+            network = {
+                "feature_extractor": self.feature_extractor,
+                "task_classifier": self.task_classifier,
+                "criterion": self.domain_criterion,
+                "feature_optimizer": self.feature_otimizer,
+                "task_optimizer": self.task_optimizer,
+            }
+            config = {
+                "num_epochs": self.num_ecochs,
+                "device": self.device,
+                "is_changing_lr": True,
+                "epoch_thr_for_changing_lr": 11,
+                "changed_lrs": [1e-4],
+                "stop_during_epochs": True,
+                "epoch_thr_for_stopping": 12,
+            }
+        self.feature_extractor, self.task_classifier, _ = ALGORYTHMS[FLAGS.algo_name].fit(
+            data,
+            network,
+            **config
         )
 
     def predict(self, x):
