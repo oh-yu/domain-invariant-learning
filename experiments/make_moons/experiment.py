@@ -84,11 +84,11 @@ def get_source_target_from_make_moons(n_samples=100, noise=0.05, rotation_degree
 
 def main(argv):
     # Prepare Data
-    (source_X, target_X, source_y_task, target_y_task, x_grid, x1_grid, x2_grid,) = get_source_target_from_make_moons(
+    (source_X, target_prime_X, source_y_task, target_prime_y_task, x_grid, x1_grid, x2_grid,) = get_source_target_from_make_moons(
         rotation_degree=FLAGS.rotation_degree
     )
-    source_loader, target_loader, source_y_task, source_X, target_X, target_y_task = utils.get_loader(
-        source_X, target_X, source_y_task, target_y_task
+    source_loader, target_prime_loader, source_y_task, source_X, target_prime_X, target_prime_y_task = utils.get_loader(
+        source_X, target_prime_X, source_y_task, target_prime_y_task
     )
 
     # Instantiate Feature Extractor, Domain Classifier, Task Classifier
@@ -114,9 +114,9 @@ def main(argv):
     num_epochs = 1000
     data = {
         "source_loader": source_loader,
-        "target_loader": target_loader,
-        "target_X": target_X,
-        "target_y_task": target_y_task,
+        "target_loader": target_prime_loader,
+        "target_X": target_prime_X,
+        "target_y_task": target_prime_y_task,
     }
     if FLAGS.algo_name == "DANN":
         network = {
@@ -147,16 +147,16 @@ def main(argv):
         config = {"num_epochs": 1000, "alpha": 1}
     feature_extractor, task_classifier, _ = ALGORYTHMS[FLAGS.algo_name].fit(data, network, **config)
 
-    target_feature_eval = feature_extractor(target_X)
-    pred_y_task = task_classifier(target_feature_eval)
+    target_prime_feature_eval = feature_extractor(target_prime_X)
+    pred_y_task = task_classifier(target_prime_feature_eval)
     pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
     pred_y_task = pred_y_task > 0.5
 
-    acc = sum(pred_y_task == target_y_task) / target_y_task.shape[0]
+    acc = sum(pred_y_task == target_prime_y_task) / target_prime_y_task.shape[0]
     print(f"Accuracy:{acc}")
 
     source_X = source_X.cpu()
-    target_X = target_X.cpu()
+    target_prime_X = target_prime_X.cpu()
 
     x_grid = torch.tensor(x_grid, dtype=torch.float32)
     x_grid = x_grid.to(device)
@@ -171,7 +171,7 @@ def main(argv):
     plt.xlabel("X1")
     plt.ylabel("X2")
     plt.scatter(source_X[:, 0], source_X[:, 1], c=source_y_task)
-    plt.scatter(target_X[:, 0], target_X[:, 1], c="black")
+    plt.scatter(target_prime_X[:, 0], target_prime_X[:, 1], c="black")
     plt.contourf(x1_grid, x2_grid, y_grid.reshape(100, 100), alpha=0.3)
     plt.colorbar()
     plt.show()
@@ -184,10 +184,10 @@ def main(argv):
     task_classifier = utils.fit_without_adaptation(
         source_loader, task_classifier, task_optimizer, criterion, num_epochs
     )
-    pred_y_task = task_classifier(target_X.to(device))
+    pred_y_task = task_classifier(target_prime_X.to(device))
     pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
     pred_y_task = pred_y_task > 0.5
-    acc = sum(pred_y_task == target_y_task) / target_y_task.shape[0]
+    acc = sum(pred_y_task == target_prime_y_task) / target_prime_y_task.shape[0]
     print(f"Without Adaptation Accuracy:{acc}")
 
     y_grid = task_classifier(x_grid.T)
@@ -199,17 +199,17 @@ def main(argv):
     plt.xlabel("X1")
     plt.ylabel("X2")
     plt.scatter(source_X[:, 0], source_X[:, 1], c=source_y_task)
-    plt.scatter(target_X[:, 0], target_X[:, 1], c="black")
+    plt.scatter(target_prime_X[:, 0], target_prime_X[:, 1], c="black")
     plt.contourf(x1_grid, x2_grid, y_grid.reshape(100, 100), alpha=0.3)
     plt.colorbar()
     plt.show()
 
     # t-SNE Visualization for Extracted Feature
-    target_feature_eval = target_feature_eval.cpu().detach().numpy()
+    target_prime_feature_eval = target_prime_feature_eval.cpu().detach().numpy()
     source_feature = feature_extractor(source_X.to(device))
     source_feature = source_feature.cpu().detach().numpy()
 
-    utils.visualize_tSNE(target_feature_eval, source_feature)
+    utils.visualize_tSNE(target_prime_feature_eval, source_feature)
 
 
 if __name__ == "__main__":
