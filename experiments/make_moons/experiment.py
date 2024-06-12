@@ -4,6 +4,7 @@ import torch
 from absl import app, flags
 from sklearn.datasets import make_moons
 from torch import nn, optim
+from torch.utils.data import DataLoader, TensorDataset
 
 from ...algo import coral_algo, dann_algo
 from ...networks import Encoder, ThreeLayersDecoder
@@ -85,13 +86,20 @@ def get_source_target_from_make_moons(n_samples=100, noise=0.05, rotation_degree
 def main(argv):
     # Prepare Data
     (source_X, target_prime_X, source_y_task, target_prime_y_task, x_grid, x1_grid, x2_grid,) = get_source_target_from_make_moons(
+        rotation_degree=FLAGS.rotation_degree*2
+    )
+    (_, target_X, _, target_y_task, _, _, _,) = get_source_target_from_make_moons(
         rotation_degree=FLAGS.rotation_degree
     )
     source_loader, target_prime_loader, source_y_task, source_X, target_prime_X, target_prime_y_task = utils.get_loader(
         source_X, target_prime_X, source_y_task, target_prime_y_task
     )
+    target_X = torch.tensor(target_X, dtype=torch.float32).to(utils.DEVICE)
+    target_y_task = torch.tensor(target_y_task, dtype=torch.float32).to(utils.DEVICE)
+    target_ds = TensorDataset(target_X, torch.ones_like(target_y_task))
+    target_loader = DataLoader(target_ds, batch_size=34, shuffle=False)
 
-    # Instantiate Feature Extractor, Domain Classifier, Task Classifier
+    # Domain Invariant Learning
     hidden_size = 10
     num_domains = 1
     num_classes = 1
@@ -110,7 +118,7 @@ def main(argv):
     domain_optimizer = optim.Adam(domain_classifier.parameters(), lr=learning_rate)
     task_optimizer = optim.Adam(task_classifier.parameters(), lr=learning_rate)
 
-    # Domain Invariant Learning
+    
     num_epochs = 1000
     data = {
         "source_loader": source_loader,
@@ -153,7 +161,7 @@ def main(argv):
     pred_y_task = pred_y_task > 0.5
 
     acc = sum(pred_y_task == target_prime_y_task) / target_prime_y_task.shape[0]
-    print(f"Accuracy:{acc}")
+    print(f"DANNs Accuracy:{acc}")
 
     source_X = source_X.cpu()
     target_prime_X = target_prime_X.cpu()
@@ -175,6 +183,123 @@ def main(argv):
     plt.contourf(x1_grid, x2_grid, y_grid.reshape(100, 100), alpha=0.3)
     plt.colorbar()
     plt.show()
+
+    # step-by-step DANNs
+    num_epochs = 500
+
+
+    hidden_size = 10
+    num_domains = 1
+    num_classes = 1
+    feature_extractor_dim12 = Encoder(input_size=source_X.shape[1], output_size=hidden_size).to(device)
+    domain_classifier_dim1 = ThreeLayersDecoder(
+        input_size=hidden_size, output_size=num_domains, dropout_ratio=0, fc1_size=50, fc2_size=10
+    ).to(device)
+    task_classifier_dim1 = ThreeLayersDecoder(
+        input_size=hidden_size, output_size=num_classes, dropout_ratio=0, fc1_size=50, fc2_size=10
+    ).to(device) 
+    domain_classifier_dim2 = ThreeLayersDecoder(
+        input_size=hidden_size, output_size=num_domains, dropout_ratio=0, fc1_size=50, fc2_size=10
+    ).to(device)
+    task_classifier_dim2 = ThreeLayersDecoder(
+        input_size=hidden_size, output_size=num_classes, dropout_ratio=0, fc1_size=50, fc2_size=10
+    ).to(device) 
+
+    criterion = nn.BCELoss()
+    feature_optimizer_dim1 = optim.Adam(feature_extractor_dim12.parameters(), lr=0.001)
+    domain_optimizer_dim1 = optim.Adam(domain_classifier_dim1.parameters(), lr=0.001)
+    task_optimizer_dim1 = optim.Adam(task_classifier_dim1.parameters(), lr=0.001)
+    feature_optimizer_dim2 = optim.Adam(feature_extractor_dim12.parameters(), lr=0.00005)
+    domain_optimizer_dim2 = optim.Adam(domain_classifier_dim2.parameters(), lr=0.00005)
+    task_optimizer_dim2 = optim.Adam(task_classifier_dim2.parameters(), lr=0.00005)
+    ## 1st dim
+
+    data = {
+        "source_loader": source_loader,
+        "target_loader": target_loader,
+        "target_X": target_X,
+        "target_y_task": target_y_task,
+    }
+
+    if FLAGS.algo_name == "DANN":
+        network = {
+            "feature_extractor": feature_extractor_dim12,
+            "domain_classifier": domain_classifier_dim1,
+            "task_classifier": task_classifier_dim1,
+            "criterion": criterion,
+            "feature_optimizer": feature_optimizer_dim1,
+            "domain_optimizer": domain_optimizer_dim1,
+            "task_optimizer": task_optimizer_dim1,
+        }
+        config = {
+            "num_epochs": 200,
+            "do_plot": True,
+            "is_target_weights": True,
+        }
+    
+    elif FLAGS.algo_name == "CoRAL":
+        network = {
+            "feature_extractor": feature_extractor_dim12,
+            "task_classifier": task_classifier_dim1,
+            "criterion": criterion,
+            "task_optimizer": task_optimizer_dim1,
+            "feature_optimizer": feature_optimizer_dim1,
+        }
+        config = {"num_epochs": 200, "alpha": 1}
+    feature_extractor_dim12, task_classifier_dim1, _ = ALGORYTHMS[FLAGS.algo_name].fit(data, network, **config)
+
+    target_feature_eval = feature_extractor_dim12(target_X)
+    pred_y_task = task_classifier_dim1(target_feature_eval)
+    pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
+
+    
+    ## 2nd dim
+    target_ds = TensorDataset(target_X, torch.cat([target_y_task.reshape(-1, 1), torch.ones_like(target_y_task).reshape(-1, 1)], dim=1))
+    target_loader = DataLoader(target_ds, batch_size=34, shuffle=False)
+
+    data = {
+        "source_loader": target_loader,
+        "target_loader": target_prime_loader,
+        "target_X": target_prime_X.to(utils.DEVICE),
+        "target_y_task": target_prime_y_task,
+    }
+    if FLAGS.algo_name == "DANN":
+        network = {
+            "feature_extractor": feature_extractor_dim12,
+            "domain_classifier": domain_classifier_dim2,
+            "task_classifier": task_classifier_dim2,
+            "criterion": criterion,
+            "feature_optimizer": feature_optimizer_dim2,
+            "domain_optimizer": domain_optimizer_dim2,
+            "task_optimizer": task_optimizer_dim2,
+        }
+        config = {
+            "num_epochs": 800,
+            "do_plot": True,
+            "is_target_weights": True,
+            "is_psuedo_weights": True
+        }
+    
+    elif FLAGS.algo_name == "CoRAL":
+        network = {
+            "feature_extractor": feature_extractor_dim12,
+            "task_classifier": task_classifier_dim2,
+            "criterion": criterion,
+            "task_optimizer": task_optimizer_dim2,
+            "feature_optimizer": feature_optimizer_dim2,
+        }
+        config = {"num_epochs": 800, "alpha": 1, "is_psuedo_weights": True}
+
+    feature_extractor_dim12, task_classifier_dim2, _ = ALGORYTHMS[FLAGS.algo_name].fit(data, network, **config)
+
+    ## Eval
+    pred_y_task = task_classifier_dim2(feature_extractor_dim12(target_prime_X.to(utils.DEVICE)))
+    pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
+    pred_y_task = pred_y_task > 0.5
+    acc = sum(pred_y_task == target_prime_y_task) / target_prime_y_task.shape[0]
+    print(f"step-by-step DANNs Accuracy:{acc}")
+
+
 
     # Without Adaptation
     task_classifier = ThreeLayersDecoder(
