@@ -1,5 +1,8 @@
+from datetime import datetime
+
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import torch
 from absl import app, flags
 from sklearn.datasets import make_moons
@@ -124,8 +127,8 @@ def main(argv):
     pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
     pred_y_task = pred_y_task > 0.5
 
-    acc = sum(pred_y_task == target_prime_y_task) / target_prime_y_task.shape[0]
-    print(f"DANNs Accuracy:{acc}")
+    dann_acc = sum(pred_y_task == target_prime_y_task) / target_prime_y_task.shape[0]
+    print(f"DANNs Accuracy:{dann_acc}")
 
     source_X = source_X.cpu()
     target_prime_X = target_prime_X.cpu()
@@ -215,7 +218,7 @@ def main(argv):
 
     
     ## 2nd dim
-    target_ds = TensorDataset(target_X, torch.cat([pred_y_task.reshape(-1, 1), torch.ones_like(target_y_task).reshape(-1, 1)], dim=1))
+    target_ds = TensorDataset(target_X, torch.cat([pred_y_task.detach().reshape(-1, 1), torch.ones_like(target_y_task).reshape(-1, 1)], dim=1))
     target_loader = DataLoader(target_ds, batch_size=34, shuffle=False)
 
     data = {
@@ -257,8 +260,8 @@ def main(argv):
     pred_y_task = task_classifier_dim2(feature_extractor_dim12(target_prime_X.to(utils.DEVICE)))
     pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
     pred_y_task = pred_y_task > 0.5
-    acc = sum(pred_y_task == target_prime_y_task) / target_prime_y_task.shape[0]
-    print(f"step-by-step DANNs Accuracy:{acc}")
+    stepbystep_dann_acc = sum(pred_y_task == target_prime_y_task) / target_prime_y_task.shape[0]
+    print(f"step-by-step DANNs Accuracy:{stepbystep_dann_acc}")
 
 
     x_grid_feature = feature_extractor_dim12(x_grid.T)
@@ -288,8 +291,8 @@ def main(argv):
     pred_y_task = task_classifier(target_prime_X.to(device))
     pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
     pred_y_task = pred_y_task > 0.5
-    acc = sum(pred_y_task == target_prime_y_task) / target_prime_y_task.shape[0]
-    print(f"Without Adaptation Accuracy:{acc}")
+    without_adapt_acc = sum(pred_y_task == target_prime_y_task) / target_prime_y_task.shape[0]
+    print(f"Without Adaptation Accuracy:{without_adapt_acc}")
 
     y_grid = task_classifier(x_grid.T)
     y_grid = torch.sigmoid(y_grid)
@@ -311,6 +314,14 @@ def main(argv):
     source_feature = source_feature.cpu().detach().numpy()
 
     utils.visualize_tSNE(target_prime_feature_eval, source_feature)
+
+    # to csv
+    df = pd.DataFrame()
+    df["stepbystep-DANNs"] = [stepbystep_dann_acc]
+    df["DANNs"] = [dann_acc]
+    df["WithoutAdapt"] = [without_adapt_acc]
+    df.to_csv(f"make_moons_{str(datetime.now())}_{FLAGS.algo_name}.csv", index=False)
+
 
 
 if __name__ == "__main__":
