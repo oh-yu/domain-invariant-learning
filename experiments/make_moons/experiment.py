@@ -64,7 +64,7 @@ def main(argv):
     target_ds = TensorDataset(target_X, torch.ones_like(target_y_task))
     target_loader = DataLoader(target_ds, batch_size=34, shuffle=False)
 
-    # Domain Invariant Learning
+    # DANNs
     hidden_size = 10
     num_domains = 1
     num_classes = 1
