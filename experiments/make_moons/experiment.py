@@ -84,7 +84,6 @@ def main(argv):
     task_optimizer = optim.Adam(task_classifier.parameters(), lr=learning_rate)
 
     
-    num_epochs = 1000
     data = {
         "source_loader": source_loader,
         "target_loader": target_prime_loader,
@@ -150,9 +149,6 @@ def main(argv):
     plt.show()
 
     # step-by-step DANNs
-    num_epochs = 500
-
-
     hidden_size = 10
     num_domains = 1
     num_classes = 1
@@ -287,7 +283,7 @@ def main(argv):
     ).to(device)
     task_optimizer = optim.Adam(task_classifier.parameters(), lr=learning_rate)
     task_classifier = utils.fit_without_adaptation(
-        source_loader, task_classifier, task_optimizer, criterion, num_epochs
+        source_loader, task_classifier, task_optimizer, criterion, 1000
     )
     pred_y_task = task_classifier(target_prime_X.to(device))
     pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
