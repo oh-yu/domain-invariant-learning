@@ -119,7 +119,13 @@ def main(argv):
             "task_optimizer": task_optimizer,
             "feature_optimizer": feature_optimizer,
         }
-        config = {"num_epochs": 1000, "alpha": 1}
+        config = {
+            "num_epochs": 1000, 
+            "alpha": 1,
+            "is_changing_lr": True,
+            "epoch_thr_for_changing_lr": 200,
+            "changed_lrs": [0.00005, 0.00005],
+        }
     feature_extractor, task_classifier, _ = ALGORYTHMS[FLAGS.algo_name].fit(data, network, **config)
 
     target_prime_feature_eval = feature_extractor(target_prime_X)
