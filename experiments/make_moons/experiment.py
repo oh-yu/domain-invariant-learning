@@ -215,7 +215,7 @@ def main(argv):
 
     
     ## 2nd dim
-    target_ds = TensorDataset(target_X, torch.cat([target_y_task.reshape(-1, 1), torch.ones_like(target_y_task).reshape(-1, 1)], dim=1))
+    target_ds = TensorDataset(target_X, torch.cat([pred_y_task.reshape(-1, 1), torch.ones_like(target_y_task).reshape(-1, 1)], dim=1))
     target_loader = DataLoader(target_ds, batch_size=34, shuffle=False)
 
     data = {
