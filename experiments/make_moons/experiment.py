@@ -317,6 +317,7 @@ def main(argv):
 
     # to csv
     df = pd.DataFrame()
+    df["PAT"] = [f"source-{FLAGS.rotation_degree}rotated-{FLAGS.rotation_degree*2}rotated"]
     df["stepbystep-DANNs"] = [stepbystep_dann_acc]
     df["DANNs"] = [dann_acc]
     df["WithoutAdapt"] = [without_adapt_acc]
