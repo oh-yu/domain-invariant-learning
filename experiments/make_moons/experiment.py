@@ -125,6 +125,7 @@ def main(argv):
             "is_changing_lr": True,
             "epoch_thr_for_changing_lr": 200,
             "changed_lrs": [0.00005, 0.00005],
+            "do_plot": True
         }
     feature_extractor, task_classifier, _ = ALGORYTHMS[FLAGS.algo_name].fit(data, network, **config)
 
@@ -215,7 +216,7 @@ def main(argv):
             "task_optimizer": task_optimizer_dim1,
             "feature_optimizer": feature_optimizer_dim1,
         }
-        config = {"num_epochs": 200, "alpha": 1}
+        config = {"num_epochs": 200, "alpha": 1, "do_plot": True}
     feature_extractor_dim12, task_classifier_dim1, _ = ALGORYTHMS[FLAGS.algo_name].fit(data, network, **config)
 
     target_feature_eval = feature_extractor_dim12(target_X)
@@ -258,7 +259,7 @@ def main(argv):
             "task_optimizer": task_optimizer_dim2,
             "feature_optimizer": feature_optimizer_dim2,
         }
-        config = {"num_epochs": 800, "alpha": 1, "is_psuedo_weights": True}
+        config = {"num_epochs": 800, "alpha": 1, "is_psuedo_weights": True, "do_plot": True}
 
     feature_extractor_dim12, task_classifier_dim2, _ = ALGORYTHMS[FLAGS.algo_name].fit(data, network, **config)
 
