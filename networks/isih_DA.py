@@ -253,6 +253,9 @@ class IsihDanns:
             self.feature_extractor = tmp
             # 3. RV algo
             ## 3.1 fit f_i
+            val_source_X = torch.cat([X for X, _ in val_source_loader], dim=0)
+            val_source_y_task = torch.cat([y[:, utils.COL_IDX_TASK] > 0.5 for _, y in val_source_loader], dim=0)
+            self.fit_1st_dim(train_source_loader, target_loader, val_source_X, val_source_y_task)
             ## 3.2 fit \bar{f}_i
             ## 3.3 get RV loss
         # 4. Retraining
