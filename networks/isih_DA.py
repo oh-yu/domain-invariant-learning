@@ -133,7 +133,7 @@ class IsihDanns:
             {"learning_rate": 0.0001, "eps": 1e-04, "weight_decay": 0},
             {"learning_rate": 0.0001, "eps": 1e-08, "weight_decay": 0.1},
         ]
-        RV_scores = {"free_params": [], "scores": [], "terminal_acc": []}
+        RV_scores = {"free_params": [], "scores": []}
         for param in free_params:
             self.__init__(self.experiment)
             self.feature_optimizer.param_groups[0].update(param)
@@ -161,7 +161,10 @@ class IsihDanns:
 
             self.fit_1st_dim(target_as_source_loader, train_source_as_target_loader, target_X, pred_y_task)
             ## 3.3 get RV loss
-            ## 3.4 get terminal evaluation
+            pred_y_task = self.predict(val_source_X)
+            acc_RV = sum(pred_y_task == val_source_y_task) / val_source_y_task.shape[0]
+            RV_scores["free_params"].append(param)
+            RV_scores["scores"].append(acc_RV.item())
 
         # 4. Retraining
         pass
