@@ -4,7 +4,7 @@ import torch
 from torch import nn
 
 from ..utils import utils
-from .algo_utils import get_psuedo_label_weights
+from .algo_utils import get_psuedo_label_weights, EarlyStopping
 
 
 def get_MSE(x, y):
@@ -54,6 +54,7 @@ def fit(data, network, **kwargs):
     epoch_thr_for_stopping = config["epoch_thr_for_stopping"]
 
     # Fit
+    early_stopping = EarlyStopping()
     for epoch in range(1, num_epochs + 1):
         task_classifier.train()
         feature_extractor.train()
@@ -123,6 +124,9 @@ def fit(data, network, **kwargs):
             acc = sum(target_out == target_y_task) / len(target_y_task)
             if epoch % 10 == 0:
                 print(f"Epoch: {epoch}, Loss Coral: {loss_coral}, Loss Task: {loss_task}, Acc: {acc}")
+            early_stopping(acc.item())
+        if early_stopping.early_stop:
+            break
     return feature_extractor, task_classifier, None
 
 

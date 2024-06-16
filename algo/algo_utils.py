@@ -95,3 +95,26 @@ def _get_class_weights(source_y_task_batch):
         elif y == 0:
             class_weights[i] = p_occupied
     return class_weights
+
+
+class EarlyStopping:
+    def __init__(self, patience=10, delta=0):
+        self.patience = patience
+        self.counter = 0
+        self.best_score = None
+        self.early_stop = False
+        self.val_loss_min = 0
+        self.delta = delta
+    
+    def __call__(self, val_loss):
+        score = val_loss
+
+        if self.best_score is None:
+            self.best_score = score
+        elif score < self.best_score + self.delta:
+            self.counter += 1
+            if self.counter >= self.patience:
+                self.early_stop = True
+        else:
+            self.best_score = score
+            self.counter = 0
