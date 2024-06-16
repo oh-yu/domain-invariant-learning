@@ -145,6 +145,21 @@ class IsihDanns:
             val_source_y_task = torch.cat([y[:, utils.COL_IDX_TASK] for _, y in val_source_loader], dim=0)
             self.fit_1st_dim(train_source_loader, target_loader, val_source_X, val_source_y_task)
             ## 3.2 fit \bar{f}_i
+            target_X = torch.cat([X for X, _ in target_loader], dim=0)
+            pred_y_task = self.predict(target_X)
+            target_ds = TensorDataset(target_X, torch.cat([pred_y_task.reshape(-1, 1), torch.zeros_like(pred_y_task).reshape(-1, 1).to(torch.float32)], dim=1))
+            target_as_source_loader = DataLoader(target_ds, batch_size=self.batch_size, shuffle=True)
+
+            train_source_X = torch.cat([X for X, _ in train_source_loader], dim=0)
+            train_source_ds = TensorDataset(train_source_X, torch.ones(train_source_X.shape[0]).to(torch.float32).to(utils.DEVICE))
+            train_source_as_target_loader = DataLoader(train_source_ds, batch_size=self.batch_size, shuffle=True)
+    
+            self.__init__(self.experiment)
+            self.feature_optimizer.param_groups[0].update(param)
+            self.domain_optimizer_dim1.param_groups[0].update(param)
+            self.task_optimizer_dim1.param_groups[0].update(param)
+
+            self.fit_1st_dim(target_as_source_loader, train_source_as_target_loader, target_X, pred_y_task)
             ## 3.3 get RV loss
             ## 3.4 get terminal evaluation
 
