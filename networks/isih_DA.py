@@ -1,6 +1,7 @@
 import torch
 from absl import flags
 from torch import nn, optim
+from torch.utils.data import Subset, DataLoader, TensorDataset
 
 from ..algo import coral_algo, dann_algo
 from .conv1d_three_layers import Conv1dThreeLayers
@@ -54,6 +55,8 @@ class IsihDanns:
             self.device = DEVICE
             self.stop_during_epochs = False
 
+            self.batch_size = 34
+
         elif experiment == "HHAR":
             self.feature_extractor = Conv1dThreeLayers(input_size=6).to(DEVICE)
             self.domain_classifier_dim1 = ThreeLayersDecoder(input_size=128, output_size=1, dropout_ratio=0.3).to(
@@ -79,6 +82,7 @@ class IsihDanns:
 
             self.device = DEVICE
             self.stop_during_epochs = False
+            self.batch_size = 128
 
         elif experiment in ["MNIST"]:
             self.feature_extractor = Conv2d()
@@ -108,10 +112,18 @@ class IsihDanns:
 
             self.device = torch.device("cpu")
             self.stop_during_epochs = True
-    
+            self.batch_size = 64
+
     def fit_RV_1st_dim(self, source_ds: torch.utils.data.TensorDataset,  target_loader: torch.utils.data.dataloader.DataLoader, test_target_X: torch.Tensor, test_target_y_task: torch.Tensor) -> None:
         # 1. split source into train, val
+        N_source = len(source_ds)
+        train_idx = [i for i in range(0, N_source//2, 1)]
+        val_idx = [i for i in range(N_source//2, N_source, 1)]
+        train_source_ds = Subset(source_ds, train_idx)
+        val_source_ds = Subset(source_ds, val_idx)
 
+        train_source_loader = DataLoader(train_source_ds, batch_size=self.batch_size, shuffle=True)
+        val_source_loader = DataLoader(val_source_ds, batch_size=self.batch_size, shuffle=True)
         # 2. free params
 
         # 3. RV algo
