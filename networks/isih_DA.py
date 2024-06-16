@@ -227,6 +227,14 @@ class IsihDanns:
 
     def fit_RV_2nd_dim(self, source_ds: torch.utils.data.TensorDataset,  target_loader: torch.utils.data.dataloader.DataLoader, test_target_X: torch.Tensor, test_target_y_task: torch.Tensor) -> None:
         # 1. split source into train, val
+        N_source = len(source_ds)
+        train_idx = [i for i in range(0, N_source//2, 1)]
+        val_idx = [i for i in range(N_source//2, N_source, 1)]
+        train_source_ds = Subset(source_ds, train_idx)
+        val_source_ds = Subset(source_ds, val_idx)
+
+        train_source_loader = DataLoader(train_source_ds, batch_size=self.batch_size, shuffle=True)
+        val_source_loader = DataLoader(val_source_ds, batch_size=self.batch_size, shuffle=True)
         # 2. free params
             # 3. RV algo
             ## 3.1 fit f_i
