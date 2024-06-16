@@ -125,7 +125,19 @@ class IsihDanns:
         train_source_loader = DataLoader(train_source_ds, batch_size=self.batch_size, shuffle=True)
         val_source_loader = DataLoader(val_source_ds, batch_size=self.batch_size, shuffle=True)
         # 2. free params
-
+        free_params = [
+            {"learning_rate": 0.0001, "eps": 1e-08, "weight_decay": 0},
+            {"learning_rate": 0.001, "eps": 1e-08, "weight_decay": 0},
+            {"learning_rate": 0.01, "eps": 1e-08, "weight_decay": 0},
+            {"learning_rate": 0.0001, "eps": 1e-04, "weight_decay": 0},
+            {"learning_rate": 0.0001, "eps": 1e-08, "weight_decay": 0.1},
+        ]
+        RV_scores = {"free_params": [], "scores": [], "terminal_acc": []}
+        for param in free_params:
+            self.__init__(self.experiment)
+            self.feature_optimizer.param_groups[0].update(param)
+            self.domain_optimizer_dim1.param_groups[0].update(param)
+            self.task_optimizer_dim1.param_groups[0].update(param)
         # 3. RV algo
         ## 3.1 fit f_i
         ## 3.2 fit \bar{f}_i
