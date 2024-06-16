@@ -167,7 +167,17 @@ class IsihDanns:
             RV_scores["scores"].append(acc_RV.item())
 
         # 4. Retraining
-        pass
+        best_param = RV_scores["free_params"][np.argmax(RV_scores["scores"])]
+        self.__init__(self.experiment)
+        self.feature_optimizer.param_groups[0].update(best_param)
+        self.domain_optimizer_dim1.param_groups[0].update(best_param)
+        self.task_optimizer_dim1.param_groups[0].update(best_param)
+        source_loader = DataLoader(source_ds, batch_size=self.batch_size, shuffle=True)
+        self.fit_1st_dim(source_loader, target_loader, test_target_X, test_target_y_task)
+        self.set_eval()
+        pred_y_task = self.predict(test_target_X)
+        acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
+        return acc.item()
 
 
     def fit_1st_dim(self, source_loader, target_loader, test_target_X: torch.Tensor, test_target_y_task: torch.Tensor):
