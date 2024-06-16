@@ -1,11 +1,13 @@
 import torch
 from absl import flags
 from torch import nn, optim
+from torch.utils.data import Subset, DataLoader
 
 from ..algo import coral_algo, dann_algo
 from .conv1d_three_layers import Conv1dThreeLayers
 from .conv1d_two_layers import Conv1dTwoLayers
 from .mlp_decoder_three_layers import ThreeLayersDecoder
+from ..utils import utils
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 FLAGS = flags.FLAGS
@@ -62,14 +64,32 @@ class Codats:
         N_source = len(source_ds)
         train_idx = [i for i in range(0, N_source//2, 1)]
         val_idx = [i for i in range(N_source//2, N_source, 1)]
-        source_ds_train = torch.utils.data.Subset(source_ds, train_idx)
-        source_ds_val = torch.utils.data.Subset(source_ds, val_idx)
+        train_source_ds = torch.utils.data.Subset(source_ds, train_idx)
+        val_source_ds = torch.utils.data.Subset(source_ds, val_idx)
+
+        train_source_loader = DataLoader(train_source_ds, batch_size=34, shuffle=True)
+        val_source_loader = DataLoader(val_source_ds, batch_size=34, shuffle=True)
 
         # 2. free params
+        # TODO: Implement
 
         # 3. RV algo
+        ## 3.1 fit f_i
+        val_source_X = torch.cat([X for X, _ in val_source_loader], dim=0)
+        val_source_y_task = torch.cat([y[:, utils.COL_IDX_TASK] for _, y in val_source_loader], dim=0)
+        self.fit(train_source_loader, target_loader, val_source_X, val_source_y_task)
+
+        ## 3.2 fit \bar{f}_i
+        # TODO: Implement
+
+
+
+        ## 3.3 get RV loss
+        # TODO: Implement
+
 
         # 4. return best
+        # TODO: Implement
 
 
     def fit(
