@@ -1,5 +1,6 @@
 import torch
 from absl import flags
+import numpy as np
 from torch import nn, optim
 from torch.utils.data import Subset, DataLoader, TensorDataset
 
@@ -72,31 +73,45 @@ class Codats:
         val_source_loader = DataLoader(val_source_ds, batch_size=34, shuffle=True)
 
         # 2. free params
-        # TODO: Implement
+        free_params = [
+            {"learning_rate": 0.0001, "eps": 1e-08, "weight_decay": 0},
+            {"learning_rate": 0.001, "eps": 1e-08, "weight_decay": 0},
+            {"learning_rate": 0.01, "eps": 1e-08, "weight_decay": 0},
+            {"learning_rate": 0.0001, "eps": 1e-04, "weight_decay": 0},
+            {"learning_rate": 0.0001, "eps": 1e-08, "weight_decay": 0.1},
+        ]
+        RV_scores = {"free_params": [], "scores": []}
+        for param in free_params:
+            self.feature_optimizer.param_groups[0].update(param)
+            self.domain_optimizer.param_groups[0].update(param)
+            self.task_optimizer.param_groups[0].update(param)
 
-        # 3. RV algo
-        ## 3.1 fit f_i
-        val_source_X = torch.cat([X for X, _ in val_source_loader], dim=0)
-        val_source_y_task = torch.cat([y[:, utils.COL_IDX_TASK] for _, y in val_source_loader], dim=0)
-        self.fit(train_source_loader, target_loader, val_source_X, val_source_y_task)
+            # 3. RV algo
+            ## 3.1 fit f_i
+            val_source_X = torch.cat([X for X, _ in val_source_loader], dim=0)
+            val_source_y_task = torch.cat([y[:, utils.COL_IDX_TASK] for _, y in val_source_loader], dim=0)
+            self.fit(train_source_loader, target_loader, val_source_X, val_source_y_task)
 
-        ## 3.2 fit \bar{f}_i
-        target_X = torch.cat([X for X, _ in target_loader], dim=0)
-        pred_y_task = self.predict(target_X)
-        target_ds = TensorDataset(target_X, pred_y_task)
-        target_loader = DataLoader(target_ds, batch_size=34, shuffle=True)
-        train_source_X = torch.cat([X for X, _ in train_source_loader], dim=0)
-        train_source_ds = TensorDataset(train_source_X)
-        train_source_loader = DataLoader(train_source_ds, batch_size=34, shuffle=True)
-        self.__init__(self.experiment)
-        self.fit(target_loader, train_source_loader, target_X, pred_y_task)
+            ## 3.2 fit \bar{f}_i
+            target_X = torch.cat([X for X, _ in target_loader], dim=0)
+            pred_y_task = self.predict(target_X)
+            target_ds = TensorDataset(target_X, pred_y_task)
+            target_loader = DataLoader(target_ds, batch_size=34, shuffle=True)
+            train_source_X = torch.cat([X for X, _ in train_source_loader], dim=0)
+            train_source_ds = TensorDataset(train_source_X)
+            train_source_loader = DataLoader(train_source_ds, batch_size=34, shuffle=True)
+            self.__init__(self.experiment)
+            self.fit(target_loader, train_source_loader, target_X, pred_y_task)
 
-        ## 3.3 get RV loss
-        pred_y_task = self.predict(val_source_X)
-        acc = sum(pred_y_task == val_source_y_task) / val_source_y_task.shape[0]
+            ## 3.3 get RV loss
+            pred_y_task = self.predict(val_source_X)
+            acc = sum(pred_y_task == val_source_y_task) / val_source_y_task.shape[0]
+
+            RV_scores["free_params"].append(param)
+            RV_scores["scores"].append(acc)
 
         # 4. return best
-        # TODO: Implement
+        return RV_scores["free_params"][np.argmax(RV_scores["scores"])]
 
 
     def fit(
