@@ -16,6 +16,7 @@ def get_loader(
     target_y_task: np.ndarray,
     batch_size: int = 34,
     shuffle: bool = False,
+    return_ds: bool = False,
 ):
     """
     Get instances of torch.utils.data.DataLoader for domain invariant learning,
@@ -72,7 +73,10 @@ def get_loader(
     source_loader = DataLoader(source_ds, batch_size=batch_size, shuffle=shuffle)
     target_loader = DataLoader(target_ds, batch_size=batch_size, shuffle=shuffle)
 
-    return source_loader, target_loader, source_y_task, source_X, target_X, target_y_task
+    if return_ds:
+        return source_loader, target_loader, source_y_task, source_X, target_X, target_y_task, source_ds
+    else:
+        return source_loader, target_loader, source_y_task, source_X, target_X, target_y_task
 
 
 def apply_sliding_window(
