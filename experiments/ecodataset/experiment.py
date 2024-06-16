@@ -249,10 +249,7 @@ def codats(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, n
         ## CoDATS fit, predict
         codats = Codats(experiment="ECOdataset")
         # codats.fit(source_loader, target_loader, test_target_X, test_target_y_task)
-        codats.fit_RV(source_ds, target_loader, test_target_X, test_target_y_task)
-        codats.set_eval()
-        pred_y_task = codats.predict(test_target_X)
-        acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
+        acc = codats.fit_RV(source_ds, target_loader, test_target_X, test_target_y_task)
         accs.append(acc.item())
     return sum(accs) / num_repeats
 
