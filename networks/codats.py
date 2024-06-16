@@ -122,8 +122,18 @@ class Codats:
             RV_scores["scores"].append(acc_RV.item())
             RV_scores["terminal_acc"].append(acc_terminal.item())
 
-        # 4. return best
-        return RV_scores["terminal_acc"][np.argmax(RV_scores["scores"])]
+        # 4. Retraining
+        best_param = RV_scores["free_params"][np.argmax(RV_scores["scores"])]
+        self.__init__(self.experiment)
+        self.feature_optimizer.param_groups[0].update(best_param)
+        self.domain_optimizer.param_groups[0].update(best_param)
+        self.task_optimizer.param_groups[0].update(best_param)
+        source_loader = DataLoader(source_ds, batch_size=34, shuffle=True)
+        self.fit(source_loader, target_loader, test_target_X, test_target_y_task)
+        self.set_eval()
+        pred_y_task = self.predict(test_target_X)
+        acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
+        return acc.item()
 
 
     def fit(
