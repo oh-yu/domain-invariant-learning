@@ -39,6 +39,7 @@ class Codats:
             self.task_optimizer = optim.Adam(self.task_classifier.parameters(), lr=0.0001)
             self.num_epochs = 300
             self.is_target_weights = True
+            self.experiment = experiment
 
         elif experiment == "HHAR":
             self.feature_extractor = Conv1dThreeLayers(input_size=6).to(DEVICE)
@@ -51,6 +52,8 @@ class Codats:
             self.task_optimizer = optim.Adam(self.task_classifier.parameters(), lr=0.0001)
             self.num_epochs = 300
             self.is_target_weights = True
+            self.experiment = experiment
+
     def fit_RV(
         self,
         source_ds: torch.utils.data.TensorDataset,
@@ -85,11 +88,12 @@ class Codats:
         train_source_X = torch.cat([X for X, _ in train_source_loader], dim=0)
         train_source_ds = TensorDataset(train_source_X)
         train_source_loader = DataLoader(train_source_ds, batch_size=34, shuffle=True)
+        self.__init__(self.experiment)
         self.fit(target_loader, train_source_loader, target_X, pred_y_task)
 
         ## 3.3 get RV loss
-        # TODO: Implement
-
+        pred_y_task = self.predict(val_source_X)
+        acc = sum(pred_y_task == val_source_y_task) / val_source_y_task.shape[0]
 
         # 4. return best
         # TODO: Implement
