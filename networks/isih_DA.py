@@ -247,10 +247,12 @@ class IsihDanns:
         for param in free_params:
             tmp = self.feature_extractor
             self.__init__(self.experiment)
+            self.feature_extractor = tmp
+            self.feature_optimizer_dim2 = optim.Adam(self.feature_extractor.parameters())
             self.feature_optimizer_dim2.param_groups[0].update(param)
             self.domain_optimizer_dim2.param_groups[0].update(param)
             self.task_optimizer_dim2.param_groups[0].update(param)
-            self.feature_extractor = tmp
+            
             # 3. RV algo
             ## 3.1 fit f_i
             val_source_X = torch.cat([X for X, _ in val_source_loader], dim=0)
@@ -269,7 +271,9 @@ class IsihDanns:
             tmp = self.feature_extractor
             self.__init__(self.experiment)
             self.feature_extractor = tmp
-            self.feature_optimizer_dim2.param_groups[0].update(param)
+            self.feature_optimizer_dim1 = optim.Adam(self.feature_extractor.parameters())
+
+            self.feature_optimizer_dim1.param_groups[0].update(param)
             self.domain_optimizer_dim2.param_groups[0].update(param)
             self.task_optimizer_dim2.param_groups[0].update(param)
             self.fit_1st_dim(target_as_source_loader, train_source_as_target_loader, target_X, pred_y_task)
