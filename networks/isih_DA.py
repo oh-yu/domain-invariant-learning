@@ -108,6 +108,21 @@ class IsihDanns:
 
             self.device = torch.device("cpu")
             self.stop_during_epochs = True
+    
+    def fit_RV_1st_dim(self, source_ds: torch.utils.data.TensorDataset,  target_loader: torch.utils.data.dataloader.DataLoader, test_target_X: torch.Tensor, test_target_y_task: torch.Tensor) -> None:
+        # 1. split source into train, val
+
+        # 2. free params
+
+        # 3. RV algo
+        ## 3.1 fit f_i
+        ## 3.2 fit \bar{f}_i
+        ## 3.3 get RV loss
+        ## 3.4 get terminal evaluation
+
+        # 4. Retraining
+        pass
+
 
     def fit_1st_dim(self, source_loader, target_loader, test_target_X: torch.Tensor, test_target_y_task: torch.Tensor):
         data = {
