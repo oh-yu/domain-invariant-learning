@@ -278,6 +278,10 @@ class IsihDanns:
             self.task_optimizer_dim2.param_groups[0].update(param)
             self.fit_1st_dim(target_as_source_loader, train_source_as_target_loader, target_X, pred_y_task)
             ## 3.3 get RV loss
+            pred_y_task = self.predict(val_source_X, is_1st_dim=True)
+            acc_RV = sum(pred_y_task == val_source_y_task) / val_source_y_task.shape[0]
+            RV_scores["free_params"].append(param)
+            RV_scores["scores"].append(acc_RV.item())
         # 4. Retraining
         pass
 
