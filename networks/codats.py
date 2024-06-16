@@ -133,7 +133,7 @@ class Codats:
         self.domain_optimizer.param_groups[0].update(best_param)
         self.task_optimizer.param_groups[0].update(best_param)
         source_loader = DataLoader(source_ds, batch_size=34, shuffle=True)
-        self.fit(source_loader, target_loader, test_target_X, test_target_y_task)
+        self.fit(source_loader, target_loader, val_source_X, val_source_y_task)
         self.set_eval()
         pred_y_task = self.predict(test_target_X)
         acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
