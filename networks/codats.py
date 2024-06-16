@@ -51,6 +51,26 @@ class Codats:
             self.task_optimizer = optim.Adam(self.task_classifier.parameters(), lr=0.0001)
             self.num_epochs = 300
             self.is_target_weights = True
+    def fit_RV(
+        self,
+        source_ds: torch.utils.data.TensorDataset,
+        target_loader: torch.utils.data.dataloader.DataLoader,
+        test_target_X: torch.Tensor,
+        test_target_y_task: torch.Tensor, 
+    ) -> None:
+        # 1. split source into train, val
+        N_source = len(source_ds)
+        train_idx = [i for i in range(0, N_source//2, 1)]
+        val_idx = [i for i in range(N_source//2, N_source, 1)]
+        source_ds_train = torch.utils.data.Subset(source_ds, train_idx)
+        source_ds_val = torch.utils.data.Subset(source_ds, val_idx)
+
+        # 2. free params
+
+        # 3. RV algo
+
+        # 4. return best
+
 
     def fit(
         self,
