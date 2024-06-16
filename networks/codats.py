@@ -103,6 +103,9 @@ class Codats:
             train_source_ds = TensorDataset(train_source_X, torch.ones(train_source_X.shape[0]).to(torch.float32).to(utils.DEVICE))
             train_source_as_target_loader = DataLoader(train_source_ds, batch_size=34, shuffle=True)
             self.__init__(self.experiment)
+            self.feature_optimizer.param_groups[0].update(param)
+            self.domain_optimizer.param_groups[0].update(param)
+            self.task_optimizer.param_groups[0].update(param)
             self.fit(target_as_source_loader, train_source_as_target_loader, target_X, pred_y_task)
 
             ## 3.3 get RV loss
