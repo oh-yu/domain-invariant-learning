@@ -41,6 +41,7 @@ class Codats:
             self.num_epochs = 300
             self.is_target_weights = True
             self.experiment = experiment
+            self.batch_size = 34
 
         elif experiment == "HHAR":
             self.feature_extractor = Conv1dThreeLayers(input_size=6).to(DEVICE)
@@ -54,6 +55,7 @@ class Codats:
             self.num_epochs = 300
             self.is_target_weights = True
             self.experiment = experiment
+            self.batch_size = 128
 
     def fit_RV(
         self,
@@ -67,8 +69,8 @@ class Codats:
         Theory: 3.1 ~ 4.2 from https://link.springer.com/chapter/10.1007/978-3-642-15939-8_35
         """
         # 1. split source into train, val
-        train_source_loader, val_source_loader = utils.tensordataset_to_splitted_loaders(source_ds)
-        train_target_loader, val_target_loader = utils.tensordataset_to_splitted_loaders(target_ds)
+        train_source_loader, val_source_loader = utils.tensordataset_to_splitted_loaders(source_ds, self.batch_size)
+        train_target_loader, val_target_loader = utils.tensordataset_to_splitted_loaders(target_ds, self.batch_size)
         
         # 2. free params
         free_params = [
@@ -98,12 +100,12 @@ class Codats:
             val_target_pred_y_task = self.predict(val_target_X)
 
 
-            target_ds = TensorDataset(train_target_X, torch.cat([train_target_pred_y_task.reshape(-1, 1), torch.zeros_like(train_target_pred_y_task).reshape(-1, 1).to(torch.float32)], dim=1))
-            target_as_source_loader = DataLoader(target_ds, batch_size=34, shuffle=True)
+            train_target_ds = TensorDataset(train_target_X, torch.cat([train_target_pred_y_task.reshape(-1, 1), torch.zeros_like(train_target_pred_y_task).reshape(-1, 1).to(torch.float32)], dim=1))
+            target_as_source_loader = DataLoader(train_target_ds, batch_size=self.batch_size, shuffle=True)
 
             train_source_X = torch.cat([X for X, _ in train_source_loader], dim=0)
             train_source_ds = TensorDataset(train_source_X, torch.ones(train_source_X.shape[0]).to(torch.float32).to(utils.DEVICE))
-            train_source_as_target_loader = DataLoader(train_source_ds, batch_size=34, shuffle=True)
+            train_source_as_target_loader = DataLoader(train_source_ds, batch_size=self.batch_size, shuffle=True)
             self.__init__(self.experiment)
             self.feature_optimizer.param_groups[0].update(param)
             self.domain_optimizer.param_groups[0].update(param)
@@ -130,8 +132,8 @@ class Codats:
         self.feature_optimizer.param_groups[0].update(best_param)
         self.domain_optimizer.param_groups[0].update(best_param)
         self.task_optimizer.param_groups[0].update(best_param)
-        source_loader = DataLoader(source_ds, batch_size=34, shuffle=True)
-        target_loader = DataLoader(target_ds, batch_size=34, shuffle=True)
+        source_loader = DataLoader(source_ds, batch_size=self.batch_size, shuffle=True)
+        target_loader = DataLoader(target_ds, batch_size=self.batch_size, shuffle=True)
         self.fit(source_loader, target_loader, val_source_X, val_source_y_task)
         self.set_eval()
         pred_y_task = self.predict(test_target_X)
