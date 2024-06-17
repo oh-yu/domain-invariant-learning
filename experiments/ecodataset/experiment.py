@@ -55,7 +55,7 @@ def isih_da_house(source_idx: int, target_idx: int, winter_idx: int, summer_idx:
             target_y_task,
             target_y_task,
         )
-        source_loader, target_loader, _, _, _, _, source_ds = utils.get_loader(
+        source_loader, target_loader, _, _, _, _, source_ds, target_ds = utils.get_loader(
             train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True, batch_size=32, return_ds=True
         )
         # Note: batch_size=32, because exploding gradient when batch_size=34(this leads to one sample loss)
@@ -68,7 +68,7 @@ def isih_da_house(source_idx: int, target_idx: int, winter_idx: int, summer_idx:
         ## isih-DA fit, predict for 1st dimension
         isih_dann = IsihDanns(experiment="ECOdataset")
         # isih_dann.fit_1st_dim(source_loader, target_loader, test_target_X, test_target_y_task)
-        isih_dann.fit_RV_1st_dim(source_ds, target_loader, test_target_X, test_target_y_task)
+        isih_dann.fit_RV_1st_dim(source_ds, target_ds, test_target_X, test_target_y_task)
         pred_y_task = isih_dann.predict_proba(test_target_X, is_1st_dim=True)
 
         # Algo2. Inter-Seasons DA
@@ -96,12 +96,12 @@ def isih_da_house(source_idx: int, target_idx: int, winter_idx: int, summer_idx:
         test_target_X = test_target_X.to(DEVICE)
         test_target_y_task = test_target_y_task.to(DEVICE)
 
-        source_loader, target_loader, _, _, _, _, source_ds = utils.get_loader(
+        source_loader, target_loader, _, _, _, _, source_ds, target_ds = utils.get_loader(
             train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True, return_ds=True
         )
         ## isih-DA fit, predict for 2nd dimension
         # isih_dann.fit_2nd_dim(source_loader, target_loader, test_target_X, test_target_y_task)
-        isih_dann.fit_RV_2nd_dim(source_ds, target_loader, test_target_X, test_target_y_task)
+        isih_dann.fit_RV_2nd_dim(source_ds, target_ds, test_target_X, test_target_y_task)
         isih_dann.set_eval()
         pred_y_task = isih_dann.predict(test_target_X, is_1st_dim=False)
 

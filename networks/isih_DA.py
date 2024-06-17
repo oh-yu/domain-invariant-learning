@@ -119,16 +119,17 @@ class IsihDanns:
             self.batch_size = 64
             self.experiment = experiment
 
-    def fit_RV_1st_dim(self, source_ds: torch.utils.data.TensorDataset,  target_loader: torch.utils.data.dataloader.DataLoader, test_target_X: torch.Tensor, test_target_y_task: torch.Tensor) -> None:
+    def fit_RV_1st_dim(
+            self, 
+            source_ds: torch.utils.data.TensorDataset, 
+            target_ds: torch.utils.data.TensorDataset,
+            test_target_X: torch.Tensor,
+            test_target_y_task: torch.Tensor
+    ) -> None:
         # 1. split source into train, val
-        N_source = len(source_ds)
-        train_idx = [i for i in range(0, N_source//2, 1)]
-        val_idx = [i for i in range(N_source//2, N_source, 1)]
-        train_source_ds = Subset(source_ds, train_idx)
-        val_source_ds = Subset(source_ds, val_idx)
+        train_source_loader, val_source_loader = utils.tensordataset_to_splitted_loaders(source_ds, self.batch_size)
+        train_target_loader, val_target_loader = utils.tensordataset_to_splitted_loaders(target_ds, self.batch_size)
 
-        train_source_loader = DataLoader(train_source_ds, batch_size=self.batch_size, shuffle=True)
-        val_source_loader = DataLoader(val_source_ds, batch_size=self.batch_size, shuffle=True)
         # 2. free params
         free_params = [
             {"learning_rate": 0.0001, "eps": 1e-08, "weight_decay": 0},
@@ -147,12 +148,16 @@ class IsihDanns:
             ## 3.1 fit f_i
             val_source_X = torch.cat([X for X, _ in val_source_loader], dim=0)
             val_source_y_task = torch.cat([y[:, utils.COL_IDX_TASK] for _, y in val_source_loader], dim=0)
-            self.fit_1st_dim(train_source_loader, target_loader, val_source_X, val_source_y_task)
+            self.fit_1st_dim(train_source_loader, train_target_loader, val_source_X, val_source_y_task)
             ## 3.2 fit \bar{f}_i
-            target_X = torch.cat([X for X, _ in target_loader], dim=0)
-            pred_y_task = self.predict(target_X, is_1st_dim=True)
-            target_ds = TensorDataset(target_X, torch.cat([pred_y_task.reshape(-1, 1), torch.zeros_like(pred_y_task).reshape(-1, 1).to(torch.float32)], dim=1))
-            target_as_source_loader = DataLoader(target_ds, batch_size=self.batch_size, shuffle=True)
+            train_target_X = torch.cat([X for X, _ in train_target_loader], dim=0)
+            train_target_pred_y_task = self.predict(train_target_X, is_1st_dim=True)
+            val_target_X = torch.cat([X for X, _ in val_target_loader], dim=0)
+            val_target_pred_y_task = self.predict(val_target_X, is_1st_dim=True)
+
+
+            train_target_ds = TensorDataset(train_target_X, torch.cat([train_target_pred_y_task.reshape(-1, 1), torch.zeros_like(train_target_pred_y_task).reshape(-1, 1).to(torch.float32)], dim=1))
+            target_as_source_loader = DataLoader(train_target_ds, batch_size=self.batch_size, shuffle=True)
 
             train_source_X = torch.cat([X for X, _ in train_source_loader], dim=0)
             train_source_ds = TensorDataset(train_source_X, torch.ones(train_source_X.shape[0]).to(torch.float32).to(utils.DEVICE))
@@ -163,7 +168,7 @@ class IsihDanns:
             self.domain_optimizer_dim1.param_groups[0].update(param)
             self.task_optimizer_dim1.param_groups[0].update(param)
 
-            self.fit_1st_dim(target_as_source_loader, train_source_as_target_loader, target_X, pred_y_task)
+            self.fit_1st_dim(target_as_source_loader, train_source_as_target_loader, val_target_X, val_target_pred_y_task)
             ## 3.3 get RV loss
             pred_y_task = self.predict(val_source_X, is_1st_dim=True)
             acc_RV = sum(pred_y_task == val_source_y_task) / val_source_y_task.shape[0]
@@ -177,6 +182,7 @@ class IsihDanns:
         self.domain_optimizer_dim1.param_groups[0].update(best_param)
         self.task_optimizer_dim1.param_groups[0].update(best_param)
         source_loader = DataLoader(source_ds, batch_size=self.batch_size, shuffle=True)
+        target_loader = DataLoader(target_ds, batch_size=self.batch_size, shuffle=True)
         self.fit_1st_dim(source_loader, target_loader, test_target_X, test_target_y_task)
         self.set_eval()
         pred_y_task = self.predict(test_target_X, is_1st_dim=True)
