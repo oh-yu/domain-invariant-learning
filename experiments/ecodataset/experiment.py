@@ -241,7 +241,7 @@ def codats(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, n
     train_target_X, train_target_y_task = utils.apply_sliding_window(train_target_X, train_target_y_task, filter_len=6)
     test_target_X, test_target_y_task = utils.apply_sliding_window(test_target_X, test_target_y_task, filter_len=6)
     for _ in range(num_repeats):
-        source_loader, target_loader, _, _, _, _, source_ds = utils.get_loader(
+        source_loader, target_loader, _, _, _, _, source_ds, target_ds = utils.get_loader(
             train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True, return_ds=True
         )
 
@@ -253,7 +253,7 @@ def codats(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, n
         ## CoDATS fit, predict
         codats = Codats(experiment="ECOdataset")
         # codats.fit(source_loader, target_loader, test_target_X, test_target_y_task)
-        acc = codats.fit_RV(source_ds, target_loader, test_target_X, test_target_y_task)
+        acc = codats.fit_RV(source_ds, target_ds, test_target_X, test_target_y_task)
         accs.append(acc)
     return sum(accs) / num_repeats
 

@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from sklearn.manifold import TSNE
-from torch.utils.data import DataLoader, TensorDataset
+from torch.utils.data import DataLoader, TensorDataset, Subset
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 COL_IDX_TASK = 0
@@ -74,7 +74,7 @@ def get_loader(
     target_loader = DataLoader(target_ds, batch_size=batch_size, shuffle=shuffle)
 
     if return_ds:
-        return source_loader, target_loader, source_y_task, source_X, target_X, target_y_task, source_ds
+        return source_loader, target_loader, source_y_task, source_X, target_X, target_y_task, source_ds, target_ds
     else:
         return source_loader, target_loader, source_y_task, source_X, target_X, target_y_task
 
@@ -197,3 +197,14 @@ def visualize_tSNE(target_feature, source_feature):
     plt.ylabel("tsne_X2")
     plt.legend()
     plt.show()
+
+
+def tensordataset_to_splitted_loaders(ds, batch_size):
+    N_dataset = len(ds)
+    train_idx = [i for i in range(0, N_dataset//2, 1)]
+    val_idx = [i for i in range(N_dataset//2, N_dataset, 1)]
+    train_ds = Subset(ds, train_idx)
+    val_ds = Subset(ds, val_idx)
+    train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
+    val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=True)
+    return train_loader, val_loader
