@@ -247,8 +247,9 @@ class IsihDanns:
             {"learning_rate": 0.0001, "eps": 1e-08, "weight_decay": 0.1},
         ]
         RV_scores = {"free_params": [], "scores": []}
-        for param in free_params:
-            tmp = self.feature_extractor
+        tmp = self.feature_extractor
+
+        for param in free_params:            
             self.__init__(self.experiment)
             self.feature_extractor = tmp
             self.feature_optimizer_dim2 = optim.Adam(self.feature_extractor.parameters())
@@ -275,7 +276,6 @@ class IsihDanns:
             train_source_ds = TensorDataset(train_source_X, torch.ones(train_source_X.shape[0]).to(torch.float32).to(utils.DEVICE))
             train_source_as_target_loader = DataLoader(train_source_ds, batch_size=self.batch_size, shuffle=True)
 
-            tmp = self.feature_extractor
             self.__init__(self.experiment)
             self.feature_extractor = tmp
             self.feature_optimizer_dim1 = optim.Adam(self.feature_extractor.parameters())
@@ -291,7 +291,7 @@ class IsihDanns:
             RV_scores["scores"].append(acc_RV.item())
         # 4. Retraining
         best_param = RV_scores["free_params"][np.argmax(RV_scores["scores"])]
-        tmp = self.feature_extractor
+
         self.__init__(self.experiment)
         self.feature_extractor = tmp
         self.feature_optimizer_dim2 = optim.Adam(self.feature_extractor.parameters())
