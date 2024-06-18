@@ -157,8 +157,8 @@ def codats(pattern):
     )
 
     # Direct Inter-Users and Inter-models DA
-    source_loader, target_loader, _, _, train_target_prime_X, train_target_prime_y_task = utils.get_loader(
-        source_X, train_target_prime_X, source_y_task, train_target_prime_y_task, batch_size=128, shuffle=True
+    source_loader, target_loader, _, _, train_target_prime_X, train_target_prime_y_task, source_ds, target_ds = utils.get_loader(
+        source_X, train_target_prime_X, source_y_task, train_target_prime_y_task, batch_size=128, shuffle=True, return_ds=True
     )
     test_target_prime_X = torch.tensor(test_target_prime_X, dtype=torch.float32)
     test_target_prime_y_task = torch.tensor(test_target_prime_y_task, dtype=torch.float32)
@@ -166,11 +166,9 @@ def codats(pattern):
     test_target_prime_y_task = test_target_prime_y_task.to(utils.DEVICE)
 
     codats = Codats(experiment="HHAR")
-    codats.fit(source_loader, target_loader, test_target_prime_X, test_target_prime_y_task)
-    codats.set_eval()
-    pred_y_task = codats.predict(test_target_prime_X)
-    acc = sum(pred_y_task == test_target_prime_y_task) / len(test_target_prime_y_task)
-    return acc.item()
+    # codats.fit(source_loader, target_loader, test_target_prime_X, test_target_prime_y_task)
+    acc = codats.fit_RV(source_ds, target_ds, test_target_prime_X, test_target_prime_y_task)
+    return acc
 
 
 def without_adapt(pattern):
