@@ -15,9 +15,10 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 HOUSEHOLD_IDXS = [1, 2, 3, 4, 5]
 FLAGS = flags.FLAGS
 flags.DEFINE_string("algo_name", "DANN", "which algo to be used, DANN or CoRAL")
+flags.DEFINE_integer("num_repeats", 10, "the number of evaluation trials")
 
 
-def isih_da_house(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, num_repeats: int = 10,) -> float:
+def isih_da_house(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, num_repeats: int = FLAGS.num_repeats,) -> float:
     """
     Execute isih-DA (Household => Season) experiment.
     TODO: Attach paper
@@ -111,7 +112,7 @@ def isih_da_house(source_idx: int, target_idx: int, winter_idx: int, summer_idx:
     return sum(accs) / num_repeats
 
 
-def isih_da_season(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, num_repeats: int = 10,) -> float:
+def isih_da_season(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, num_repeats: int = FLAGS.num_repeats,) -> float:
     """
     Execute isih-DA (Season => Household) experiment.
     TODO: Attach paper
@@ -206,7 +207,7 @@ def isih_da_season(source_idx: int, target_idx: int, winter_idx: int, summer_idx
     return sum(accs) / num_repeats
 
 
-def codats(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, num_repeats: int = 10,) -> float:
+def codats(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, num_repeats: int = FLAGS.num_repeats,) -> float:
     """
     Execute CoDATS experiment.
     TODO: Attach paper
@@ -258,7 +259,7 @@ def codats(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, n
     return sum(accs) / num_repeats
 
 
-def without_adapt(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, num_repeats: int = 10,) -> float:
+def without_adapt(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, num_repeats: int = FLAGS.num_repeats,) -> float:
     train_source_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv")
     target_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_X_train.csv")
 
@@ -309,7 +310,7 @@ def without_adapt(source_idx: int, target_idx: int, winter_idx: int, summer_idx:
     return sum(accs) / num_repeats
 
 
-def train_on_target(target_idx: int, summer_idx: int, num_repeats: int = 10) -> float:
+def train_on_target(target_idx: int, summer_idx: int, num_repeats: int = FLAGS.num_repeats) -> float:
     target_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_X_train.csv")
     target_y_task = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_Y_train.csv")[
         target_X.Season == summer_idx

@@ -26,11 +26,12 @@ FLAGS = flags.FLAGS
 flags.DEFINE_integer("lag_1", 1, "time lag for intermediate domain")
 flags.DEFINE_integer("lag_2", 6, "time lag for terminal domain")
 flags.DEFINE_string("algo_name", "DANN", "which algo to be used, DANN or CoRAL")
+flags.DEFINE_integer("num_repeats", 10 , "the number of evaluation trials")
 flags.mark_flag_as_required("lag_1")
 flags.mark_flag_as_required("lag_2")
 
 
-def isih_da(source_idx=2, season_idx=0, num_repeats: int = 10):
+def isih_da(source_idx=2, season_idx=0, num_repeats: int = FLAGS.num_repeats):
     accs = []
     for _ in range(num_repeats):
         train_source_X = pd.read_csv(
@@ -119,7 +120,7 @@ def isih_da(source_idx=2, season_idx=0, num_repeats: int = 10):
     return sum(accs) / num_repeats
 
 
-def codats(source_idx=2, season_idx=0, num_repeats: int = 10):
+def codats(source_idx=2, season_idx=0, num_repeats: int = FLAGS.num_repeats):
     train_source_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv")
     train_source_y_task = pd.read_csv(
         f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_Y_train.csv"
@@ -166,7 +167,7 @@ def codats(source_idx=2, season_idx=0, num_repeats: int = 10):
     return sum(accs) / num_repeats
 
 
-def without_adapt(source_idx=2, season_idx=0, num_repeats: int = 10):
+def without_adapt(source_idx=2, season_idx=0, num_repeats: int = FLAGS.num_repeats):
     train_source_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv")
     train_source_y_task = pd.read_csv(
         f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_Y_train.csv"
@@ -218,7 +219,7 @@ def without_adapt(source_idx=2, season_idx=0, num_repeats: int = 10):
     return sum(accs) / num_repeats
 
 
-def train_on_target(source_idx=2, season_idx=0, num_repeats: int = 10):
+def train_on_target(source_idx=2, season_idx=0, num_repeats: int = FLAGS.num_repeats):
     train_source_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv")
     train_source_y_task = pd.read_csv(
         f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_Y_train.csv"
