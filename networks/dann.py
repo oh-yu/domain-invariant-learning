@@ -90,6 +90,15 @@ class Dann:
     self.task_optimizer.param_groups[0].update(param)
     self.fit(target_as_source_loader, train_source_as_target_loader, val_target_X, val_target_pred_y_task)
 
+    ## 3.3 get RV loss
+    pred_y_task = self.predict(val_source_X)
+    acc_RV = sum(pred_y_task == val_source_y_task) / val_source_y_task.shape[0]
+
+
+    # 3.4 get terminal evaluation
+    RV_scores["free_params"].append(param)
+    RV_scores["scores"].append(acc_RV.item())
+
 
 
     def fit(self, source_loader, target_loader, test_target_X, test_target_y_task):
