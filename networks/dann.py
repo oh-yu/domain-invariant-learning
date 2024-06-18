@@ -99,7 +99,19 @@ class Dann:
     RV_scores["free_params"].append(param)
     RV_scores["scores"].append(acc_RV.item())
 
-
+    # 4. Retraining
+    best_param = RV_scores["free_params"][np.argmax(RV_scores["scores"])]
+    self.__init__(self.experiment)
+    self.feature_optimizer.param_groups[0].update(best_param)
+    self.domain_optimizer.param_groups[0].update(best_param)
+    self.task_optimizer.param_groups[0].update(best_param)
+    source_loader = DataLoader(source_ds, batch_size=16 shuffle=True)
+    target_loader = DataLoader(target_ds, batch_size=64, shuffle=True)
+    self.fit(source_loader, target_loader, val_source_X, val_source_y_task)
+    self.set_eval()
+    pred_y_task = self.predict(test_target_X)
+    acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
+    return acc.item()
 
     def fit(self, source_loader, target_loader, test_target_X, test_target_y_task):
         data = {
