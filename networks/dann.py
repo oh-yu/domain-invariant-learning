@@ -66,6 +66,12 @@ class Dann:
         self.domain_optimizer.param_groups[0].update(param)
         self.task_optimizer.param_groups[0].update(param)
 
+    # 3. RV algo
+    ## 3.1 fit f_i
+    val_source_X = torch.cat([X for X, _ in val_source_loader], dim=0)
+    val_source_y_task = torch.cat([y[:, utils.COL_IDX_TASK] for _, y in val_source_loader], dim=0)
+    self.fit(train_source_loader, train_target_loader, val_source_X, val_source_y_task)
+
 
 
     def fit(self, source_loader, target_loader, test_target_X, test_target_y_task):
