@@ -62,7 +62,7 @@ def get_image_data_for_uda(name="MNIST"):
         )
         train_data = CustomUDADataset(train_data, "source")
         train_loader = torch.utils.data.DataLoader(train_data, batch_size=16, shuffle=True)
-        return train_loader
+        return train_loader, train_data
 
     elif name == "MNIST-M":
         custom_transform = transforms.Compose([transforms.ToTensor(),])
@@ -94,7 +94,7 @@ def get_image_data_for_uda(name="MNIST"):
         )
         test_data = CustomUDADataset(test_data, "source")
         test_loader = DataLoader(test_data, batch_size=128, shuffle=False)
-        return train_loader, test_loader
+        return train_loader, test_loader, train_data
 
     elif name == "SVHN-trainontarget":
         custom_transform = transforms.Compose([transforms.ToTensor(),])
@@ -144,23 +144,19 @@ def isih_da():
 
 def dann():
     # Load Data
-    source_loader = MNIST
-    train_target_prime_loader, test_target_prime_loader_gt = SVHN
+    source_loader, source_ds = MNIST
+    train_target_prime_loader, test_target_prime_loader_gt, target_prime_ds = SVHN
 
     # Model Init
     dann = Dann()
     # Fit DANN
     test_target_prime_X = torch.cat([X for X, _ in test_target_prime_loader_gt], dim=0)
     test_target_prime_y_task = torch.cat([y[:, 0] for _, y in test_target_prime_loader_gt], dim=0)
-    dann.fit(
-        source_loader, train_target_prime_loader, test_target_prime_X, test_target_prime_y_task,
-    )
-
-    # Eval
-    dann.set_eval()
-    pred_y_task = dann.predict(test_target_prime_X)
-    acc = sum(pred_y_task == test_target_prime_y_task) / len(test_target_prime_y_task)
-    return acc.item()
+    # dann.fit(
+    #     source_loader, train_target_prime_loader, test_target_prime_X, test_target_prime_y_task,
+    # )
+    acc = dann.fit_RV(source_ds, target_prime_ds, test_target_prime_X, test_target_prime_y_task)
+    return acc
 
 
 def without_adapt():
