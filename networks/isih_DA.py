@@ -233,7 +233,7 @@ class IsihDanns:
             target_ds: torch.utils.data.TensorDataset,
             test_target_X: torch.Tensor,
             test_target_y_task: torch.Tensor
-    ) -> None:
+    ) -> float:
         # 1. split source into train, val
         train_source_loader, val_source_loader = utils.tensordataset_to_splitted_loaders(source_ds, self.batch_size)
         train_target_loader, val_target_loader = utils.tensordataset_to_splitted_loaders(target_ds, self.batch_size)

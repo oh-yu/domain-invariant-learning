@@ -63,7 +63,7 @@ class Codats:
         target_ds: torch.utils.data.TensorDataset,
         test_target_X: torch.Tensor,
         test_target_y_task: torch.Tensor, 
-    ) -> None:
+    ) -> float:
         """
         Algorythm: 5.1.2 from https://arxiv.org/abs/1505.07818
         Theory: 3.1 ~ 4.2 from https://link.springer.com/chapter/10.1007/978-3-642-15939-8_35
