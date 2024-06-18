@@ -80,7 +80,7 @@ class Codats:
             {"learning_rate": 0.0001, "eps": 1e-04, "weight_decay": 0},
             {"learning_rate": 0.0001, "eps": 1e-08, "weight_decay": 0.1},
         ]
-        RV_scores = {"free_params": [], "scores": [], "terminal_acc": []}
+        RV_scores = {"free_params": [], "scores": []}
         for param in free_params:
             self.__init__(self.experiment)
             self.feature_optimizer.param_groups[0].update(param)
@@ -118,13 +118,8 @@ class Codats:
 
 
             # 3.4 get terminal evaluation
-            self.set_eval()
-            pred_y_task = self.predict(test_target_X)
-            acc_terminal = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
-
             RV_scores["free_params"].append(param)
             RV_scores["scores"].append(acc_RV.item())
-            RV_scores["terminal_acc"].append(acc_terminal.item())
 
         # 4. Retraining
         best_param = RV_scores["free_params"][np.argmax(RV_scores["scores"])]
