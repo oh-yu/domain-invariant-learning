@@ -261,7 +261,10 @@ class IsihDanns:
             # 3. RV algo
             ## 3.1 fit f_i
             val_source_X = torch.cat([X for X, _ in val_source_loader], dim=0)
-            val_source_y_task = torch.cat([y[:, utils.COL_IDX_TASK] > 0.5 for _, y in val_source_loader], dim=0)
+            if self.task_classifier_dim1.output_size == 1:
+                val_source_y_task = torch.cat([y[:, utils.COL_IDX_TASK] > 0.5 for _, y in val_source_loader], dim=0)
+            else:
+                val_source_y_task = torch.cat([y[:, :-1].argmax(dim=1) for _, y in val_source_loader], dim=0)
             self.fit_2nd_dim(train_source_loader, train_target_loader, val_source_X, val_source_y_task)
             ## 3.2 fit \bar{f}_i
             train_target_X = torch.cat([X for X, _ in train_target_loader], dim=0)
