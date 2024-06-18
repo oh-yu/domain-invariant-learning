@@ -184,10 +184,6 @@ class IsihDanns:
         source_loader = DataLoader(source_ds, batch_size=self.batch_size, shuffle=True)
         target_loader = DataLoader(target_ds, batch_size=self.batch_size, shuffle=True)
         self.fit_1st_dim(source_loader, target_loader, val_source_X, val_source_y_task)
-        self.set_eval()
-        pred_y_task = self.predict(test_target_X, is_1st_dim=True)
-        acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
-        return acc.item()
 
 
     def fit_1st_dim(self, source_loader, target_loader, test_target_X: torch.Tensor, test_target_y_task: torch.Tensor):
