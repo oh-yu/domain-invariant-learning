@@ -33,6 +33,26 @@ class Dann:
         self.num_ecochs = 100
 
         self.is_target_weights = False
+        self.batch_size
+    
+
+    def fit_RV(
+        self,
+        source_ds: torch.utils.data.TensorDataset,
+        target_ds: torch.utils.data.TensorDataset,
+        test_target_X: torch.Tensor,
+        test_target_y_task: torch.Tensor, 
+    ) -> float:
+    """
+    Algorythm: 5.1.2 from https://arxiv.org/abs/1505.07818
+    Theory: 3.1 ~ 4.2 from https://link.springer.com/chapter/10.1007/978-3-642-15939-8_35
+    """
+    # 1. split source into train, val
+    train_source_loader, val_source_loader = utils.tensordataset_to_splitted_loaders(source_ds, 16)
+    train_target_loader, val_target_loader = utils.tensordataset_to_splitted_loaders(target_ds, 64)
+    
+
+
 
     def fit(self, source_loader, target_loader, test_target_X, test_target_y_task):
         data = {
