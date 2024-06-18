@@ -162,7 +162,7 @@ def codats(source_idx=2, season_idx=0, num_repeats: int = 10):
         codats = Codats(experiment="ECOdataset_synthetic")
         # codats.fit(source_loader, target_loader, test_target_X, test_target_y_task)
         acc = codats.fit_RV(source_ds, target_ds, test_target_X, test_target_y_task)
-        accs.append(acc.item())
+        accs.append(acc)
     return sum(accs) / num_repeats
 
 
