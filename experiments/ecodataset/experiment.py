@@ -18,7 +18,7 @@ flags.DEFINE_string("algo_name", "DANN", "which algo to be used, DANN or CoRAL")
 flags.DEFINE_integer("num_repeats", 10, "the number of evaluation trials")
 
 
-def isih_da_house(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, num_repeats: int = FLAGS.num_repeats,) -> float:
+def isih_da_house(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, num_repeats: int = 10,) -> float:
     """
     Execute isih-DA (Household => Season) experiment.
     TODO: Attach paper
@@ -112,7 +112,7 @@ def isih_da_house(source_idx: int, target_idx: int, winter_idx: int, summer_idx:
     return sum(accs) / num_repeats
 
 
-def isih_da_season(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, num_repeats: int = FLAGS.num_repeats,) -> float:
+def isih_da_season(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, num_repeats: int = 10,) -> float:
     """
     Execute isih-DA (Season => Household) experiment.
     TODO: Attach paper
@@ -207,7 +207,7 @@ def isih_da_season(source_idx: int, target_idx: int, winter_idx: int, summer_idx
     return sum(accs) / num_repeats
 
 
-def codats(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, num_repeats: int = FLAGS.num_repeats,) -> float:
+def codats(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, num_repeats: int = 10,) -> float:
     """
     Execute CoDATS experiment.
     TODO: Attach paper
@@ -259,7 +259,7 @@ def codats(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, n
     return sum(accs) / num_repeats
 
 
-def without_adapt(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, num_repeats: int = FLAGS.num_repeats,) -> float:
+def without_adapt(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, num_repeats: int = 10,) -> float:
     train_source_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv")
     target_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_X_train.csv")
 
@@ -310,7 +310,7 @@ def without_adapt(source_idx: int, target_idx: int, winter_idx: int, summer_idx:
     return sum(accs) / num_repeats
 
 
-def train_on_target(target_idx: int, summer_idx: int, num_repeats: int = FLAGS.num_repeats) -> float:
+def train_on_target(target_idx: int, summer_idx: int, num_repeats: int = 10) -> float:
     target_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_X_train.csv")
     target_y_task = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_Y_train.csv")[
         target_X.Season == summer_idx
@@ -373,11 +373,11 @@ def main(argv):
             elif (i != 4) and (i != 5):
                 if (j == 4) or (j == 5):
                     continue
-            isih_da_house_acc = isih_da_house(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
-            isih_da_season_acc = isih_da_season(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
-            codats_acc = codats(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
-            without_adapt_acc = without_adapt(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
-            train_on_target_acc, ground_truth_ratio = train_on_target(target_idx=j, summer_idx=1)
+            isih_da_house_acc = isih_da_house(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1, num_repeats=FLAGS.num_repeats)
+            isih_da_season_acc = isih_da_season(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1, num_repeats=FLAGS.num_repeats)
+            codats_acc = codats(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1, num_repeats=FLAGS.num_repeats)
+            without_adapt_acc = without_adapt(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1, num_repeats=FLAGS.num_repeats)
+            train_on_target_acc, ground_truth_ratio = train_on_target(target_idx=j, summer_idx=1, num_repeats=FLAGS.num_repeats)
 
             isih_da_house_accs.append(isih_da_house_acc)
             isih_da_season_accs.append(isih_da_season_acc)
@@ -400,11 +400,11 @@ def main(argv):
             elif (i != 4) and (i != 5):
                 if (j == 4) or (j == 5):
                     continue
-            isih_da_house_acc = isih_da_house(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0)
-            isih_da_season_acc = isih_da_season(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0)
-            codats_acc = codats(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0)
-            without_adapt_acc = without_adapt(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0)
-            train_on_target_acc, ground_truth_ratio = train_on_target(target_idx=j, summer_idx=0)
+            isih_da_house_acc = isih_da_house(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0, num_repeats=FLAGS.num_repeats)
+            isih_da_season_acc = isih_da_season(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0, num_repeats=FLAGS.num_repeats)
+            codats_acc = codats(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0, num_repeats=FLAGS.num_repeats)
+            without_adapt_acc = without_adapt(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0, num_repeats=FLAGS.num_repeats)
+            train_on_target_acc, ground_truth_ratio = train_on_target(target_idx=j, summer_idx=0, num_repeats=FLAGS.num_repeats)
 
             isih_da_house_accs.append(isih_da_house_acc)
             isih_da_season_accs.append(isih_da_season_acc)

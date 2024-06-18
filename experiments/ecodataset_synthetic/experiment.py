@@ -31,7 +31,7 @@ flags.mark_flag_as_required("lag_1")
 flags.mark_flag_as_required("lag_2")
 
 
-def isih_da(source_idx=2, season_idx=0, num_repeats: int = FLAGS.num_repeats):
+def isih_da(source_idx=2, season_idx=0, num_repeats: int = 10):
     accs = []
     for _ in range(num_repeats):
         train_source_X = pd.read_csv(
@@ -122,7 +122,7 @@ def isih_da(source_idx=2, season_idx=0, num_repeats: int = FLAGS.num_repeats):
     return sum(accs) / num_repeats
 
 
-def codats(source_idx=2, season_idx=0, num_repeats: int = FLAGS.num_repeats):
+def codats(source_idx=2, season_idx=0, num_repeats: int = 10):
     train_source_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv")
     train_source_y_task = pd.read_csv(
         f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_Y_train.csv"
@@ -169,7 +169,7 @@ def codats(source_idx=2, season_idx=0, num_repeats: int = FLAGS.num_repeats):
     return sum(accs) / num_repeats
 
 
-def without_adapt(source_idx=2, season_idx=0, num_repeats: int = FLAGS.num_repeats):
+def without_adapt(source_idx=2, season_idx=0, num_repeats: int = 10):
     train_source_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv")
     train_source_y_task = pd.read_csv(
         f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_Y_train.csv"
@@ -221,7 +221,7 @@ def without_adapt(source_idx=2, season_idx=0, num_repeats: int = FLAGS.num_repea
     return sum(accs) / num_repeats
 
 
-def train_on_target(source_idx=2, season_idx=0, num_repeats: int = FLAGS.num_repeats):
+def train_on_target(source_idx=2, season_idx=0, num_repeats: int = 10):
     train_source_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv")
     train_source_y_task = pd.read_csv(
         f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_Y_train.csv"
@@ -279,10 +279,10 @@ def main(argv):
     patterns = []
     for i in tqdm(HOUSEHOLD_IDX):
         for j in SEASON_IDX:
-            acc_isih_da = isih_da(source_idx=i, season_idx=j)
-            acc_codats = codats(source_idx=i, season_idx=j)
-            acc_without_adapt = without_adapt(source_idx=i, season_idx=j)
-            acc_train_on_target = train_on_target(source_idx=i, season_idx=j)
+            acc_isih_da = isih_da(source_idx=i, season_idx=j, num_repeats=FLAGS.num_repeats)
+            acc_codats = codats(source_idx=i, season_idx=j, num_repeats=FLAGS.num_repeats)
+            acc_without_adapt = without_adapt(source_idx=i, season_idx=j, num_repeats=FLAGS.num_repeats)
+            acc_train_on_target = train_on_target(source_idx=i, season_idx=j, num_repeats=FLAGS.num_repeats)
             accs_isih_da.append(acc_isih_da)
             accs_codats.append(acc_codats)
             accs_without_adapt.append(acc_without_adapt)
