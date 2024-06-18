@@ -155,15 +155,13 @@ def codats(source_idx=2, season_idx=0, num_repeats: int = 10):
     test_target_X = test_target_X.to(DEVICE)
     test_target_y_task = test_target_y_task.to(DEVICE)
     for _ in range(num_repeats):
-        source_loader, target_loader, _, _, _, _ = utils.get_loader(
-            train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True
+        source_loader, target_loader, _, _, _, _, source_ds, target_ds = utils.get_loader(
+            train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True, return_ds=True
         )
         ## CoDATS fit, predict
         codats = Codats(experiment="ECOdataset_synthetic")
-        codats.fit(source_loader, target_loader, test_target_X, test_target_y_task)
-        codats.set_eval()
-        pred_y_task = codats.predict(test_target_X)
-        acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
+        # codats.fit(source_loader, target_loader, test_target_X, test_target_y_task)
+        acc = codats.fit_RV(source_ds, target_ds, test_target_X, test_target_y_task)
         accs.append(acc.item())
     return sum(accs) / num_repeats
 
