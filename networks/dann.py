@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 from absl import flags
 from torch import nn, optim
@@ -35,8 +36,7 @@ class Dann:
         self.num_ecochs = 100
 
         self.is_target_weights = False
-        self.batch_size
-    
+
 
     def fit_RV(
         self,
@@ -84,7 +84,7 @@ class Dann:
             target_as_source_loader = DataLoader(train_target_ds, batch_size=64, shuffle=True)
 
             train_source_X = torch.cat([X for X, _ in train_source_loader], dim=0)
-            train_source_ds = TensorDataset(train_source_X, torch.ones(train_source_X.shape[0]).to(torch.float32).to(utils.DEVICE))
+            train_source_ds = TensorDataset(train_source_X, torch.ones(train_source_X.shape[0]).to(torch.float32))
             train_source_as_target_loader = DataLoader(train_source_ds, batch_size=16, shuffle=True)
             self.__init__()
             self.feature_optimizer.param_groups[0].update(param)
