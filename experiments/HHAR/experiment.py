@@ -92,22 +92,24 @@ def isih_da_user(pattern):
     )
 
     # Algo1: Inter-user DA
-    source_loader, target_loader, _, _, target_X, target_y_task = utils.get_loader(
-        source_X, target_X, source_y_task, target_y_task, batch_size=128, shuffle=True
+    source_loader, target_loader, _, _, target_X, target_y_task, source_ds, target_ds = utils.get_loader(
+        source_X, target_X, source_y_task, target_y_task, batch_size=128, shuffle=True, return_ds=True
     )
     isih_dann = IsihDanns(experiment="HHAR")
-    isih_dann.fit_1st_dim(source_loader, target_loader, target_X, target_y_task)
+    # isih_dann.fit_1st_dim(source_loader, target_loader, target_X, target_y_task)
+    isiha_dann.fit_RV_1st_dim(source_ds, target_ds, target_X, target_y_task)
     pred_y_task = isih_dann.predict_proba(target_X, is_1st_dim=True)
 
     # Algo2: Inter-models DA
     source_X = target_X.cpu().detach().numpy()
     source_y_task = pred_y_task.cpu().detach().numpy()
-    source_loader, target_loader, _, _, _, _ = utils.get_loader(
-        source_X, train_target_prime_X, source_y_task, train_target_prime_y_task, batch_size=128, shuffle=True
+    source_loader, target_loader, _, _, _, _, source_ds, target_ds = utils.get_loader(
+        source_X, train_target_prime_X, source_y_task, train_target_prime_y_task, batch_size=128, shuffle=True, return_ds=True
     )
     test_target_prime_X = torch.tensor(test_target_prime_X, dtype=torch.float32).to(utils.DEVICE)
     test_target_prime_y_task = torch.tensor(test_target_prime_y_task, dtype=torch.long).to(utils.DEVICE)
-    isih_dann.fit_2nd_dim(source_loader, target_loader, test_target_prime_X, test_target_prime_y_task)
+    # isih_dann.fit_2nd_dim(source_loader, target_loader, test_target_prime_X, test_target_prime_y_task)
+    isih_dann.fit_RV_2nd_dim(source_ds, target_ds, test_target_prime_X, test_target_prime_y_task)
     isih_dann.set_eval()
     pred_y_task = isih_dann.predict(test_target_prime_X, is_1st_dim=False)
 
@@ -125,22 +127,24 @@ def isih_da_model(pattern):
     )
 
     # Algo1: Inter-models DA
-    source_loader, target_loader, _, _, target_X, target_y_task = utils.get_loader(
-        source_X, target_X, source_y_task, target_y_task, batch_size=128, shuffle=True
+    source_loader, target_loader, _, _, target_X, target_y_task, source_ds, target_ds = utils.get_loader(
+        source_X, target_X, source_y_task, target_y_task, batch_size=128, shuffle=True, return_ds=True
     )
     isih_dann = IsihDanns(experiment="HHAR")
-    isih_dann.fit_1st_dim(source_loader, target_loader, target_X, target_y_task)
+    # isih_dann.fit_1st_dim(source_loader, target_loader, target_X, target_y_task)
+    isih_dann.fit_RV_1st_dim(source_ds, target_ds, target_X, target_y_task)
     pred_y_task = isih_dann.predict_proba(target_X, is_1st_dim=True)
 
     # Algo2: Inter-users DA
     source_X = target_X.cpu().detach().numpy()
     source_y_task = pred_y_task.cpu().detach().numpy()
-    source_loader, target_loader, _, _, _, _ = utils.get_loader(
-        source_X, train_target_prime_X, source_y_task, train_target_prime_y_task, batch_size=128, shuffle=True
+    source_loader, target_loader, _, _, _, _, source_ds, target_ds = utils.get_loader(
+        source_X, train_target_prime_X, source_y_task, train_target_prime_y_task, batch_size=128, shuffle=True, return_ds=True
     )
     test_target_prime_X = torch.tensor(test_target_prime_X, dtype=torch.float32).to(utils.DEVICE)
     test_target_prime_y_task = torch.tensor(test_target_prime_y_task, dtype=torch.long).to(utils.DEVICE)
-    isih_dann.fit_2nd_dim(source_loader, target_loader, test_target_prime_X, test_target_prime_y_task)
+    # isih_dann.fit_2nd_dim(source_loader, target_loader, test_target_prime_X, test_target_prime_y_task)
+    isih_dann.fit_RV_2nd_dim(source_ds, target_ds, test_target_prime_X, test_target_prime_y_task)
     isih_dann.set_eval()
     pred_y_task = isih_dann.predict(test_target_prime_X, is_1st_dim=False)
 
