@@ -135,11 +135,6 @@ class Dann:
             config = {
                 "num_epochs": self.num_ecochs,
                 "device": self.device,
-                "is_changing_lr": True,
-                "epoch_thr_for_changing_lr": 11,
-                "changed_lrs": [1e-4, 1e-6],
-                "stop_during_epochs": True,
-                "epoch_thr_for_stopping": 12,
                 "is_target_weights": self.is_target_weights,
             }
         elif FLAGS.algo_name == "CoRAL":
@@ -153,11 +148,6 @@ class Dann:
             config = {
                 "num_epochs": self.num_ecochs,
                 "device": self.device,
-                "is_changing_lr": True,
-                "epoch_thr_for_changing_lr": 11,
-                "changed_lrs": [1e-4],
-                "stop_during_epochs": True,
-                "epoch_thr_for_stopping": 12,
             }
         self.feature_extractor, self.task_classifier, _ = ALGORYTHMS[FLAGS.algo_name].fit(data, network, **config)
 
