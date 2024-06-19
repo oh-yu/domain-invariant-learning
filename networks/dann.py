@@ -50,7 +50,7 @@ class Dann:
         Theory: 3.1 ~ 4.2 from https://link.springer.com/chapter/10.1007/978-3-642-15939-8_35
         """
         # 1. split source into train, val
-        train_source_loader, val_source_loader = utils.tensordataset_to_splitted_loaders(source_ds, 16)
+        train_source_loader, val_source_loader = utils.tensordataset_to_splitted_loaders(source_ds, 64)
         train_target_loader, val_target_loader = utils.tensordataset_to_splitted_loaders(target_ds, 64)
 
         # 2. free params
@@ -85,7 +85,7 @@ class Dann:
 
             train_source_X = torch.cat([X for X, _ in train_source_loader], dim=0)
             train_source_ds = TensorDataset(train_source_X, torch.ones(train_source_X.shape[0]).to(torch.float32))
-            train_source_as_target_loader = DataLoader(train_source_ds, batch_size=16, shuffle=True)
+            train_source_as_target_loader = DataLoader(train_source_ds, batch_size=64, shuffle=True)
             self.__init__()
             self.feature_optimizer.param_groups[0].update(param)
             self.domain_optimizer.param_groups[0].update(param)
@@ -107,7 +107,7 @@ class Dann:
         self.feature_optimizer.param_groups[0].update(best_param)
         self.domain_optimizer.param_groups[0].update(best_param)
         self.task_optimizer.param_groups[0].update(best_param)
-        source_loader = DataLoader(source_ds, batch_size=16, shuffle=True)
+        source_loader = DataLoader(source_ds, batch_size=64, shuffle=True)
         target_loader = DataLoader(target_ds, batch_size=64, shuffle=True)
         self.fit(source_loader, target_loader, val_source_X, val_source_y_task)
         self.set_eval()
