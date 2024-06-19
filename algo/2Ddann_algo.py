@@ -170,10 +170,10 @@ if __name__ == "__main__":
         input_size=hidden_size, output_size=num_classes, dropout_ratio=0, fc1_size=50, fc2_size=10
     ).to(device)
     criterion = nn.BCELoss()
-    feature_optimizer = optim.Adam(feature_extractor.parameters(), lr=0.05)
-    domain_optimizer_dim1 = optim.Adam(domain_classifier_dim1.parameters(), lr=0.05)
-    domain_optimizer_dim2 = optim.Adam(domain_classifier_dim2.parameters(), lr=0.05)
-    task_optimizer= optim.Adam(task_classifier.parameters(), lr=0.05)
+    feature_optimizer = optim.Adam(feature_extractor.parameters(), lr=0.005)
+    domain_optimizer_dim1 = optim.Adam(domain_classifier_dim1.parameters(), lr=0.005)
+    domain_optimizer_dim2 = optim.Adam(domain_classifier_dim2.parameters(), lr=0.005)
+    task_optimizer= optim.Adam(task_classifier.parameters(), lr=0.005)
 
     # Set Params
     data = {
@@ -195,7 +195,7 @@ if __name__ == "__main__":
         "task_optimizer": task_optimizer,
     }
     config = {
-        "num_epochs": 500,
+        "num_epochs": 200,
         "is_target_weights": False,
     }
     feature_extractor, task_classifier = fit(data, network, **config)
