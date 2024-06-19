@@ -1,5 +1,6 @@
 from typing import List
 
+import matplotlib.pyplot as plt
 import torch
 from torch import nn
 
@@ -41,6 +42,7 @@ def fit(data, network, **kwargs):
         "changed_lrs": [0.00005, 0.00005],
         "stop_during_epochs": False,
         "epoch_thr_for_stopping": 2,
+        "do_plot": False
     }
     config.update(kwargs)
     num_epochs = config["num_epochs"]
@@ -52,8 +54,12 @@ def fit(data, network, **kwargs):
     changed_lrs = config["changed_lrs"]
     stop_during_epochs = config["stop_during_epochs"]
     epoch_thr_for_stopping = config["epoch_thr_for_stopping"]
+    do_plot = config["do_plot"]
 
     # Fit
+    loss_corals = []
+    loss_tasks = []
+    loss_evals = []
     for epoch in range(1, num_epochs + 1):
         task_classifier.train()
         feature_extractor.train()
@@ -106,6 +112,9 @@ def fit(data, network, **kwargs):
             cov_mat_source, cov_mat_target = get_covariance_matrix(source_out, target_out)
             k = source_out.shape[1]
             loss_coral = get_MSE(cov_mat_source, cov_mat_target) * (1 / (4 * k ** 2))
+            loss_corals.append(loss_coral.item())
+            loss_tasks.append(loss_task.item())
+
             loss = loss_task + loss_coral * alpha
             # 2. Backward
             task_optimizer.zero_grad()
@@ -123,7 +132,26 @@ def fit(data, network, **kwargs):
             acc = sum(target_out == target_y_task) / len(target_y_task)
             if epoch % 10 == 0:
                 print(f"Epoch: {epoch}, Loss Coral: {loss_coral}, Loss Task: {loss_task}, Acc: {acc}")
+            loss_evals.append(acc.item())
+    
+    if do_plot:
+        _plot_coral_loss(loss_corals, loss_tasks, loss_evals)
     return feature_extractor, task_classifier, None
+
+
+def _plot_coral_loss(loss_corals, loss_tasks, loss_evals):
+    plt.plot(loss_corals, label="loss coral")
+    plt.plot(loss_tasks, label="loss task")
+    plt.xlabel("batch")
+    plt.ylabel("loss")
+    plt.legend()
+    plt.show()
+
+    plt.figure()
+    plt.plot(loss_evals, label="eval acc")
+    plt.xlabel("epoch")
+    plt.ylabel("accuracy")
+    plt.show()
 
 
 def _change_lr_during_coral_training(
