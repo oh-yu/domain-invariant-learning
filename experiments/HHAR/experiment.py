@@ -97,7 +97,7 @@ def isih_da_user(pattern):
     )
     isih_dann = IsihDanns(experiment="HHAR")
     # isih_dann.fit_1st_dim(source_loader, target_loader, target_X, target_y_task)
-    isiha_dann.fit_RV_1st_dim(source_ds, target_ds, target_X, target_y_task)
+    isih_dann.fit_RV_1st_dim(source_ds, target_ds, target_X, target_y_task)
     pred_y_task = isih_dann.predict_proba(target_X, is_1st_dim=True)
 
     # Algo2: Inter-models DA
