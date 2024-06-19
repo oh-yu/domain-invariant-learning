@@ -61,7 +61,7 @@ def get_image_data_for_uda(name="MNIST"):
             transform=custom_transform,
         )
         train_data = CustomUDADataset(train_data, "source")
-        train_loader = torch.utils.data.DataLoader(train_data, batch_size=64, shuffle=True)
+        train_loader = torch.utils.data.DataLoader(train_data, batch_size=16, shuffle=True)
         return train_loader, train_data
 
     elif name == "MNIST-M":
@@ -70,7 +70,7 @@ def get_image_data_for_uda(name="MNIST"):
             root="./domain-invariant-learning/experiments/MNIST/data/MNIST-M/training", transform=custom_transform
         )
         train_data = CustomUDADataset(imagefolder_data, "target")
-        train_loader = DataLoader(train_data, batch_size=64, shuffle=True)
+        train_loader = DataLoader(train_data, batch_size=16, shuffle=True)
 
         train_data_gt = CustomUDADataset(imagefolder_data, "source")
         train_loader_gt = DataLoader(train_data_gt, batch_size=128, shuffle=False)
