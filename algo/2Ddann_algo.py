@@ -111,7 +111,7 @@ def fit(data, network, **kwargs):
             feature_optimizer.step()
             domain_optimizer_dim1.step()
             domain_optimizer_dim2.step()
-            feature_optimizer.step()
+            task_optimizer.step()
 
         # Eval
         feature_extractor.eval()
