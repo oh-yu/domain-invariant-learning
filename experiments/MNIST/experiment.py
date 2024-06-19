@@ -13,6 +13,7 @@ from ...networks import Dann, Dann_F_C, IsihDanns
 FLAGS = flags.FLAGS
 flags.DEFINE_string("algo_name", "DANN", "which algo to be used, DANN or CoRAL")
 flags.DEFINE_integer("num_repeats", 10, "the number of repetitions for hold-out test")
+flags.DEFINE_boolean("is_RV_tuning", True, "Whether or not use Reverse Validation based free params tuning method(5.1.2 algo from DANN paper)")
 
 
 class Reshape(object):
@@ -123,8 +124,10 @@ def isih_da():
     target_y_task = torch.cat([y[:, 0] for _, y in target_loader_gt], dim=0)
     target_X = torch.tensor(target_X, dtype=torch.float32)
     target_y_task = torch.tensor(target_y_task, dtype=torch.long)
-    # isih_dann.fit_1st_dim(source_loader, target_loader, target_X, target_y_task)
-    isih_dann.fit_RV_1st_dim(source_ds, target_ds, target_X, target_y_task)
+    if not FLAGS.is_RV_tuning:
+        isih_dann.fit_1st_dim(source_loader, target_loader, target_X, target_y_task)
+    else:
+        isih_dann.fit_RV_1st_dim(source_ds, target_ds, target_X, target_y_task)
     pred_y_task = isih_dann.predict_proba(target_X, is_1st_dim=True)
 
     # Algo2 inter-reals DA
@@ -154,10 +157,16 @@ def dann():
     # Fit DANN
     test_target_prime_X = torch.cat([X for X, _ in test_target_prime_loader_gt], dim=0)
     test_target_prime_y_task = torch.cat([y[:, 0] for _, y in test_target_prime_loader_gt], dim=0)
-    # dann.fit(
-    #     source_loader, train_target_prime_loader, test_target_prime_X, test_target_prime_y_task,
-    # )
-    acc = dann.fit_RV(source_ds, target_prime_ds, test_target_prime_X, test_target_prime_y_task)
+    if not FLAGS.is_RV_tuning:
+        dann.fit(
+            source_loader, train_target_prime_loader, test_target_prime_X, test_target_prime_y_task,
+        )
+        dann.set_eval()
+        pred_y_task = dann.predict(test_target_prime_X)
+        acc = sum(pred_y_task == test_target_prime_y_task) / len(test_target_prime_y_task)
+        acc = acc.item()
+    else:
+        acc = dann.fit_RV(source_ds, target_prime_ds, test_target_prime_X, test_target_prime_y_task)
     return acc
 
 
