@@ -16,6 +16,7 @@ HOUSEHOLD_IDXS = [1, 2, 3, 4, 5]
 FLAGS = flags.FLAGS
 flags.DEFINE_string("algo_name", "DANN", "which algo to be used, DANN or CoRAL")
 flags.DEFINE_integer("num_repeats", 10, "the number of evaluation trials")
+flags.DEFINE_boolean("is_RV_tuning", True, "Whether or not use Reverse Validation based free params tuning method(5.1.2 algo from DANN paper)")
 
 
 def isih_da_house(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, num_repeats: int = 10,) -> float:
@@ -68,8 +69,10 @@ def isih_da_house(source_idx: int, target_idx: int, winter_idx: int, summer_idx:
 
         ## isih-DA fit, predict for 1st dimension
         isih_dann = IsihDanns(experiment="ECOdataset")
-        # isih_dann.fit_1st_dim(source_loader, target_loader, test_target_X, test_target_y_task)
-        isih_dann.fit_RV_1st_dim(source_ds, target_ds, test_target_X, test_target_y_task)
+        if FLAGS.is_RV_tuning:
+            isih_dann.fit_RV_1st_dim(source_ds, target_ds, test_target_X, test_target_y_task)
+        else:
+            isih_dann.fit_1st_dim(source_loader, target_loader, test_target_X, test_target_y_task)
         pred_y_task = isih_dann.predict_proba(test_target_X, is_1st_dim=True)
 
         # Algo2. Inter-Seasons DA
@@ -101,8 +104,10 @@ def isih_da_house(source_idx: int, target_idx: int, winter_idx: int, summer_idx:
             train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True, return_ds=True
         )
         ## isih-DA fit, predict for 2nd dimension
-        # isih_dann.fit_2nd_dim(source_loader, target_loader, test_target_X, test_target_y_task)
-        isih_dann.fit_RV_2nd_dim(source_ds, target_ds, test_target_X, test_target_y_task)
+        if FLAGS.is_RV_tuning:
+            isih_dann.fit_RV_2nd_dim(source_ds, target_ds, test_target_X, test_target_y_task)
+        else:
+            isih_dann.fit_2nd_dim(source_loader, target_loader, test_target_X, test_target_y_task)
         isih_dann.set_eval()
         pred_y_task = isih_dann.predict(test_target_X, is_1st_dim=False)
 
@@ -162,8 +167,10 @@ def isih_da_season(source_idx: int, target_idx: int, winter_idx: int, summer_idx
 
         ## isih-DA fit, predict for 1st dimension
         isih_dann = IsihDanns(experiment="ECOdataset")
-        # isih_dann.fit_1st_dim(source_loader, target_loader, test_target_X, test_target_y_task)
-        isih_dann.fit_RV_1st_dim(source_ds, target_ds, test_target_X, test_target_y_task)
+        if FLAGS.is_RV_tuning:
+            isih_dann.fit_RV_1st_dim(source_ds, target_ds, test_target_X, test_target_y_task)
+        else:
+            isih_dann.fit_1st_dim(source_loader, target_loader, test_target_X, test_target_y_task)
         pred_y_task = isih_dann.predict_proba(test_target_X, is_1st_dim=True)
 
         # Algo2. Inter-Households DA
@@ -196,8 +203,10 @@ def isih_da_season(source_idx: int, target_idx: int, winter_idx: int, summer_idx
         test_target_X = test_target_X.to(DEVICE)
         test_target_y_task = test_target_y_task.to(DEVICE)
         ## isih-DA fit, predict for 2nd dimension
-        # isih_dann.fit_2nd_dim(source_loader, target_loader, test_target_X, test_target_y_task)
-        isih_dann.fit_RV_2nd_dim(source_ds, target_ds, test_target_X, test_target_y_task)
+        if FLAGS.is_RV_tuning:
+            isih_dann.fit_RV_2nd_dim(source_ds, target_ds, test_target_X, test_target_y_task)
+        else:
+            isih_dann.fit_2nd_dim(source_loader, target_loader, test_target_X, test_target_y_task)
         isih_dann.set_eval()
         pred_y_task = isih_dann.predict(test_target_X, is_1st_dim=False)
 
@@ -253,8 +262,13 @@ def codats(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, n
 
         ## CoDATS fit, predict
         codats = Codats(experiment="ECOdataset")
-        # codats.fit(source_loader, target_loader, test_target_X, test_target_y_task)
-        acc = codats.fit_RV(source_ds, target_ds, test_target_X, test_target_y_task)
+        if FLAGS.is_RV_tuning:
+            acc = codats.fit_RV(source_ds, target_ds, test_target_X, test_target_y_task)
+        else:
+            codats.fit(source_loader, target_loader, test_target_X, test_target_y_task)
+            codats.set_eval()
+            pred_y_task = codats.predict(test_target_X)
+            acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
         accs.append(acc)
     return sum(accs) / num_repeats
 
