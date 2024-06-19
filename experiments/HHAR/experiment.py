@@ -24,6 +24,7 @@ GYROSCOPE_DF = GYROSCOPE_DF.add_suffix("_gyro")
 FLAGS = flags.FLAGS
 flags.DEFINE_string("algo_name", "DANN", "which algo to be used, DANN or CoRAL")
 flags.DEFINE_integer("num_repeat", 10, "the number of repetitions for hold-out test")
+flags.DEFINE_boolean("is_RV_tuning", True, "Whether or not use Reverse Validation based free params tuning method(5.1.2 algo from DANN paper)")
 
 
 class Pattern:
@@ -96,8 +97,10 @@ def isih_da_user(pattern):
         source_X, target_X, source_y_task, target_y_task, batch_size=128, shuffle=True, return_ds=True
     )
     isih_dann = IsihDanns(experiment="HHAR")
-    # isih_dann.fit_1st_dim(source_loader, target_loader, target_X, target_y_task)
-    isih_dann.fit_RV_1st_dim(source_ds, target_ds, target_X, target_y_task)
+    if not FLAGS.is_RV_tuning:
+        isih_dann.fit_1st_dim(source_loader, target_loader, target_X, target_y_task)
+    else:
+        isih_dann.fit_RV_1st_dim(source_ds, target_ds, target_X, target_y_task)
     pred_y_task = isih_dann.predict_proba(target_X, is_1st_dim=True)
 
     # Algo2: Inter-models DA
@@ -108,8 +111,10 @@ def isih_da_user(pattern):
     )
     test_target_prime_X = torch.tensor(test_target_prime_X, dtype=torch.float32).to(utils.DEVICE)
     test_target_prime_y_task = torch.tensor(test_target_prime_y_task, dtype=torch.long).to(utils.DEVICE)
-    # isih_dann.fit_2nd_dim(source_loader, target_loader, test_target_prime_X, test_target_prime_y_task)
-    isih_dann.fit_RV_2nd_dim(source_ds, target_ds, test_target_prime_X, test_target_prime_y_task)
+    if not FLAGS.is_RV_tuning:
+        isih_dann.fit_2nd_dim(source_loader, target_loader, test_target_prime_X, test_target_prime_y_task)
+    else:
+        isih_dann.fit_RV_2nd_dim(source_ds, target_ds, test_target_prime_X, test_target_prime_y_task)
     isih_dann.set_eval()
     pred_y_task = isih_dann.predict(test_target_prime_X, is_1st_dim=False)
 
@@ -143,8 +148,10 @@ def isih_da_model(pattern):
     )
     test_target_prime_X = torch.tensor(test_target_prime_X, dtype=torch.float32).to(utils.DEVICE)
     test_target_prime_y_task = torch.tensor(test_target_prime_y_task, dtype=torch.long).to(utils.DEVICE)
-    # isih_dann.fit_2nd_dim(source_loader, target_loader, test_target_prime_X, test_target_prime_y_task)
-    isih_dann.fit_RV_2nd_dim(source_ds, target_ds, test_target_prime_X, test_target_prime_y_task)
+    if not FLAGS.is_RV_tuning:
+        isih_dann.fit_2nd_dim(source_loader, target_loader, test_target_prime_X, test_target_prime_y_task)
+    else:
+        isih_dann.fit_RV_2nd_dim(source_ds, target_ds, test_target_prime_X, test_target_prime_y_task)
     isih_dann.set_eval()
     pred_y_task = isih_dann.predict(test_target_prime_X, is_1st_dim=False)
 
@@ -170,8 +177,14 @@ def codats(pattern):
     test_target_prime_y_task = test_target_prime_y_task.to(utils.DEVICE)
 
     codats = Codats(experiment="HHAR")
-    # codats.fit(source_loader, target_loader, test_target_prime_X, test_target_prime_y_task)
-    acc = codats.fit_RV(source_ds, target_ds, test_target_prime_X, test_target_prime_y_task)
+    if not FLAGS.is_RV_tuning:
+        codats.fit(source_loader, target_loader, test_target_prime_X, test_target_prime_y_task)
+        codats.set_eval()
+        pred_y_task = codats.predict(test_target_prime_X)
+        acc = sum(pred_y_task == test_target_prime_y_task) / test_target_prime_y_task.shape[0]
+        acc = acc.item()
+    else:
+        acc = codats.fit_RV(source_ds, target_ds, test_target_prime_X, test_target_prime_y_task)
     return acc
 
 
