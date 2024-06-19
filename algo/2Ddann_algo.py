@@ -1,9 +1,12 @@
 import torch
-from torch import nn
+from torch import nn, optim
+from torch.utils.data import TensorDataset, DataLoader
 from tqdm import tqdm
 
 from ..utils import utils
 from dann_algo import ReverseGradient
+from ..experiments.make_moons import get_source_target_from_make_moons
+from ..networks import Encoder, ThreeLayersDecoder
 
 def fit(data, network, **kwargs):
     # Args
@@ -42,6 +45,8 @@ def fit(data, network, **kwargs):
             source_loader, target_loader, target_prime_loader
         ):
             # 0. Prep Data
+            target_prime_y_domain_batch = target_prime_y_domain_batch - 1
+
             source_y_domain_batch = source_Y_batch[:, utils.COL_IDX_DOMAIN]
             source_y_task_batch = source_Y_batch[:, utils.COL_IDX_TASK]
             if task_classifier.output_size == 1:
@@ -116,3 +121,63 @@ def fit(data, network, **kwargs):
     
     print(f"Epoch: {epoch}, Loss Domain Dim1: {loss_domain_dim1}, Loss Domain Dim2: {loss_domain_dim2},  Loss Task: {loss_task}, Acc: {acc}")
     return feature_extractor, task_classifier
+
+
+if __name__ == "__main__":
+    # Prepare Data
+    (source_X, source_y_task, target_X, target_y_task, target_prime_X, target_prime_y_task, x_grid, x1_grid, x2_grid) = get_source_target_from_make_moons(
+        rotation_degree=-20
+    )
+    source_loader, target_prime_loader, source_y_task, source_X, target_prime_X, target_prime_y_task = utils.get_loader(
+        source_X, target_prime_X, source_y_task, target_prime_y_task
+    )
+    target_X = torch.tensor(target_X, dtype=torch.float32).to(utils.DEVICE)
+    target_y_task = torch.tensor(target_y_task, dtype=torch.float32).to(utils.DEVICE)
+    target_ds = TensorDataset(target_X, torch.ones_like(target_y_task))
+    target_loader = DataLoader(target_ds, batch_size=34, shuffle=False)
+
+    # Init NN, Optim
+    hidden_size = 10
+    num_domains = 1
+    num_classes = 1
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    feature_extractor = Encoder(input_size=source_X.shape[1], output_size=hidden_size).to(device)
+    domain_classifier_dim1 = ThreeLayersDecoder(
+        input_size=hidden_size, output_size=num_domains, dropout_ratio=0, fc1_size=50, fc2_size=10
+    ).to(device)
+    domain_classifier_dim2 = ThreeLayersDecoder(
+        input_size=hidden_size, output_size=num_domains, dropout_ratio=0, fc1_size=50, fc2_size=10
+    ).to(device)
+    task_classifier = ThreeLayersDecoder(
+        input_size=hidden_size, output_size=num_classes, dropout_ratio=0, fc1_size=50, fc2_size=10
+    ).to(device)
+    criterion = nn.BCELoss()
+    feature_optimizer = optim.Adam(feature_extractor.parameters(), lr=0.001)
+    domain_optimizer_dim1 = optim.Adam(domain_classifier_dim1.parameters(), lr=0.001)
+    domain_optimizer_dim2 = optim.Adam(domain_classifier_dim2.parameters(), lr=0.001)
+    task_optimizer= optim.Adam(task_classifier.parameters(), lr=0.001)
+
+    # Set Params
+    data = {
+        "source_loader": source_loader,
+        "target_loader": target_loader,
+        "target_prime_loader": target_prime_loader,
+        "target_prime_X": target_prime_X,
+        "target_prime_y_task": target_prime_y_task,
+    }
+    network = {
+        "feature_extractor": feature_extractor,
+        "domain_classifier_dim1": domain_classifier_dim1,
+        "domain_classifier_dim2": domain_classifier_dim2,
+        "task_classifier": task_classifier,
+        "criterion": criterion,
+        "feature_optimizer": feature_optimizer,
+        "domain_optimizer_dim1": domain_optimizer_dim1,
+        "domain_optimizer_dim2": domain_optimizer_dim2,
+        "task_optimizer": task_optimizer,
+    }
+    config = {
+        "num_epochs": 500,
+        "is_target_weights": False,
+    }
+    feature_extractor, task_classifier = fit(data, network, **config)
