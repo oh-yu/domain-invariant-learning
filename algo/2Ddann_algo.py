@@ -4,8 +4,8 @@ from torch.utils.data import TensorDataset, DataLoader
 from tqdm import tqdm
 
 from ..utils import utils
-from dann_algo import ReverseGradient
-from ..experiments.make_moons import get_source_target_from_make_moons
+from .dann_algo import ReverseGradient
+from ..experiments.make_moons.experiment import get_source_target_from_make_moons
 from ..networks import Encoder, ThreeLayersDecoder
 
 def fit(data, network, **kwargs):
@@ -38,7 +38,9 @@ def fit(data, network, **kwargs):
     loss_domain_dim1s = []
     loss_domain_dim2s = []
     reverse_grad = ReverseGradient.apply
-    for epoch in tqdm(range(1, num_epochs.item()+1)):
+    num_epochs = torch.tensor(num_epochs, dtype=torch.int32).to(device)
+    for epoch in tqdm(range(1, num_epochs+1)):
+        epoch = torch.tensor(epoch, dtype=torch.float32).to(device)
         feature_extractor.train()
         task_classifier.train()
         for (source_X_batch, source_Y_batch), (target_X_batch, target_y_domain_batch), (target_prime_X_batch, target_prime_y_domain_batch) in zip(
@@ -110,16 +112,16 @@ def fit(data, network, **kwargs):
             domain_optimizer_dim2.step()
             feature_optimizer.step()
 
-    # Eval
-    feature_extractor.eval()
-    task_classifier.eval()
-    with torch.no_grad():
-            target_prime_feature_eval = feature_extractor(target_prime_X)
-            pred_y_task_eval = task_classifier.predict(target_prime_feature_eval)
-            acc = sum(pred_y_task_eval == target_prime_y_task) / target_prime_y_task.shape[0]
-    loss_task_evals.append(acc.item())
-    
-    print(f"Epoch: {epoch}, Loss Domain Dim1: {loss_domain_dim1}, Loss Domain Dim2: {loss_domain_dim2},  Loss Task: {loss_task}, Acc: {acc}")
+        # Eval
+        feature_extractor.eval()
+        task_classifier.eval()
+        with torch.no_grad():
+                target_prime_feature_eval = feature_extractor(target_prime_X)
+                pred_y_task_eval = task_classifier.predict(target_prime_feature_eval)
+                acc = sum(pred_y_task_eval == target_prime_y_task) / target_prime_y_task.shape[0]
+        loss_task_evals.append(acc.item())
+        
+        print(f"Epoch: {epoch}, Loss Domain Dim1: {loss_domain_dim1}, Loss Domain Dim2: {loss_domain_dim2},  Loss Task: {loss_task}, Acc: {acc}")
     return feature_extractor, task_classifier
 
 
@@ -152,10 +154,10 @@ if __name__ == "__main__":
         input_size=hidden_size, output_size=num_classes, dropout_ratio=0, fc1_size=50, fc2_size=10
     ).to(device)
     criterion = nn.BCELoss()
-    feature_optimizer = optim.Adam(feature_extractor.parameters(), lr=0.001)
-    domain_optimizer_dim1 = optim.Adam(domain_classifier_dim1.parameters(), lr=0.001)
-    domain_optimizer_dim2 = optim.Adam(domain_classifier_dim2.parameters(), lr=0.001)
-    task_optimizer= optim.Adam(task_classifier.parameters(), lr=0.001)
+    feature_optimizer = optim.Adam(feature_extractor.parameters(), lr=0.1)
+    domain_optimizer_dim1 = optim.Adam(domain_classifier_dim1.parameters(), lr=0.1)
+    domain_optimizer_dim2 = optim.Adam(domain_classifier_dim2.parameters(), lr=0.1)
+    task_optimizer= optim.Adam(task_classifier.parameters(), lr=0.1)
 
     # Set Params
     data = {
@@ -177,7 +179,7 @@ if __name__ == "__main__":
         "task_optimizer": task_optimizer,
     }
     config = {
-        "num_epochs": 500,
+        "num_epochs": 100,
         "is_target_weights": False,
     }
     feature_extractor, task_classifier = fit(data, network, **config)
