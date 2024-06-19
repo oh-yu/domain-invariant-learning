@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 import torch
 from torch import nn, optim
 from torch.utils.data import TensorDataset, DataLoader
@@ -122,6 +123,21 @@ def fit(data, network, **kwargs):
         loss_task_evals.append(acc.item())
         
         print(f"Epoch: {epoch}, Loss Domain Dim1: {loss_domain_dim1}, Loss Domain Dim2: {loss_domain_dim2},  Loss Task: {loss_task}, Acc: {acc}")
+    
+    # Plot
+    plt.plot(loss_domain_dim1s, label="loss domain dim1")
+    plt.plot(loss_domain_dim2s, label="loss domain dim2")
+    plt.plot(loss_tasks, label="loss task")
+    plt.xlabel("batch")
+    plt.ylabel("entropy loss")
+    plt.legend()
+    plt.show()
+
+    plt.figure()
+    plt.plot(loss_task_evals)
+    plt.xlabel("epoch")
+    plt.ylabel("accuracy")
+    plt.show()
     return feature_extractor, task_classifier
 
 
@@ -179,7 +195,7 @@ if __name__ == "__main__":
         "task_optimizer": task_optimizer,
     }
     config = {
-        "num_epochs": 100,
+        "num_epochs": 30,
         "is_target_weights": False,
     }
     feature_extractor, task_classifier = fit(data, network, **config)
