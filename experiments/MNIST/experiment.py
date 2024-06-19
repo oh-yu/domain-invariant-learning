@@ -135,7 +135,7 @@ def isih_da():
     test_target_prime_X = torch.cat([X for X, _ in test_target_prime_loader_gt], dim=0)
     test_target_prime_y_task = torch.cat([y[:, 0] for _, y in test_target_prime_loader_gt], dim=0)
     # isih_dann.fit_2nd_dim(source_loader, train_target_prime_loader, test_target_prime_X, test_target_prime_y_task)
-    isih_dann.fit_2nd_dim(source_ds, target_prime_ds, test_target_prime_X, test_target_prime_y_task)
+    isih_dann.fit_RV_2nd_dim(source_ds, target_prime_ds, test_target_prime_X, test_target_prime_y_task)
 
     # Algo3 Eval
     isih_dann.set_eval()

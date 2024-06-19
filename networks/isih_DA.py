@@ -160,7 +160,7 @@ class IsihDanns:
             target_as_source_loader = DataLoader(train_target_ds, batch_size=self.batch_size, shuffle=True)
 
             train_source_X = torch.cat([X for X, _ in train_source_loader], dim=0)
-            train_source_ds = TensorDataset(train_source_X, torch.ones(train_source_X.shape[0]).to(torch.float32).to(utils.DEVICE))
+            train_source_ds = TensorDataset(train_source_X, torch.ones(train_source_X.shape[0]).to(torch.float32).to(self.device))
             train_source_as_target_loader = DataLoader(train_source_ds, batch_size=self.batch_size, shuffle=True)
     
             self.__init__(self.experiment)
@@ -276,7 +276,7 @@ class IsihDanns:
             target_as_source_loader = DataLoader(train_target_ds, batch_size=self.batch_size, shuffle=True)
 
             train_source_X = torch.cat([X for X, _ in train_source_loader], dim=0)
-            train_source_ds = TensorDataset(train_source_X, torch.ones(train_source_X.shape[0]).to(torch.float32).to(utils.DEVICE))
+            train_source_ds = TensorDataset(train_source_X, torch.ones(train_source_X.shape[0]).to(torch.float32).to(self.device))
             train_source_as_target_loader = DataLoader(train_source_ds, batch_size=self.batch_size, shuffle=True)
 
             self.__init__(self.experiment)
