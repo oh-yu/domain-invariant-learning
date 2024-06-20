@@ -8,7 +8,7 @@ from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 
-from ...networks import Codats, CoDATS_F_C, IsihDanns
+from ...networks import Codats, CoDATS_F_C, IsihDanns, Danns2D
 from ...utils import utils
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -17,6 +17,77 @@ FLAGS = flags.FLAGS
 flags.DEFINE_string("algo_name", "DANN", "which algo to be used, DANN or CoRAL")
 flags.DEFINE_integer("num_repeats", 10, "the number of evaluation trials")
 flags.DEFINE_boolean("is_RV_tuning", True, "Whether or not use Reverse Validation based free params tuning method(5.1.2 algo from DANN paper)")
+
+
+def danns_2d(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, num_repeats: int = 10,) -> float:
+    accs = []
+    for _ in range(num_repeats):
+        # Prepare Data
+        train_source_X = pd.read_csv(
+            f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv"
+        )
+        target_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_X_train.csv")
+        train_source_y_task = pd.read_csv(
+            f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_Y_train.csv"
+        )[train_source_X.Season == winter_idx].values.reshape(-1)
+        target_y_task = pd.read_csv(
+            f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_Y_train.csv"
+        )[target_X.Season == winter_idx].values.reshape(-1)
+        train_source_X = train_source_X[train_source_X.Season == winter_idx]
+        target_X = target_X[target_X.Season == winter_idx]
+
+        scaler = preprocessing.StandardScaler()
+        train_source_X = scaler.fit_transform(train_source_X)
+        scaler.fit(target_X)
+        target_X = scaler.transform(target_X)
+
+        train_source_X, train_source_y_task = utils.apply_sliding_window(
+            train_source_X, train_source_y_task, filter_len=6
+        )
+        target_X, target_y_task = utils.apply_sliding_window(target_X, target_y_task, filter_len=6)
+
+        source_loader, target_loader, _, _, _, _ = utils.get_loader(
+            train_source_X, target_X, train_source_y_task, target_y_task, shuffle=True, batch_size=32
+        )
+
+        target_prime_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_X_train.csv")
+        target_prime_y_task = pd.read_csv(
+            f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_Y_train.csv"
+        )[target_prime_X.Season == summer_idx].values.reshape(-1)
+        target_prime_X = target_prime_X[target_prime_X.Season == summer_idx].values
+
+        train_target_prime_X, test_target_prime_X, train_target_prime_y_task, test_target_prime_y_task = train_test_split(
+            target_prime_X, target_prime_y_task, test_size=0.5, shuffle=False
+        )
+
+        scaler.fit(train_target_prime_X)
+        train_target_prime_X = scaler.transform(train_target_prime_X)
+        test_target_prime_X = scaler.transform(test_target_prime_X)
+        train_target_prime_X, train_target_prime_y_task = utils.apply_sliding_window(
+            train_target_prime_X, train_target_prime_y_task, filter_len=6
+        )
+        test_target_prime_X, test_target_prime_y_task = utils.apply_sliding_window(test_target_prime_X, test_target_prime_y_task, filter_len=6)
+        test_target_prime_X = torch.tensor(test_target_prime_X, dtype=torch.float32)
+        test_target_prime_y_task = torch.tensor(test_target_prime_y_task, dtype=torch.float32)
+        test_target_prime_X = test_target_prime_X.to(DEVICE)
+        test_target_prime_y_task = test_target_prime_y_task.to(DEVICE)
+
+        train_target_prime_X = torch.tensor(train_target_prime_X, dtype=torch.float32).to(DEVICE)
+        train_target_prime_y_domain = torch.ones(train_target_prime_X.shape[0]).to(DEVICE)
+        target_prime_ds = TensorDataset(train_target_prime_X, train_target_prime_y_domain)
+        target_prime_loader = DataLoader(target_prime_ds, shuffle=True)
+
+        # Init 2D-DANNs
+        danns_2d = Danns2D(experiment="ECOdataset")
+        acc = danns_2d.fit(
+            source_loader,
+            target_loader,
+            target_prime_loader,
+            test_target_prime_X,
+            test_target_prime_y_task
+        )
+        accs.append(acc)
+    return sum(accs) / num_repeats
 
 
 def isih_da_house(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, num_repeats: int = 10,) -> float:

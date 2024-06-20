@@ -51,4 +51,5 @@ class Danns2D:
         config = {
             "num_epochs": self.num_epochs
         }
-        self.feature_extractor, self.task_classifier = fit(data, network, **config)
+        self.feature_extractor, self.task_classifier, acc = fit(data, network, **config)
+        return acc

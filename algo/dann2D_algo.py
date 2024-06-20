@@ -137,7 +137,7 @@ def fit(data, network, **kwargs):
     plt.xlabel("epoch")
     plt.ylabel("accuracy")
     plt.show()
-    return feature_extractor, task_classifier
+    return feature_extractor, task_classifier, acc
 
 
 if __name__ == "__main__":
