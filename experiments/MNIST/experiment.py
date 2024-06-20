@@ -13,6 +13,7 @@ from ...networks import Dann, Dann_F_C, IsihDanns
 FLAGS = flags.FLAGS
 flags.DEFINE_string("algo_name", "DANN", "which algo to be used, DANN or CoRAL")
 flags.DEFINE_integer("num_repeats", 10, "the number of repetitions for hold-out test")
+flags.DEFINE_boolean("is_RV_tuning", True, "Whether or not use Reverse Validation based free params tuning method(5.1.2 algo from DANN paper)")
 
 
 class Reshape(object):
@@ -62,7 +63,7 @@ def get_image_data_for_uda(name="MNIST"):
         )
         train_data = CustomUDADataset(train_data, "source")
         train_loader = torch.utils.data.DataLoader(train_data, batch_size=16, shuffle=True)
-        return train_loader
+        return train_loader, train_data
 
     elif name == "MNIST-M":
         custom_transform = transforms.Compose([transforms.ToTensor(),])
@@ -74,7 +75,7 @@ def get_image_data_for_uda(name="MNIST"):
 
         train_data_gt = CustomUDADataset(imagefolder_data, "source")
         train_loader_gt = DataLoader(train_data_gt, batch_size=128, shuffle=False)
-        return train_loader, train_loader_gt
+        return train_loader, train_loader_gt, train_data
 
     elif name == "SVHN":
         custom_transform = transforms.Compose([transforms.ToTensor(),])
@@ -94,7 +95,7 @@ def get_image_data_for_uda(name="MNIST"):
         )
         test_data = CustomUDADataset(test_data, "source")
         test_loader = DataLoader(test_data, batch_size=128, shuffle=False)
-        return train_loader, test_loader
+        return train_loader, test_loader, train_data
 
     elif name == "SVHN-trainontarget":
         custom_transform = transforms.Compose([transforms.ToTensor(),])
@@ -111,9 +112,9 @@ def get_image_data_for_uda(name="MNIST"):
 
 def isih_da():
     # Load Data
-    source_loader = MNIST
-    target_loader, target_loader_gt = MNIST_M
-    train_target_prime_loader, test_target_prime_loader_gt = SVHN
+    source_loader, source_ds = MNIST
+    target_loader, target_loader_gt, target_ds = MNIST_M
+    train_target_prime_loader, test_target_prime_loader_gt, target_prime_ds = SVHN
 
     # Model Init
     isih_dann = IsihDanns(experiment="MNIST")
@@ -123,7 +124,10 @@ def isih_da():
     target_y_task = torch.cat([y[:, 0] for _, y in target_loader_gt], dim=0)
     target_X = torch.tensor(target_X, dtype=torch.float32)
     target_y_task = torch.tensor(target_y_task, dtype=torch.long)
-    isih_dann.fit_1st_dim(source_loader, target_loader, target_X, target_y_task)
+    if not FLAGS.is_RV_tuning:
+        isih_dann.fit_1st_dim(source_loader, target_loader, target_X, target_y_task)
+    else:
+        isih_dann.fit_RV_1st_dim(source_ds, target_ds, target_X, target_y_task)
     pred_y_task = isih_dann.predict_proba(target_X, is_1st_dim=True)
 
     # Algo2 inter-reals DA
@@ -133,7 +137,8 @@ def isih_da():
     source_loader = DataLoader(source_ds, batch_size=64, shuffle=True)
     test_target_prime_X = torch.cat([X for X, _ in test_target_prime_loader_gt], dim=0)
     test_target_prime_y_task = torch.cat([y[:, 0] for _, y in test_target_prime_loader_gt], dim=0)
-    isih_dann.fit_2nd_dim(source_loader, train_target_prime_loader, test_target_prime_X, test_target_prime_y_task)
+    # isih_dann.fit_2nd_dim(source_loader, train_target_prime_loader, test_target_prime_X, test_target_prime_y_task)
+    isih_dann.fit_RV_2nd_dim(source_ds, target_prime_ds, test_target_prime_X, test_target_prime_y_task)
 
     # Algo3 Eval
     isih_dann.set_eval()
@@ -144,23 +149,25 @@ def isih_da():
 
 def dann():
     # Load Data
-    source_loader = MNIST
-    train_target_prime_loader, test_target_prime_loader_gt = SVHN
+    source_loader, source_ds = MNIST
+    train_target_prime_loader, test_target_prime_loader_gt, target_prime_ds = SVHN
 
     # Model Init
     dann = Dann()
     # Fit DANN
     test_target_prime_X = torch.cat([X for X, _ in test_target_prime_loader_gt], dim=0)
     test_target_prime_y_task = torch.cat([y[:, 0] for _, y in test_target_prime_loader_gt], dim=0)
-    dann.fit(
-        source_loader, train_target_prime_loader, test_target_prime_X, test_target_prime_y_task,
-    )
-
-    # Eval
-    dann.set_eval()
-    pred_y_task = dann.predict(test_target_prime_X)
-    acc = sum(pred_y_task == test_target_prime_y_task) / len(test_target_prime_y_task)
-    return acc.item()
+    if not FLAGS.is_RV_tuning:
+        dann.fit(
+            source_loader, train_target_prime_loader, test_target_prime_X, test_target_prime_y_task,
+        )
+        dann.set_eval()
+        pred_y_task = dann.predict(test_target_prime_X)
+        acc = sum(pred_y_task == test_target_prime_y_task) / len(test_target_prime_y_task)
+        acc = acc.item()
+    else:
+        acc = dann.fit_RV(source_ds, target_prime_ds, test_target_prime_X, test_target_prime_y_task)
+    return acc
 
 
 def without_adapt():

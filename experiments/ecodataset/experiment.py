@@ -15,6 +15,8 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 HOUSEHOLD_IDXS = [1, 2, 3, 4, 5]
 FLAGS = flags.FLAGS
 flags.DEFINE_string("algo_name", "DANN", "which algo to be used, DANN or CoRAL")
+flags.DEFINE_integer("num_repeats", 10, "the number of evaluation trials")
+flags.DEFINE_boolean("is_RV_tuning", True, "Whether or not use Reverse Validation based free params tuning method(5.1.2 algo from DANN paper)")
 
 
 def isih_da_house(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, num_repeats: int = 10,) -> float:
@@ -55,8 +57,8 @@ def isih_da_house(source_idx: int, target_idx: int, winter_idx: int, summer_idx:
             target_y_task,
             target_y_task,
         )
-        source_loader, target_loader, _, _, _, _ = utils.get_loader(
-            train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True, batch_size=32
+        source_loader, target_loader, _, _, _, _, source_ds, target_ds = utils.get_loader(
+            train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True, batch_size=32, return_ds=True
         )
         # Note: batch_size=32, because exploding gradient when batch_size=34(this leads to one sample loss)
 
@@ -67,7 +69,10 @@ def isih_da_house(source_idx: int, target_idx: int, winter_idx: int, summer_idx:
 
         ## isih-DA fit, predict for 1st dimension
         isih_dann = IsihDanns(experiment="ECOdataset")
-        isih_dann.fit_1st_dim(source_loader, target_loader, test_target_X, test_target_y_task)
+        if FLAGS.is_RV_tuning:
+            isih_dann.fit_RV_1st_dim(source_ds, target_ds, test_target_X, test_target_y_task)
+        else:
+            isih_dann.fit_1st_dim(source_loader, target_loader, test_target_X, test_target_y_task)
         pred_y_task = isih_dann.predict_proba(test_target_X, is_1st_dim=True)
 
         # Algo2. Inter-Seasons DA
@@ -95,11 +100,14 @@ def isih_da_house(source_idx: int, target_idx: int, winter_idx: int, summer_idx:
         test_target_X = test_target_X.to(DEVICE)
         test_target_y_task = test_target_y_task.to(DEVICE)
 
-        source_loader, target_loader, _, _, _, _ = utils.get_loader(
-            train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True
+        source_loader, target_loader, _, _, _, _, source_ds, target_ds = utils.get_loader(
+            train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True, return_ds=True
         )
         ## isih-DA fit, predict for 2nd dimension
-        isih_dann.fit_2nd_dim(source_loader, target_loader, test_target_X, test_target_y_task)
+        if FLAGS.is_RV_tuning:
+            isih_dann.fit_RV_2nd_dim(source_ds, target_ds, test_target_X, test_target_y_task)
+        else:
+            isih_dann.fit_2nd_dim(source_loader, target_loader, test_target_X, test_target_y_task)
         isih_dann.set_eval()
         pred_y_task = isih_dann.predict(test_target_X, is_1st_dim=False)
 
@@ -147,8 +155,8 @@ def isih_da_season(source_idx: int, target_idx: int, winter_idx: int, summer_idx
             target_y_task,
             target_y_task,
         )
-        source_loader, target_loader, _, _, _, _ = utils.get_loader(
-            train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True, batch_size=32
+        source_loader, target_loader, _, _, _, _, source_ds, target_ds = utils.get_loader(
+            train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True, batch_size=32, return_ds=True
         )
         # Note: batch_size=32, because exploding gradient when batch_size=34(this leads to one sample loss)
 
@@ -159,7 +167,10 @@ def isih_da_season(source_idx: int, target_idx: int, winter_idx: int, summer_idx
 
         ## isih-DA fit, predict for 1st dimension
         isih_dann = IsihDanns(experiment="ECOdataset")
-        isih_dann.fit_1st_dim(source_loader, target_loader, test_target_X, test_target_y_task)
+        if FLAGS.is_RV_tuning:
+            isih_dann.fit_RV_1st_dim(source_ds, target_ds, test_target_X, test_target_y_task)
+        else:
+            isih_dann.fit_1st_dim(source_loader, target_loader, test_target_X, test_target_y_task)
         pred_y_task = isih_dann.predict_proba(test_target_X, is_1st_dim=True)
 
         # Algo2. Inter-Households DA
@@ -183,8 +194,8 @@ def isih_da_season(source_idx: int, target_idx: int, winter_idx: int, summer_idx
             train_target_X, train_target_y_task, filter_len=6
         )
 
-        source_loader, target_loader, _, _, _, _ = utils.get_loader(
-            train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True
+        source_loader, target_loader, _, _, _, _, source_ds, target_ds = utils.get_loader(
+            train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True, return_ds=True
         )
 
         test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
@@ -192,7 +203,10 @@ def isih_da_season(source_idx: int, target_idx: int, winter_idx: int, summer_idx
         test_target_X = test_target_X.to(DEVICE)
         test_target_y_task = test_target_y_task.to(DEVICE)
         ## isih-DA fit, predict for 2nd dimension
-        isih_dann.fit_2nd_dim(source_loader, target_loader, test_target_X, test_target_y_task)
+        if FLAGS.is_RV_tuning:
+            isih_dann.fit_RV_2nd_dim(source_ds, target_ds, test_target_X, test_target_y_task)
+        else:
+            isih_dann.fit_2nd_dim(source_loader, target_loader, test_target_X, test_target_y_task)
         isih_dann.set_eval()
         pred_y_task = isih_dann.predict(test_target_X, is_1st_dim=False)
 
@@ -237,8 +251,8 @@ def codats(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, n
     train_target_X, train_target_y_task = utils.apply_sliding_window(train_target_X, train_target_y_task, filter_len=6)
     test_target_X, test_target_y_task = utils.apply_sliding_window(test_target_X, test_target_y_task, filter_len=6)
     for _ in range(num_repeats):
-        source_loader, target_loader, _, _, _, _ = utils.get_loader(
-            train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True
+        source_loader, target_loader, _, _, _, _, source_ds, target_ds = utils.get_loader(
+            train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True, return_ds=True
         )
 
         test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
@@ -248,11 +262,15 @@ def codats(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, n
 
         ## CoDATS fit, predict
         codats = Codats(experiment="ECOdataset")
-        codats.fit(source_loader, target_loader, test_target_X, test_target_y_task)
-        codats.set_eval()
-        pred_y_task = codats.predict(test_target_X)
-        acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
-        accs.append(acc.item())
+        if FLAGS.is_RV_tuning:
+            acc = codats.fit_RV(source_ds, target_ds, test_target_X, test_target_y_task)
+        else:
+            codats.fit(source_loader, target_loader, test_target_X, test_target_y_task)
+            codats.set_eval()
+            pred_y_task = codats.predict(test_target_X)
+            acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
+            acc = acc.item()
+        accs.append(acc)
     return sum(accs) / num_repeats
 
 
@@ -370,11 +388,11 @@ def main(argv):
             elif (i != 4) and (i != 5):
                 if (j == 4) or (j == 5):
                     continue
-            isih_da_house_acc = isih_da_house(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
-            isih_da_season_acc = isih_da_season(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
-            codats_acc = codats(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
-            without_adapt_acc = without_adapt(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
-            train_on_target_acc, ground_truth_ratio = train_on_target(target_idx=j, summer_idx=1)
+            isih_da_house_acc = isih_da_house(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1, num_repeats=FLAGS.num_repeats)
+            isih_da_season_acc = isih_da_season(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1, num_repeats=FLAGS.num_repeats)
+            codats_acc = codats(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1, num_repeats=FLAGS.num_repeats)
+            without_adapt_acc = without_adapt(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1, num_repeats=FLAGS.num_repeats)
+            train_on_target_acc, ground_truth_ratio = train_on_target(target_idx=j, summer_idx=1, num_repeats=FLAGS.num_repeats)
 
             isih_da_house_accs.append(isih_da_house_acc)
             isih_da_season_accs.append(isih_da_season_acc)
@@ -397,11 +415,11 @@ def main(argv):
             elif (i != 4) and (i != 5):
                 if (j == 4) or (j == 5):
                     continue
-            isih_da_house_acc = isih_da_house(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0)
-            isih_da_season_acc = isih_da_season(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0)
-            codats_acc = codats(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0)
-            without_adapt_acc = without_adapt(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0)
-            train_on_target_acc, ground_truth_ratio = train_on_target(target_idx=j, summer_idx=0)
+            isih_da_house_acc = isih_da_house(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0, num_repeats=FLAGS.num_repeats)
+            isih_da_season_acc = isih_da_season(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0, num_repeats=FLAGS.num_repeats)
+            codats_acc = codats(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0, num_repeats=FLAGS.num_repeats)
+            without_adapt_acc = without_adapt(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0, num_repeats=FLAGS.num_repeats)
+            train_on_target_acc, ground_truth_ratio = train_on_target(target_idx=j, summer_idx=0, num_repeats=FLAGS.num_repeats)
 
             isih_da_house_accs.append(isih_da_house_acc)
             isih_da_season_accs.append(isih_da_season_acc)

@@ -26,6 +26,9 @@ FLAGS = flags.FLAGS
 flags.DEFINE_integer("lag_1", 1, "time lag for intermediate domain")
 flags.DEFINE_integer("lag_2", 6, "time lag for terminal domain")
 flags.DEFINE_string("algo_name", "DANN", "which algo to be used, DANN or CoRAL")
+flags.DEFINE_integer("num_repeats", 10 , "the number of evaluation trials")
+flags.DEFINE_boolean("is_RV_tuning", True, "Whether or not use Reverse Validation based free params tuning method(5.1.2 algo from DANN paper)")
+
 flags.mark_flag_as_required("lag_1")
 flags.mark_flag_as_required("lag_2")
 
@@ -73,8 +76,8 @@ def isih_da(source_idx=2, season_idx=0, num_repeats: int = 10):
             target_y_task,
             target_y_task,
         )
-        source_loader, target_loader, train_source_y_task, train_source_X, _, _ = utils.get_loader(
-            train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True, batch_size=32
+        source_loader, target_loader, train_source_y_task, train_source_X, _, _, source_ds, target_ds = utils.get_loader(
+            train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True, batch_size=32, return_ds=True
         )
         # Note: batch_size=32, because exploding gradient when batch_size=34(this leads to one sample loss)
 
@@ -84,7 +87,10 @@ def isih_da(source_idx=2, season_idx=0, num_repeats: int = 10):
         test_target_y_task = test_target_y_task.to(DEVICE)
 
         isih_dann = IsihDanns(experiment="ECOdataset_synthetic")
-        isih_dann.fit_1st_dim(source_loader, target_loader, test_target_X, test_target_y_task)
+        if not FLAGS.is_RV_tuning:
+            isih_dann.fit_1st_dim(source_loader, target_loader, test_target_X, test_target_y_task)
+        else:
+            isih_dann.fit_RV_1st_dim(source_ds, target_ds, test_target_X, test_target_y_task)
         pred_y_task = isih_dann.predict_proba(test_target_X, is_1st_dim=True)
         train_source_X = target_X
         train_source_y_task = pred_y_task.cpu().detach().numpy()
@@ -105,11 +111,14 @@ def isih_da(source_idx=2, season_idx=0, num_repeats: int = 10):
         test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
         test_target_X = test_target_X.to(DEVICE)
         test_target_y_task = test_target_y_task.to(DEVICE)
-        source_loader, target_loader, _, _, _, _ = utils.get_loader(
-            train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True
+        source_loader, target_loader, _, _, _, _, source_ds, target_ds = utils.get_loader(
+            train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True, return_ds=True
         )
         ## isih-DA fit, predict for 2nd dimension
-        isih_dann.fit_2nd_dim(source_loader, target_loader, test_target_X, test_target_y_task)
+        if not FLAGS.is_RV_tuning:
+            isih_dann.fit_2nd_dim(source_loader, target_loader, test_target_X, test_target_y_task)
+        else:
+            isih_dann.fit_RV_2nd_dim(source_ds, target_ds, test_target_X, test_target_y_task)
         isih_dann.set_eval()
         pred_y_task = isih_dann.predict(test_target_X, is_1st_dim=False)
 
@@ -155,16 +164,20 @@ def codats(source_idx=2, season_idx=0, num_repeats: int = 10):
     test_target_X = test_target_X.to(DEVICE)
     test_target_y_task = test_target_y_task.to(DEVICE)
     for _ in range(num_repeats):
-        source_loader, target_loader, _, _, _, _ = utils.get_loader(
-            train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True
+        source_loader, target_loader, _, _, _, _, source_ds, target_ds = utils.get_loader(
+            train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True, return_ds=True
         )
         ## CoDATS fit, predict
         codats = Codats(experiment="ECOdataset_synthetic")
-        codats.fit(source_loader, target_loader, test_target_X, test_target_y_task)
-        codats.set_eval()
-        pred_y_task = codats.predict(test_target_X)
-        acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
-        accs.append(acc.item())
+        if not FLAGS.is_RV_tuning:
+            codats.fit(source_loader, target_loader, test_target_X, test_target_y_task)
+            codats.set_eval()
+            pred_y_task = codats.predict(test_target_X)
+            acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
+            acc = acc.item()
+        else:
+            acc = codats.fit_RV(source_ds, target_ds, test_target_X, test_target_y_task)
+        accs.append(acc)
     return sum(accs) / num_repeats
 
 
@@ -278,10 +291,10 @@ def main(argv):
     patterns = []
     for i in tqdm(HOUSEHOLD_IDX):
         for j in SEASON_IDX:
-            acc_isih_da = isih_da(source_idx=i, season_idx=j)
-            acc_codats = codats(source_idx=i, season_idx=j)
-            acc_without_adapt = without_adapt(source_idx=i, season_idx=j)
-            acc_train_on_target = train_on_target(source_idx=i, season_idx=j)
+            acc_isih_da = isih_da(source_idx=i, season_idx=j, num_repeats=FLAGS.num_repeats)
+            acc_codats = codats(source_idx=i, season_idx=j, num_repeats=FLAGS.num_repeats)
+            acc_without_adapt = without_adapt(source_idx=i, season_idx=j, num_repeats=FLAGS.num_repeats)
+            acc_train_on_target = train_on_target(source_idx=i, season_idx=j, num_repeats=FLAGS.num_repeats)
             accs_isih_da.append(acc_isih_da)
             accs_codats.append(acc_codats)
             accs_without_adapt.append(acc_without_adapt)
