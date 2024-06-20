@@ -199,3 +199,16 @@ if __name__ == "__main__":
         "is_target_weights": False,
     }
     feature_extractor, task_classifier = fit(data, network, **config)
+
+    y_grid = task_classifier.predict_proba(feature_extractor(x_grid.T)).cpu().detach().numpy()
+    source_X = source_X.cpu()
+    target_prime_X = target_prime_X.cpu()
+    plt.figure()
+    plt.title("2D-DANN Boundary")
+    plt.xlabel("X1")
+    plt.ylabel("X2")
+    plt.scatter(source_X[:, 0], source_X[:, 1], c=source_y_task)
+    plt.scatter(target_prime_X[:, 0], target_prime_X[:, 1], c="black")
+    plt.contourf(x1_grid, x2_grid, y_grid.reshape(100, 100), alpha=0.3)
+    plt.colorbar()
+    plt.show()
