@@ -134,9 +134,10 @@ def fit(data, network, **kwargs):
             if epoch % 10 == 0:
                 print(f"Epoch: {epoch}, Loss Coral: {loss_coral}, Loss Task: {loss_task}, Acc: {acc}")
             early_stopping(acc.item())
+            loss_evals.append(acc.item())
         if early_stopping.early_stop:
             break
-            loss_evals.append(acc.item())
+            
     
     if do_plot:
         _plot_coral_loss(loss_corals, loss_tasks, loss_evals)
