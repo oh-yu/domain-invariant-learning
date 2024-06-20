@@ -439,6 +439,7 @@ def train_on_target(target_idx: int, summer_idx: int, num_repeats: int = 10) -> 
 
 
 def main(argv):
+    danns_2d_accs = []
     isih_da_house_accs = []
     isih_da_season_accs = []
     codats_accs = []
@@ -459,12 +460,14 @@ def main(argv):
             elif (i != 4) and (i != 5):
                 if (j == 4) or (j == 5):
                     continue
+            danns_2d_acc = danns_2d(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1, num_repeats=FLAGS.num_repeats)
             isih_da_house_acc = isih_da_house(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1, num_repeats=FLAGS.num_repeats)
             isih_da_season_acc = isih_da_season(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1, num_repeats=FLAGS.num_repeats)
             codats_acc = codats(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1, num_repeats=FLAGS.num_repeats)
             without_adapt_acc = without_adapt(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1, num_repeats=FLAGS.num_repeats)
             train_on_target_acc, ground_truth_ratio = train_on_target(target_idx=j, summer_idx=1, num_repeats=FLAGS.num_repeats)
 
+            danns_2d_accs.append(danns_2d_acc)
             isih_da_house_accs.append(isih_da_house_acc)
             isih_da_season_accs.append(isih_da_season_acc)
             codats_accs.append(codats_acc)
@@ -486,12 +489,14 @@ def main(argv):
             elif (i != 4) and (i != 5):
                 if (j == 4) or (j == 5):
                     continue
+            danns_2d_acc = danns_2d(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0, num_repeats=FLAGS.num_repeats)
             isih_da_house_acc = isih_da_house(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0, num_repeats=FLAGS.num_repeats)
             isih_da_season_acc = isih_da_season(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0, num_repeats=FLAGS.num_repeats)
             codats_acc = codats(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0, num_repeats=FLAGS.num_repeats)
             without_adapt_acc = without_adapt(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0, num_repeats=FLAGS.num_repeats)
             train_on_target_acc, ground_truth_ratio = train_on_target(target_idx=j, summer_idx=0, num_repeats=FLAGS.num_repeats)
 
+            danns_2d_accs.append(danns_2d_acc)
             isih_da_house_accs.append(isih_da_house_acc)
             isih_da_season_accs.append(isih_da_season_acc)
             codats_accs.append(codats_acc)
@@ -501,7 +506,7 @@ def main(argv):
             patterns.append(f"({i}, s) -> ({j}, w)")
             if (i == 4) or (i == 5):
                 break
-
+    print(f"DANNs-2D Average: {sum(danns_2d_accs) / len(danns_2d_accs)}")
     print(f"isih-DA (Household => Season) Average: {sum(isih_da_house_accs)/len(isih_da_house_accs)}")
     print(f"isih-DA (Season => Household) Average: {sum(isih_da_season_accs)/len(isih_da_season_accs)}")
     print(f"CoDATS Average: {sum(codats_accs)/len(codats_accs)}")
@@ -509,6 +514,7 @@ def main(argv):
     print(f"Train on Target Average: {sum(train_on_target_accs)/len(train_on_target_accs)}")
 
     df["PAT"] = patterns
+    df["DANNs-2D"] = danns_2d_accs
     df["isih-DA (Household => Season)"] = isih_da_house_accs
     df["isih-DA (Season => Household)"] = isih_da_season_accs
     df["CoDATS"] = codats_accs

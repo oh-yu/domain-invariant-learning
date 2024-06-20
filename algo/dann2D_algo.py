@@ -6,7 +6,6 @@ from tqdm import tqdm
 
 from ..utils import utils
 from .dann_algo import ReverseGradient
-from ..experiments.make_moons.experiment import get_source_target_from_make_moons
 from ..networks import Encoder, ThreeLayersDecoder
 
 def fit(data, network, **kwargs):
@@ -28,9 +27,10 @@ def fit(data, network, **kwargs):
     )
     config = {
         "num_epochs": 1000,
+        "device": utils.DEVICE
     }
     config.update(kwargs)
-    num_epochs = config["num_epochs"]
+    num_epochs, device = config["num_epochs"], config["device"]
 
     # Fit
     loss_tasks = []
@@ -142,7 +142,7 @@ def fit(data, network, **kwargs):
 
 if __name__ == "__main__":
     # Prepare Data
-    (source_X, source_y_task, target_X, target_y_task, target_prime_X, target_prime_y_task, x_grid, x1_grid, x2_grid) = get_source_target_from_make_moons(
+    (source_X, source_y_task, target_X, target_y_task, target_prime_X, target_prime_y_task, x_grid, x1_grid, x2_grid) = utils.get_source_target_from_make_moons(
         rotation_degree=-20
     )
     source_loader, target_prime_loader, source_y_task, source_X, target_prime_X, target_prime_y_task = utils.get_loader(
