@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from sklearn.datasets import make_moons
 from sklearn.manifold import TSNE
 from torch.utils.data import DataLoader, TensorDataset, Subset
 

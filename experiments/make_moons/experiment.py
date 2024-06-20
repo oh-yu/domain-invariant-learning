@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 import torch
 from absl import app, flags
-from sklearn.datasets import make_moons
 from torch import nn, optim
 from torch.utils.data import DataLoader, TensorDataset
 

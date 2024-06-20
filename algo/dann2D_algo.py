@@ -196,7 +196,7 @@ if __name__ == "__main__":
     config = {
         "num_epochs": 200,
     }
-    feature_extractor, task_classifier = fit(data, network, **config)
+    feature_extractor, task_classifier, _ = fit(data, network, **config)
 
     x_grid = torch.tensor(x_grid, dtype=torch.float32)
     x_grid = x_grid.to(device)
