@@ -200,6 +200,8 @@ if __name__ == "__main__":
     }
     feature_extractor, task_classifier = fit(data, network, **config)
 
+    x_grid = torch.tensor(x_grid, dtype=torch.float32)
+    x_grid = x_grid.to(device)
     y_grid = task_classifier.predict_proba(feature_extractor(x_grid.T)).cpu().detach().numpy()
     source_X = source_X.cpu()
     target_prime_X = target_prime_X.cpu()
