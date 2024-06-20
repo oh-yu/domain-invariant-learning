@@ -28,10 +28,9 @@ def fit(data, network, **kwargs):
     )
     config = {
         "num_epochs": 1000,
-        "is_target_weights": False,
     }
     config.update(kwargs)
-    num_epochs, is_target_weights = config["num_epochs"], config["is_target_weights"]
+    num_epochs = config["num_epochs"]
 
     # Fit
     loss_tasks = []
@@ -196,7 +195,6 @@ if __name__ == "__main__":
     }
     config = {
         "num_epochs": 200,
-        "is_target_weights": False,
     }
     feature_extractor, task_classifier = fit(data, network, **config)
 
