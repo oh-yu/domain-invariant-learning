@@ -91,7 +91,7 @@ class Codats:
             ## 3.1 fit f_i
             val_source_X = torch.cat([X for X, _ in val_source_loader], dim=0)
             val_source_y_task = torch.cat([y[:, utils.COL_IDX_TASK] for _, y in val_source_loader], dim=0)
-            self.fit(train_source_loader, train_target_loader, val_source_X, val_source_y_task)
+            self.fit_ES(train_source_loader, train_target_loader, val_source_X, val_source_y_task)
 
             ## 3.2 fit \bar{f}_i
             train_target_X = torch.cat([X for X, _ in train_target_loader], dim=0)
@@ -110,7 +110,7 @@ class Codats:
             self.feature_optimizer.param_groups[0].update(param)
             self.domain_optimizer.param_groups[0].update(param)
             self.task_optimizer.param_groups[0].update(param)
-            self.fit(target_as_source_loader, train_source_as_target_loader, val_target_X, val_target_pred_y_task)
+            self.fit_ES(target_as_source_loader, train_source_as_target_loader, val_target_X, val_target_pred_y_task)
 
             ## 3.3 get RV loss
             pred_y_task = self.predict(val_source_X)
@@ -134,6 +134,47 @@ class Codats:
         pred_y_task = self.predict(test_target_X)
         acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
         return acc.item()
+
+
+    def fit_ES(
+        self,
+        source_loader: torch.utils.data.dataloader.DataLoader,
+        target_loader: torch.utils.data.dataloader.DataLoader,
+        test_target_X: torch.Tensor,
+        test_target_y_task: torch.Tensor,
+    ) -> None:
+        data = {
+            "source_loader": source_loader,
+            "target_loader": target_loader,
+            "target_X": test_target_X,
+            "target_y_task": test_target_y_task,
+        }
+        if FLAGS.algo_name == "DANN":
+            network = {
+                "feature_extractor": self.feature_extractor,
+                "domain_classifier": self.domain_classifier,
+                "task_classifier": self.task_classifier,
+                "criterion": self.criterion,
+                "feature_optimizer": self.feature_optimizer,
+                "domain_optimizer": self.domain_optimizer,
+                "task_optimizer": self.task_optimizer,
+            }
+            config = {
+                "num_epochs": self.num_epochs,
+                "is_target_weights": self.is_target_weights,
+                "do_early_stop": True
+            }
+        elif FLAGS.algo_name == "CoRAL":
+            network = {
+                "feature_extractor": self.feature_extractor,
+                "task_classifier": self.task_classifier,
+                "criterion": self.criterion,
+                "feature_optimizer": self.feature_optimizer,
+                "task_optimizer": self.task_optimizer,
+            }
+            config = {"num_epochs": self.num_epochs}
+
+        self.feature_extractor, self.task_classifier, _ = ALGORYTHMS[FLAGS.algo_name].fit(data, network, **config)
 
 
     def fit(
