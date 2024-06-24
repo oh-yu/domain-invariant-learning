@@ -224,15 +224,18 @@ def train_on_target():
 
 def main(argv):
     num_repeats = FLAGS.num_repeats
+    danns_2d_acc = 0
     isih_da_acc = 0
     dann_acc = 0
     without_adapt_acc = 0
     train_on_target_acc = 0
     for _ in range(num_repeats):
+        danns_2d_acc += danns_2d()
         isih_da_acc += isih_da()
         dann_acc += dann()
         without_adapt_acc += without_adapt()
         train_on_target_acc += train_on_target()
+    danns_2d_acc /= num_repeats
     isih_da_acc /= num_repeats
     dann_acc /= num_repeats
     without_adapt_acc /= num_repeats
@@ -240,6 +243,7 @@ def main(argv):
 
     df = pd.DataFrame()
     df["PAT"] = ["(non-color, non-real) -> (color, real)"]
+    df["DANNs 2D"] = [danns_2d_acc]
     df["isih-DA"] = [isih_da_acc]
     df["DANN"] = [dann_acc]
     df["Without Adapt"] = [without_adapt_acc]
