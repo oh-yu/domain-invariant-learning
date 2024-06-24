@@ -7,7 +7,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from torch.utils.data import DataLoader, TensorDataset
 
-from ...networks import Codats, CoDATS_F_C, IsihDanns
+from ...networks import Codats, CoDATS_F_C, IsihDanns, Danns2D
 from ...utils import utils
 
 GT_TO_INT = {"bike": 0, "stairsup": 1, "stairsdown": 2, "stand": 3, "walk": 4, "sit": 5}
@@ -82,6 +82,37 @@ def get_data_for_uda(user, model, is_targer_prime: bool = False):
         train_X, test_X = scaler.fit_transform(train_X), scaler.transform(test_X)
         train_X, test_X = train_X.reshape(train_N, T, H), test_X.reshape(test_N, T, H)
         return train_X, train_y, test_X, test_y
+
+
+def danns_2d(pattern):
+    # Load Data
+    source_X, source_y_task = get_data_for_uda(user=pattern.source_user, model=pattern.source_model)
+    target_X, target_y_task = get_data_for_uda(user=pattern.target_user, model=pattern.source_model)
+    train_target_prime_X, train_target_prime_y_task, test_target_prime_X, test_target_prime_y_task = get_data_for_uda(
+        user=pattern.target_user, model=pattern.target_model, is_targer_prime=True
+    )
+    source_loader, target_loader, _, _, target_X, target_y_task = utils.get_loader(
+        source_X, target_X, source_y_task, target_y_task, batch_size=128, shuffle=True
+    )
+    train_target_prime_X = torch.tensor(train_target_prime_X, dtype=torch.float32).to(utils.DEVICE)
+    train_target_prime_y_domain = torch.ones(train_target_prime_X.shape[0]).to(utils.DEVICE)
+    train_tartget_prime_ds = TensorDataset(train_target_prime_X, train_target_prime_y_domain)
+    target_prime_loader = DataLoader(train_tartget_prime_ds, shuffle=True, batch_size=128)
+
+    test_target_prime_X = torch.tensor(test_target_prime_X, dtype=torch.float32).to(utils.DEVICE)
+    test_target_prime_y_task = torch.tensor(test_target_prime_y_task).to(utils.DEVICE)
+    # 2d DANNs
+    danns_2d = Danns2D(experiment="HHAR")
+    acc = danns_2d.fit(
+        source_loader,
+        target_loader,
+        target_prime_loader,
+        test_target_prime_X,
+        test_target_prime_y_task
+    )
+    return acc
+
+
 
 
 def isih_da_user(pattern):

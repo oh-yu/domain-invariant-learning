@@ -2,6 +2,7 @@ import torch
 from torch import nn, optim
 
 from .conv1d_two_layers import Conv1dTwoLayers
+from .conv1d_three_layers import Conv1dThreeLayers
 from .mlp_decoder_three_layers import ThreeLayersDecoder
 from ..algo.dann2D_algo import fit
 
@@ -28,6 +29,23 @@ class Danns2D:
             self.task_optimizer = optim.Adam(self.task_classifier.parameters(), lr=0.0001)
             self.criterion = nn.BCELoss()
             self.num_epochs = 200
+
+
+        elif experiment == "HHAR":
+            self.feature_extractor = Conv1dThreeLayers(input_size=6).to(DEVICE)
+            self.domain_classifier_dim1 = ThreeLayersDecoder(input_size=128, output_size=1, dropout_ratio=0.3).to(
+                DEVICE
+            )
+            self.domain_classifier_dim2 = ThreeLayersDecoder(input_size=128, output_size=1, dropout_ratio=0.3).to(
+                DEVICE
+            )
+            self.task_classifier= ThreeLayersDecoder(input_size=128, output_size=6, dropout_ratio=0.3).to(DEVICE)
+            self.feature_optimizer = optim.Adam(self.feature_extractor.parameters(), lr=0.0001)
+            self.domain_optimizer_dim1 = optim.Adam(self.domain_classifier_dim1.parameters(), lr=0.0001)
+            self.domain_optimizer_dim2 = optim.Adam(self.domain_classifier_dim2.parameters(), lr=0.0001)
+            self.task_optimizer = optim.Adam(self.task_classifier.parameters(), lr=0.0001)
+            self.criterion = nn.BCELoss()
+            self.num_epochs= 200
     
     def fit(self, source_loader, target_loader, target_prime_loader, test_target_prime_X, test_target_prime_y_task):
         data = {
