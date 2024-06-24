@@ -69,7 +69,7 @@ def danns_2d(source_idx=2, season_idx=0, num_repeats: int = 10):
             train_source_X, train_source_y_task, filter_len=6
         )
         target_X, target_y_task = utils.apply_sliding_window(target_X, target_y_task, filter_len=6)
-        source_loader, target_loader, _, _, _, _, _, _ = utils.get_loader(
+        source_loader, target_loader, _, _, _, _  = utils.get_loader(
             train_source_X, target_X, train_source_y_task, target_y_task, shuffle=True, batch_size=32
         )
 
