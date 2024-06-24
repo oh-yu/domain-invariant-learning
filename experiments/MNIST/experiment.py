@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader, TensorDataset
 from torchvision import datasets, transforms
 from torchvision.datasets import ImageFolder
 
-from ...networks import Dann, Dann_F_C, IsihDanns
+from ...networks import Dann, Dann_F_C, IsihDanns, Danns2D
 
 FLAGS = flags.FLAGS
 flags.DEFINE_string("algo_name", "DANN", "which algo to be used, DANN or CoRAL")
@@ -108,6 +108,25 @@ def get_image_data_for_uda(name="MNIST"):
         train_data = CustomUDADataset(train_data, "source")
         train_loader = DataLoader(train_data, batch_size=64, shuffle=True)
         return train_loader
+
+
+def danns_2d():
+    # Load Data
+    source_loader, _ = MNIST
+    target_loader, _, _ = MNIST_M
+    train_target_prime_loader, test_target_prime_loader_gt, _ = SVHN 
+    test_target_prime_X = torch.cat([X for X, _ in test_target_prime_loader_gt], dim=0)
+    test_target_prime_y_task = torch.cat([y[:, 0] for _, y in test_target_prime_loader_gt], dim=0)
+    # DANNs 2D
+    danns_2d = Danns2D(experiment="MNIST")
+    acc = danns_2d.fit(
+        source_loader,
+        target_loader,
+        train_target_prime_loader,
+        test_target_prime_X,
+        test_target_prime_y_task
+    )
+    return acc
 
 
 def isih_da():
