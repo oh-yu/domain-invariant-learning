@@ -30,6 +30,7 @@ class Danns2D:
             self.task_optimizer = optim.Adam(self.task_classifier.parameters(), lr=0.0001)
             self.criterion = nn.BCELoss()
             self.num_epochs = 200
+            self.device = DEVICE
 
 
         elif experiment == "HHAR":
@@ -47,6 +48,7 @@ class Danns2D:
             self.task_optimizer = optim.Adam(self.task_classifier.parameters(), lr=0.0001)
             self.criterion = nn.BCELoss()
             self.num_epochs= 200
+            self.device = DEVICE
         
         elif experiment in ["MNIST"]:
             self.feature_extractor = Conv2d()
@@ -60,12 +62,13 @@ class Danns2D:
             self.domain_optimizer_dim1 = optim.Adam(self.domain_classifier_dim1.parameters(), lr=0.0001)
             self.task_optimizer = optim.Adam(self.task_classifier.parameters(), lr=0.0001)
             self.criterion = nn.BCELoss()
-            self.num_epochs = 100
+            self.num_epochs = 10
 
             self.domain_classifier_dim2 = ThreeLayersDecoder(
                 input_size=1152, output_size=1, fc1_size=1024, fc2_size=1024
             )
             self.domain_optimizer_dim2 = optim.Adam(self.domain_classifier_dim2.parameters(), lr=0.0001)
+            self.device = torch.device("cpu")
 
     
     def fit(self, source_loader, target_loader, target_prime_loader, test_target_prime_X, test_target_prime_y_task):
@@ -88,7 +91,8 @@ class Danns2D:
             "task_optimizer": self.task_optimizer,
         }
         config = {
-            "num_epochs": self.num_epochs
+            "num_epochs": self.num_epochs,
+            "device": self.device
         }
         self.feature_extractor, self.task_classifier, acc = fit(data, network, **config)
         return acc
