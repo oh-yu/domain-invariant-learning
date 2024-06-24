@@ -148,7 +148,8 @@ class IsihDanns:
             ## 3.1 fit f_i
             val_source_X = torch.cat([X for X, _ in val_source_loader], dim=0)
             val_source_y_task = torch.cat([y[:, utils.COL_IDX_TASK] for _, y in val_source_loader], dim=0)
-            self.fit_1st_dim_ES(train_source_loader, train_target_loader, val_source_X, val_source_y_task)
+            self.do_early_stop = True
+            self.fit_1st_dim(train_source_loader, train_target_loader, val_source_X, val_source_y_task)
             ## 3.2 fit \bar{f}_i
             train_target_X = torch.cat([X for X, _ in train_target_loader], dim=0)
             train_target_pred_y_task = self.predict(train_target_X, is_1st_dim=True)
@@ -167,8 +168,8 @@ class IsihDanns:
             self.feature_optimizer_dim1.param_groups[0].update(param)
             self.domain_optimizer_dim1.param_groups[0].update(param)
             self.task_optimizer_dim1.param_groups[0].update(param)
-
-            self.fit_1st_dim_ES(target_as_source_loader, train_source_as_target_loader, val_target_X, val_target_pred_y_task)
+            self.do_early_stop = True
+            self.fit_1st_dim(target_as_source_loader, train_source_as_target_loader, val_target_X, val_target_pred_y_task)
             ## 3.3 get RV loss
             pred_y_task = self.predict(val_source_X, is_1st_dim=True)
             acc_RV = sum(pred_y_task == val_source_y_task) / val_source_y_task.shape[0]
@@ -183,49 +184,9 @@ class IsihDanns:
         self.task_optimizer_dim1.param_groups[0].update(best_param)
         source_loader = DataLoader(source_ds, batch_size=self.batch_size, shuffle=True)
         target_loader = DataLoader(target_ds, batch_size=self.batch_size, shuffle=True)
+        self.do_early_stop = False
         self.fit_1st_dim(source_loader, target_loader, val_source_X, val_source_y_task)
 
-
-    def fit_1st_dim_ES(self, source_loader, target_loader, test_target_X: torch.Tensor, test_target_y_task: torch.Tensor):
-        data = {
-            "source_loader": source_loader,
-            "target_loader": target_loader,
-            "target_X": test_target_X,
-            "target_y_task": test_target_y_task,
-        }
-        if FLAGS.algo_name == "DANN":
-            network = {
-                "feature_extractor": self.feature_extractor,
-                "domain_classifier": self.domain_classifier_dim1,
-                "task_classifier": self.task_classifier_dim1,
-                "criterion": self.criterion,
-                "feature_optimizer": self.feature_optimizer_dim1,
-                "domain_optimizer": self.domain_optimizer_dim1,
-                "task_optimizer": self.task_optimizer_dim1,
-            }
-            config = {
-                "num_epochs": self.num_epochs_dim1,
-                "is_target_weights": self.is_target_weights,
-                "device": self.device,
-                "stop_during_epochs": self.stop_during_epochs,
-                "epoch_thr_for_stopping": 11,
-                "do_early_stop": True
-            }
-        elif FLAGS.algo_name == "CoRAL":
-            network = {
-                "feature_extractor": self.feature_extractor,
-                "task_classifier": self.task_classifier_dim1,
-                "criterion": self.criterion,
-                "feature_optimizer": self.feature_optimizer_dim1,
-                "task_optimizer": self.task_optimizer_dim1,
-            }
-            config = {
-                "num_epochs": self.num_epochs_dim1,
-                "device": self.device,
-                "stop_during_epochs": self.stop_during_epochs,
-                "epoch_thr_for_stopping": 11,
-            }
-        self.feature_extractor, self.task_classifier_dim1, _ = ALGORYTHMS[FLAGS.algo_name].fit(data, network, **config)
 
     def fit_1st_dim(self, source_loader, target_loader, test_target_X: torch.Tensor, test_target_y_task: torch.Tensor):
         data = {
@@ -250,6 +211,7 @@ class IsihDanns:
                 "device": self.device,
                 "stop_during_epochs": self.stop_during_epochs,
                 "epoch_thr_for_stopping": 11,
+                "do_early_stop": self.do_early_stop
             }
         elif FLAGS.algo_name == "CoRAL":
             network = {
@@ -306,7 +268,8 @@ class IsihDanns:
                 val_source_y_task = torch.cat([y[:, utils.COL_IDX_TASK] > 0.5 for _, y in val_source_loader], dim=0)
             else:
                 val_source_y_task = torch.cat([y[:, :-1].argmax(dim=1) for _, y in val_source_loader], dim=0)
-            self.fit_2nd_dim_ES(train_source_loader, train_target_loader, val_source_X, val_source_y_task)
+            self.do_early_stop = True
+            self.fit_2nd_dim(train_source_loader, train_target_loader, val_source_X, val_source_y_task)
             ## 3.2 fit \bar{f}_i
             train_target_X = torch.cat([X for X, _ in train_target_loader], dim=0)
             train_target_pred_y_task = self.predict(train_target_X, is_1st_dim=False)
@@ -327,7 +290,8 @@ class IsihDanns:
             self.feature_optimizer_dim1.param_groups[0].update(param)
             self.domain_optimizer_dim1.param_groups[0].update(param)
             self.task_optimizer_dim1.param_groups[0].update(param)
-            self.fit_1st_dim_ES(target_as_source_loader, train_source_as_target_loader, val_target_X, val_target_pred_y_task)
+            self.do_early_stop = True
+            self.fit_1st_dim(target_as_source_loader, train_source_as_target_loader, val_target_X, val_target_pred_y_task)
             ## 3.3 get RV loss
             pred_y_task = self.predict(val_source_X, is_1st_dim=True)
             acc_RV = sum(pred_y_task == val_source_y_task) / val_source_y_task.shape[0]
@@ -344,56 +308,12 @@ class IsihDanns:
         self.task_optimizer_dim2.param_groups[0].update(best_param)
         source_loader = DataLoader(source_ds, batch_size=self.batch_size, shuffle=True)
         target_loader = DataLoader(target_ds, batch_size=self.batch_size, shuffle=True)
-
+        self.do_early_stop = False
         self.fit_2nd_dim(source_loader, target_loader, val_source_X, val_source_y_task)
         self.set_eval()
         pred_y_task = self.predict(test_target_X, is_1st_dim=False)
         acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
         return acc.item()
-
-    def fit_2nd_dim_ES(self, source_loader, target_loader, test_target_X: torch.Tensor, test_target_y_task: torch.Tensor):
-        data = {
-            "source_loader": source_loader,
-            "target_loader": target_loader,
-            "target_X": test_target_X,
-            "target_y_task": test_target_y_task,
-        }
-        if FLAGS.algo_name == "DANN":
-            network = {
-                "feature_extractor": self.feature_extractor,
-                "domain_classifier": self.domain_classifier_dim2,
-                "task_classifier": self.task_classifier_dim2,
-                "criterion": self.criterion,
-                "feature_optimizer": self.feature_optimizer_dim2,
-                "domain_optimizer": self.domain_optimizer_dim2,
-                "task_optimizer": self.task_optimizer_dim2,
-            }
-            config = {
-                "num_epochs": self.num_epochs_dim2,
-                "is_psuedo_weights": True,
-                "is_target_weights": self.is_target_weights,
-                "device": self.device,
-                "stop_during_epochs": self.stop_during_epochs,
-                "epoch_thr_for_stopping": 2,
-                "do_early_stop": True
-            }
-        elif FLAGS.algo_name == "CoRAL":
-            network = {
-                "feature_extractor": self.feature_extractor,
-                "task_classifier": self.task_classifier_dim2,
-                "criterion": self.criterion,
-                "feature_optimizer": self.feature_optimizer_dim2,
-                "task_optimizer": self.task_optimizer_dim2,
-            }
-            config = {
-                "num_epochs": self.num_epochs_dim2,
-                "is_psuedo_weights": True,
-                "device": self.device,
-                "stop_during_epochs": self.stop_during_epochs,
-                "epoch_thr_for_stopping": 2,
-            }
-
-        self.feature_extractor, self.task_classifier_dim2, _ = ALGORYTHMS[FLAGS.algo_name].fit(data, network, **config)
 
 
     def fit_2nd_dim(self, source_loader, target_loader, test_target_X: torch.Tensor, test_target_y_task: torch.Tensor):
@@ -420,6 +340,7 @@ class IsihDanns:
                 "device": self.device,
                 "stop_during_epochs": self.stop_during_epochs,
                 "epoch_thr_for_stopping": 2,
+                "do_early_stop": self.do_early_stop
             }
         elif FLAGS.algo_name == "CoRAL":
             network = {
