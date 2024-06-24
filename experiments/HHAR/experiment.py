@@ -266,6 +266,7 @@ def train_on_target(pattern):
 
 
 def main(argv):
+    danns_2d_accs = []
     train_on_taget_accs = []
     isihda_model_accs = []
     isihda_user_accs = []
@@ -275,17 +276,20 @@ def main(argv):
     num_repeat = FLAGS.num_repeat
 
     for pat in get_experimental_PAT():
+        danns_2d_acc = 0
         train_on_taget_acc = 0
         isihda_model_acc = 0
         isihda_user_acc = 0
         codats_acc = 0
         without_adapt_acc = 0
         for _ in range(num_repeat):
+            danns_2d_acc += danns_2d(pat)
             train_on_taget_acc += train_on_target(pat)
             isihda_model_acc += isih_da_model(pat)
             isihda_user_acc += isih_da_user(pat)
             codats_acc += codats(pat)
             without_adapt_acc += without_adapt(pat)
+        danns_2d_accs.append(danns_2d_acc / num_repeat)
         train_on_taget_accs.append(train_on_taget_acc / num_repeat)
         isihda_model_accs.append(isihda_model_acc / num_repeat)
         isihda_user_accs.append(isihda_user_acc / num_repeat)
@@ -296,6 +300,7 @@ def main(argv):
     df = pd.DataFrame()
     df["PAT"] = executed_patterns
     df["Train on Target"] = train_on_taget_accs
+    df["DANNs-2D"] = danns_2d_accs
     df["Isih-DA(Model => User)"] = isihda_model_accs
     df["Isih-DA(User => Model)"] = isihda_user_accs
     df["CoDATS"] = codats_accs
