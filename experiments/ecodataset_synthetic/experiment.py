@@ -358,6 +358,7 @@ def train_on_target(source_idx=2, season_idx=0, num_repeats: int = 10):
 def main(argv):
     assert FLAGS.lag_1 in [1, 2, 3, 4, 5, 6]
     assert (FLAGS.lag_2 in [1, 2, 3, 4, 5, 6]) and (FLAGS.lag_2 > FLAGS.lag_1)
+    accs_danns_2d = []
     accs_isih_da = []
     accs_codats = []
     accs_without_adapt = []
@@ -365,10 +366,12 @@ def main(argv):
     patterns = []
     for i in tqdm(HOUSEHOLD_IDX):
         for j in SEASON_IDX:
+            acc_danns_2d = danns_2d(source_idx=i, season_idx=j, num_repeats=FLAGS.num_repeats)
             acc_isih_da = isih_da(source_idx=i, season_idx=j, num_repeats=FLAGS.num_repeats)
             acc_codats = codats(source_idx=i, season_idx=j, num_repeats=FLAGS.num_repeats)
             acc_without_adapt = without_adapt(source_idx=i, season_idx=j, num_repeats=FLAGS.num_repeats)
             acc_train_on_target = train_on_target(source_idx=i, season_idx=j, num_repeats=FLAGS.num_repeats)
+            accs_danns_2d.append(acc_danns_2d)
             accs_isih_da.append(acc_isih_da)
             accs_codats.append(acc_codats)
             accs_without_adapt.append(acc_without_adapt)
@@ -376,6 +379,7 @@ def main(argv):
             patterns.append(f"Household ID:{i}, Season:{j}")
     df = pd.DataFrame()
     df["patterns"] = patterns
+    df["accs_danns_2d"] = accs_danns_2d
     df["accs_isih_da"] = accs_isih_da
     df["accs_codats"] = accs_codats
     df["accs_without_adapt"] = accs_without_adapt
