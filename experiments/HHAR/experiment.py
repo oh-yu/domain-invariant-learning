@@ -23,7 +23,7 @@ GYROSCOPE_DF = pd.read_csv(
 GYROSCOPE_DF = GYROSCOPE_DF.add_suffix("_gyro")
 FLAGS = flags.FLAGS
 flags.DEFINE_string("algo_name", "DANN", "which algo to be used, DANN or CoRAL")
-flags.DEFINE_integer("num_repeat", 10, "the number of repetitions for hold-out test")
+flags.DEFINE_integer("num_repeats", 10, "the number of repetitions for hold-out test")
 flags.DEFINE_boolean("is_RV_tuning", True, "Whether or not use Reverse Validation based free params tuning method(5.1.2 algo from DANN paper)")
 
 
@@ -273,7 +273,7 @@ def main(argv):
     codats_accs = []
     without_adapt_accs = []
     executed_patterns = []
-    num_repeat = FLAGS.num_repeat
+    num_repeats = FLAGS.num_repeats
 
     for pat in get_experimental_PAT():
         danns_2d_acc = 0
@@ -282,19 +282,19 @@ def main(argv):
         isihda_user_acc = 0
         codats_acc = 0
         without_adapt_acc = 0
-        for _ in range(num_repeat):
+        for _ in range(num_repeats):
             danns_2d_acc += danns_2d(pat)
             train_on_taget_acc += train_on_target(pat)
             isihda_model_acc += isih_da_model(pat)
             isihda_user_acc += isih_da_user(pat)
             codats_acc += codats(pat)
             without_adapt_acc += without_adapt(pat)
-        danns_2d_accs.append(danns_2d_acc / num_repeat)
-        train_on_taget_accs.append(train_on_taget_acc / num_repeat)
-        isihda_model_accs.append(isihda_model_acc / num_repeat)
-        isihda_user_accs.append(isihda_user_acc / num_repeat)
-        codats_accs.append(codats_acc / num_repeat)
-        without_adapt_accs.append(without_adapt_acc / num_repeat)
+        danns_2d_accs.append(danns_2d_acc / num_repeats)
+        train_on_taget_accs.append(train_on_taget_acc / num_repeats)
+        isihda_model_accs.append(isihda_model_acc / num_repeats)
+        isihda_user_accs.append(isihda_user_acc / num_repeats)
+        codats_accs.append(codats_acc / num_repeats)
+        without_adapt_accs.append(without_adapt_acc / num_repeats)
         executed_patterns.append(f"({pat.source_user},{pat.source_model})->({pat.target_user},{pat.target_model})")
 
     df = pd.DataFrame()
