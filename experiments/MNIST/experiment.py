@@ -191,8 +191,8 @@ def dann():
 
 def without_adapt():
     # Load Data
-    source_loader = MNIST
-    _, test_target_prime_loader_gt = SVHN
+    source_loader, _ = MNIST
+    _, test_target_prime_loader_gt, _ = SVHN
 
     # Model Init
     without_adapt = Dann_F_C()
@@ -208,7 +208,7 @@ def without_adapt():
 def train_on_target():
     # Load Data
     train_target_prime_loader = SVHN_TRAIN_ON_TARGET
-    _, test_target_prime_loader_gt = SVHN
+    _, test_target_prime_loader_gt, _ = SVHN
 
     # Model Init
     train_on_target = Dann_F_C()
