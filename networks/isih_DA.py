@@ -335,7 +335,7 @@ class IsihDanns:
                 "is_target_weights": self.is_target_weights,
                 "device": self.device,
                 "stop_during_epochs": self.stop_during_epochs,
-                "epoch_thr_for_stopping": 2,
+                "epoch_thr_for_stopping": 11,
                 "do_early_stop": self.do_early_stop
             }
         elif FLAGS.algo_name == "CoRAL":
@@ -351,7 +351,7 @@ class IsihDanns:
                 "is_psuedo_weights": True,
                 "device": self.device,
                 "stop_during_epochs": self.stop_during_epochs,
-                "epoch_thr_for_stopping": 2,
+                "epoch_thr_for_stopping": 11,
             }
 
         self.feature_extractor, self.task_classifier_dim2, _ = ALGORYTHMS[FLAGS.algo_name].fit(data, network, **config)
