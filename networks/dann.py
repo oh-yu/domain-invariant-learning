@@ -151,6 +151,7 @@ class Dann:
             config = {
                 "num_epochs": self.num_ecochs,
                 "device": self.device,
+                "do_early_stop": self.do_early_stop
             }
         self.feature_extractor, self.task_classifier, _ = ALGORYTHMS[FLAGS.algo_name].fit(data, network, **config)
 

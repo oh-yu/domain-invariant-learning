@@ -42,7 +42,8 @@ def fit(data, network, **kwargs):
         "changed_lrs": [0.00005, 0.00005],
         "stop_during_epochs": False,
         "epoch_thr_for_stopping": 2,
-        "do_plot": False
+        "do_plot": False, 
+        "do_early_stop": False
     }
     config.update(kwargs)
     num_epochs = config["num_epochs"]
@@ -55,6 +56,7 @@ def fit(data, network, **kwargs):
     stop_during_epochs = config["stop_during_epochs"]
     epoch_thr_for_stopping = config["epoch_thr_for_stopping"]
     do_plot = config["do_plot"]
+    do_early_stop = config["do_early_stop"]
 
     # Fit
     early_stopping = EarlyStopping()
@@ -135,7 +137,7 @@ def fit(data, network, **kwargs):
                 print(f"Epoch: {epoch}, Loss Coral: {loss_coral}, Loss Task: {loss_task}, Acc: {acc}")
             early_stopping(acc.item())
             loss_evals.append(acc.item())
-        if early_stopping.early_stop:
+        if early_stopping.early_stop & do_early_stop:
             break
             
     

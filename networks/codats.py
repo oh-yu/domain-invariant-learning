@@ -173,7 +173,7 @@ class Codats:
                 "feature_optimizer": self.feature_optimizer,
                 "task_optimizer": self.task_optimizer,
             }
-            config = {"num_epochs": self.num_epochs}
+            config = {"num_epochs": self.num_epochs, "do_early_stop": self.do_early_stop}
 
         self.feature_extractor, self.task_classifier, _ = ALGORYTHMS[FLAGS.algo_name].fit(data, network, **config)
 
