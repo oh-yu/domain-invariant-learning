@@ -75,8 +75,8 @@ class Codats:
         # 2. free params
         free_params = [
             {"learning_rate": 0.0001, "eps": 1e-08, "weight_decay": 0},
-            {"learning_rate": 0.001, "eps": 1e-08, "weight_decay": 0},
-            {"learning_rate": 0.01, "eps": 1e-08, "weight_decay": 0},
+            {"learning_rate": 0.0001, "eps": 1e-07, "weight_decay": 0},
+            {"learning_rate": 0.0001, "eps": 1e-08, "weight_decay": 0.1},
         ]
         RV_scores = {"free_params": [], "scores": []}
         for param in free_params:
