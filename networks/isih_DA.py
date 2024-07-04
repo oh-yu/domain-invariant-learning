@@ -251,8 +251,6 @@ class IsihDanns:
         for param in free_params:            
             self.__init__(self.experiment)
             self.feature_extractor.load_state_dict(tmp.state_dict())
-            # self.feature_optimizer_dim2 = optim.Adam(self.feature_extractor.parameters())
-
             self.feature_optimizer_dim2.param_groups[0].update(param)
             self.domain_optimizer_dim2.param_groups[0].update(param)
             self.task_optimizer_dim2.param_groups[0].update(param)
@@ -281,8 +279,6 @@ class IsihDanns:
 
             self.__init__(self.experiment)
             self.feature_extractor.load_state_dict(tmp.state_dict())
-            # self.feature_optimizer_dim1 = optim.Adam(self.feature_extractor.parameters())
-
             self.feature_optimizer_dim1.param_groups[0].update(param)
             self.domain_optimizer_dim1.param_groups[0].update(param)
             self.task_optimizer_dim1.param_groups[0].update(param)
@@ -299,6 +295,8 @@ class IsihDanns:
         self.__init__(self.experiment)
         self.feature_extractor.load_state_dict(tmp.state_dict())
         # self.feature_optimizer_dim2 = optim.Adam(self.feature_extractor.parameters())
+        # TODO: Understand that this line causes lower evaluation score
+    
         self.feature_optimizer_dim2.param_groups[0].update(best_param)
         self.domain_optimizer_dim2.param_groups[0].update(best_param)
         self.task_optimizer_dim2.param_groups[0].update(best_param)
