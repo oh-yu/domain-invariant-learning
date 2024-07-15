@@ -1,3 +1,5 @@
+from typing import List
+
 import matplotlib.pyplot as plt
 import torch
 from torch import nn, optim
@@ -27,10 +29,14 @@ def fit(data, network, **kwargs):
     )
     config = {
         "num_epochs": 1000,
-        "device": utils.DEVICE
+        "device": utils.DEVICE,
+        "is_changing_lr": False,
+        "epoch_thr_for_changing_lr": 200,
+        "changed_lrs": [0.00005, 0.00005],
     }
     config.update(kwargs)
     num_epochs, device = config["num_epochs"], config["device"]
+    is_changing_lr, epoch_thr_for_changing_lr, changed_lrs = config["is_changing_lr"], config["epoch_thr_for_changing_lr"], config["changed_lrs"]
 
     # Fit
     loss_tasks = []
@@ -43,6 +49,16 @@ def fit(data, network, **kwargs):
         epoch = torch.tensor(epoch, dtype=torch.float32).to(device)
         feature_extractor.train()
         task_classifier.train()
+        if is_changing_lr:
+            feature_optimizer, domain_optimizer_dim1, domain_optimizer_dim2, task_optimizer = _chaging_lr_during_dann2D_training(
+                feature_optimizer,
+                domain_optimizer_dim1,
+                domain_optimizer_dim2,
+                task_optimizer,
+                epoch,
+                epoch_thr=epoch_thr_for_changing_lr,
+                changed_lrs=changed_lrs
+            )
         for (source_X_batch, source_Y_batch), (target_X_batch, target_y_domain_batch), (target_prime_X_batch, target_prime_y_domain_batch) in zip(
             source_loader, target_loader, target_prime_loader
         ):
@@ -139,6 +155,22 @@ def fit(data, network, **kwargs):
     plt.show()
     return feature_extractor, task_classifier, acc.item()
 
+
+def _change_lr_during_dann2D_training(
+    feature_optimizer: torch.optim.Adam,
+    domain_optimizer_dim1: torch.optim.Adam,
+    domain_optimizer_dim2: torch.optim.Adam,
+    task_optimizer: torch.optim.Adam,
+    epoch: torch.Tensor,
+    epoch_thr: int = 200,
+    changed_lrs: List[float] = [0.00005, 0.00005],
+):
+    if epoch == epoch_thr:
+        domain_optimizer_dim1.param_groups[0]["lr"] = changed_lrs[1]
+        domain_optimizer_dim2.param_groups[0]["lr"] = changed_lrs[1]
+        feature_optimizer.param_groups[0]["lr"] = changed_lrs[0]
+        task_optimizer.param_groups[0]["lr"] = changed_lrs[0]
+    return feature_optimizer, domain_optimizer_dim1, domain_optimizer_dim2, task_optimizer
 
 if __name__ == "__main__":
     # Prepare Data
