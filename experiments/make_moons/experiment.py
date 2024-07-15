@@ -8,7 +8,7 @@ from absl import app, flags
 from torch import nn, optim
 from torch.utils.data import DataLoader, TensorDataset
 
-from ...algo import coral_algo, dann_algo
+from ...algo import coral_algo, dann_algo, dann2D_algo
 from ...networks import Encoder, ThreeLayersDecoder
 from ...utils import utils
 
@@ -122,6 +122,60 @@ def main(argv):
 
     plt.figure()
     plt.title("Domain Adaptation Boundary")
+    plt.xlabel("X1")
+    plt.ylabel("X2")
+    plt.scatter(source_X[:, 0], source_X[:, 1], c=source_y_task)
+    plt.scatter(target_prime_X[:, 0], target_prime_X[:, 1], c="black")
+    plt.contourf(x1_grid, x2_grid, y_grid.reshape(100, 100), alpha=0.3)
+    plt.colorbar()
+    plt.show()
+
+
+    # 2D-DANNs
+    hidden_size = 10
+    num_domains = 1
+    num_classes = 1
+    feature_extractor_dim12 = Encoder(input_size=source_X.shape[1], output_size=hidden_size).to(device)
+    domain_classifier_dim1 = ThreeLayersDecoder(
+        input_size=hidden_size, output_size=num_domains, dropout_ratio=0, fc1_size=50, fc2_size=10
+    ).to(device)
+    domain_classifier_dim2 = ThreeLayersDecoder(
+        input_size=hidden_size, output_size=num_domains, dropout_ratio=0, fc1_size=50, fc2_size=10
+    ).to(device)
+    task_classifier = ThreeLayersDecoder(
+        input_size=hidden_size, output_size=num_classes, dropout_ratio=0, fc1_size=50, fc2_size=10
+    ).to(device)
+    criterion = nn.BCELoss()
+    feature_optimizer = optim.Adam(feature_extractor_dim12.parameters(), lr=0.001)
+    domain_optimizer_dim1 = optim.Adam(domain_classifier_dim1.parameters(), lr=0.001)
+    domain_optimizer_dim2 = optim.Adam(domain_classifier_dim2.parameters(), lr=0.001)
+    task_optimizer = optim.Adam(task_classifier.parameters(), lr=0.001)
+
+    data = {
+        "source_loader": source_loader,
+        "target_loader": target_loader,
+        "target_prime_loader": target_prime_loader,
+        "target_prime_X": target_prime_X,
+        "target_prime_y_task": target_prime_y_task,   
+    }
+    network = {
+        "feature_extractor": feature_extractor_dim12,
+        "domain_classifier_dim1": domain_classifier_dim1,
+        "domain_classifier_dim2": domain_classifier_dim2,
+        "task_classifier": task_classifier,
+        "criterion": criterion,
+        "feature_optimizer": feature_optimizer,
+        "domain_optimizer_dim1": domain_optimizer_dim1,
+        "domain_optimizer_dim2": domain_optimizer_dim2,
+        "task_optimizer": task_optimizer,
+    }
+    config = {
+        "num_epochs": 1000
+    }
+    feature_extractor, task_classifier, _ = dann2D_algo.fit(data, network, **config)
+    y_grid = task_classifier.predict_proba(feature_extractor(x_grid.T)).cpu().detach().numpy()
+    plt.figure()
+    plt.title("2D-DANN Boundary")
     plt.xlabel("X1")
     plt.ylabel("X2")
     plt.scatter(source_X[:, 0], source_X[:, 1], c=source_y_task)
