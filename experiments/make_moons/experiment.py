@@ -78,9 +78,6 @@ def main(argv):
         config = {
             "num_epochs": 1000,
             "do_plot": True,
-            "is_changing_lr": True,
-            "epoch_thr_for_changing_lr": 200,
-            "changed_lrs": [0.00005, 0.00005],
             "is_target_weights": True,
         }
     elif FLAGS.algo_name == "CoRAL":
@@ -171,9 +168,6 @@ def main(argv):
     }
     config = {
         "num_epochs": 1000,
-        "is_changing_lr": True,
-        "epoch_thr_for_changing_lr": 200,
-        "changed_lrs": [0.00005, 0.00005]
     }
     feature_extractor_dim12, task_classifier, _ = dann2D_algo.fit(data, network, **config)
     y_grid = task_classifier.predict_proba(feature_extractor_dim12(x_grid.T)).cpu().detach().numpy()
