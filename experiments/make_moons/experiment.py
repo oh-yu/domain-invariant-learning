@@ -155,7 +155,7 @@ def main(argv):
         "source_loader": source_loader,
         "target_loader": target_loader,
         "target_prime_loader": target_prime_loader,
-        "target_prime_X": target_prime_X,
+        "target_prime_X": target_prime_X.to(utils.DEVICE),
         "target_prime_y_task": target_prime_y_task,   
     }
     network = {
@@ -183,6 +183,9 @@ def main(argv):
     plt.contourf(x1_grid, x2_grid, y_grid.reshape(100, 100), alpha=0.3)
     plt.colorbar()
     plt.show()
+    pred_y_task = task_classifier.predict(feature_extractor(target_prime_X.to(device)))
+    danns_2D_acc = sum(pred_y_task == target_prime_y_task) / len(pred_y_task)
+
 
     # step-by-step DANNs
     hidden_size = 10
@@ -351,6 +354,7 @@ def main(argv):
     # to csv
     df = pd.DataFrame()
     df["PAT"] = [f"source->{FLAGS.rotation_degree}rotated->{FLAGS.rotation_degree*2}rotated"]
+    df["2D-DANNs"] = [danns_2D_acc.item()]
     df["stepbystep-DANNs"] = [stepbystep_dann_acc.item()]
     df["DANNs"] = [dann_acc.item()]
     df["WithoutAdapt"] = [without_adapt_acc.item()]

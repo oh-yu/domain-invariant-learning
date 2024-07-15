@@ -5,7 +5,7 @@ from .conv2d import Conv2d
 from .conv1d_two_layers import Conv1dTwoLayers
 from .conv1d_three_layers import Conv1dThreeLayers
 from .mlp_decoder_three_layers import ThreeLayersDecoder
-from ..algo.dann2D_algo import fit
+from ..algo import dann2D_algo
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -94,5 +94,5 @@ class Danns2D:
             "num_epochs": self.num_epochs,
             "device": self.device
         }
-        self.feature_extractor, self.task_classifier, acc = fit(data, network, **config)
+        self.feature_extractor, self.task_classifier, acc = dann2D_algo.fit(data, network, **config)
         return acc
