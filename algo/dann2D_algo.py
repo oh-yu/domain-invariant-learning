@@ -50,7 +50,7 @@ def fit(data, network, **kwargs):
         feature_extractor.train()
         task_classifier.train()
         if is_changing_lr:
-            feature_optimizer, domain_optimizer_dim1, domain_optimizer_dim2, task_optimizer = _chaging_lr_during_dann2D_training(
+            feature_optimizer, domain_optimizer_dim1, domain_optimizer_dim2, task_optimizer = _change_lr_during_dann2D_training(
                 feature_optimizer,
                 domain_optimizer_dim1,
                 domain_optimizer_dim2,
