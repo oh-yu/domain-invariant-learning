@@ -14,7 +14,7 @@ from ...utils import utils
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 FLAGS = flags.FLAGS
-flags.DEFINE_integer("rotation_degree", -30, "rotation degree for target data")
+flags.DEFINE_integer("rotation_degree", -25, "rotation degree for target data")
 flags.DEFINE_string("algo_name", "DANN", "Which algo to use, DANN or CoRAL")
 flags.mark_flag_as_required("rotation_degree")
 flags.mark_flag_as_required("algo_name")
@@ -51,7 +51,7 @@ def main(argv):
     task_classifier = ThreeLayersDecoder(
         input_size=hidden_size, output_size=num_classes, dropout_ratio=0, fc1_size=50, fc2_size=10
     ).to(device)
-    learning_rate = 0.001
+    learning_rate = 0.005
 
     criterion = nn.BCELoss()
     feature_optimizer = optim.Adam(feature_extractor.parameters(), lr=learning_rate)
@@ -143,10 +143,10 @@ def main(argv):
         input_size=hidden_size, output_size=num_classes, dropout_ratio=0, fc1_size=50, fc2_size=10
     ).to(device)
     criterion = nn.BCELoss()
-    feature_optimizer = optim.Adam(feature_extractor_dim12.parameters(), lr=0.001)
-    domain_optimizer_dim1 = optim.Adam(domain_classifier_dim1.parameters(), lr=0.001)
-    domain_optimizer_dim2 = optim.Adam(domain_classifier_dim2.parameters(), lr=0.001)
-    task_optimizer = optim.Adam(task_classifier.parameters(), lr=0.001)
+    feature_optimizer = optim.Adam(feature_extractor_dim12.parameters(), lr=learning_rate)
+    domain_optimizer_dim1 = optim.Adam(domain_classifier_dim1.parameters(), lr=learning_rate)
+    domain_optimizer_dim2 = optim.Adam(domain_classifier_dim2.parameters(), lr=learning_rate)
+    task_optimizer = optim.Adam(task_classifier.parameters(), lr=learning_rate)
 
     data = {
         "source_loader": source_loader,
