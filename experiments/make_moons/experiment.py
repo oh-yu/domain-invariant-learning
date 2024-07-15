@@ -185,6 +185,7 @@ def main(argv):
     plt.show()
     pred_y_task = task_classifier.predict(feature_extractor(target_prime_X.to(device)))
     danns_2D_acc = sum(pred_y_task == target_prime_y_task) / len(pred_y_task)
+    print(f"2D-DANNs Accuracy: {danns_2D_acc.item()}")
 
 
     # step-by-step DANNs
