@@ -59,6 +59,7 @@ class IsihDanns:
 
             self.batch_size = 34
             self.experiment = experiment
+            self.do_early_stop = False
 
         elif experiment == "HHAR":
             self.feature_extractor = Conv1dThreeLayers(input_size=6).to(DEVICE)
@@ -87,6 +88,7 @@ class IsihDanns:
             self.stop_during_epochs = False
             self.batch_size = 128
             self.experiment = experiment
+            self.do_early_stop = False
 
         elif experiment in ["MNIST"]:
             self.feature_extractor = Conv2d()
@@ -118,6 +120,7 @@ class IsihDanns:
             self.stop_during_epochs = True
             self.batch_size = 64
             self.experiment = experiment
+            self.do_early_stop = False
 
     def fit_RV_1st_dim(
             self, 

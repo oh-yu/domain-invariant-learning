@@ -42,6 +42,7 @@ class Codats:
             self.is_target_weights = True
             self.experiment = experiment
             self.batch_size = 34
+            self.do_early_stop = False
 
         elif experiment == "HHAR":
             self.feature_extractor = Conv1dThreeLayers(input_size=6).to(DEVICE)
@@ -56,6 +57,7 @@ class Codats:
             self.is_target_weights = True
             self.experiment = experiment
             self.batch_size = 128
+            self.do_early_stop = False
 
     def fit_RV(
         self,
