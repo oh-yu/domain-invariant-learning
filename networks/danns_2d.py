@@ -1,11 +1,13 @@
 import torch
 from torch import nn, optim
+from torch.utils.data import Subset, TensorDataset
 
 from .conv2d import Conv2d
 from .conv1d_two_layers import Conv1dTwoLayers
 from .conv1d_three_layers import Conv1dThreeLayers
 from .mlp_decoder_three_layers import ThreeLayersDecoder
 from ..algo import dann2D_algo
+from ..utils import utils
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -31,6 +33,7 @@ class Danns2D:
             self.criterion = nn.BCELoss()
             self.num_epochs = 200
             self.device = DEVICE
+            self.batch_size = 32
 
 
         elif experiment == "HHAR":
@@ -49,6 +52,7 @@ class Danns2D:
             self.criterion = nn.BCELoss()
             self.num_epochs= 200
             self.device = DEVICE
+            self.batch_size = 128
         
         elif experiment in ["MNIST"]:
             self.feature_extractor = Conv2d()
@@ -69,6 +73,26 @@ class Danns2D:
             )
             self.domain_optimizer_dim2 = optim.Adam(self.domain_classifier_dim2.parameters(), lr=0.0001)
             self.device = torch.device("cpu")
+            self.batch_size = 16
+    
+    def fit_RV(self, source_loader, target_loader, target_prime_loader, test_target_prime_X, test_target_prime_y_task):
+        # S -> S', S_V
+        source_X = torch.cat([X for X, _ in source_loader], dim=0)
+        source_y_task = torch.cat([y for _, y in source_loader], dim=0)
+        source_ds = TensorDataset(source_X, source_y_task)
+        train_source_loader, val_source_loader = utils.tensordataset_to_splitted_loaders(source_ds, self.batch_size)
+
+        # Fit eta
+
+        # Fit eta_r
+
+        # Get RV Loss
+
+
+        # Argmin
+
+        # Retraining
+
 
     
     def fit(self, source_loader, target_loader, target_prime_loader, test_target_prime_X, test_target_prime_y_task):
