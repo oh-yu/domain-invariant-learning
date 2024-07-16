@@ -9,6 +9,7 @@ from tqdm import tqdm
 from ..utils import utils
 from .dann_algo import ReverseGradient
 from ..networks import Encoder, ThreeLayersDecoder
+from .algo_utils import EarlyStopping
 
 def fit(data, network, **kwargs):
     # Args
@@ -33,10 +34,12 @@ def fit(data, network, **kwargs):
         "is_changing_lr": False,
         "epoch_thr_for_changing_lr": 200,
         "changed_lrs": [0.00005, 0.00005],
+        "do_early_stop": False
     }
     config.update(kwargs)
     num_epochs, device = config["num_epochs"], config["device"]
     is_changing_lr, epoch_thr_for_changing_lr, changed_lrs = config["is_changing_lr"], config["epoch_thr_for_changing_lr"], config["changed_lrs"]
+    do_early_stop = config["do_early_stop"]
 
     # Fit
     loss_tasks = []
@@ -44,6 +47,7 @@ def fit(data, network, **kwargs):
     loss_domain_dim1s = []
     loss_domain_dim2s = []
     reverse_grad = ReverseGradient.apply
+    early_stopping = EarlyStopping()
     num_epochs = torch.tensor(num_epochs, dtype=torch.int32).to(device)
     for epoch in tqdm(range(1, num_epochs+1)):
         epoch = torch.tensor(epoch, dtype=torch.float32).to(device)
@@ -135,8 +139,10 @@ def fit(data, network, **kwargs):
                 target_prime_feature_eval = feature_extractor(target_prime_X)
                 pred_y_task_eval = task_classifier.predict(target_prime_feature_eval)
                 acc = sum(pred_y_task_eval == target_prime_y_task) / target_prime_y_task.shape[0]
+                early_stopping(acc)
         loss_task_evals.append(acc.item())
-        
+        if early_stopping.early_stop & do_early_stop:
+            break
         print(f"Epoch: {epoch}, Loss Domain Dim1: {loss_domain_dim1}, Loss Domain Dim2: {loss_domain_dim2},  Loss Task: {loss_task}, Acc: {acc}")
     
     # Plot

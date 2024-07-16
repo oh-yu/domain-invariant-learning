@@ -36,6 +36,7 @@ class Danns2D:
             self.device = DEVICE
             self.batch_size = 32
             self.experiment = experiment
+            self.do_early_stop = False
 
 
         elif experiment == "HHAR":
@@ -56,6 +57,7 @@ class Danns2D:
             self.device = DEVICE
             self.batch_size = 128
             self.experiment = experiment
+            self.do_early_stop = False
         
         elif experiment in ["MNIST"]:
             self.feature_extractor = Conv2d()
@@ -78,6 +80,7 @@ class Danns2D:
             self.device = torch.device("cpu")
             self.batch_size = 16
             self.experiment = experiment
+            self.do_early_stop = False
 
     def fit(self, source_loader, target_loader, target_prime_loader, test_target_prime_X, test_target_prime_y_task):
         return self._fit(source_loader, target_loader, target_prime_loader, test_target_prime_X, test_target_prime_y_task)
@@ -164,7 +167,8 @@ class Danns2D:
         }
         config = {
             "num_epochs": self.num_epochs,
-            "device": self.device
+            "device": self.device,
+            "do_early_stop": self.do_early_stop
         }
         self.feature_extractor, self.task_classifier, acc = dann2D_algo.fit(data, network, **config)
         return acc
