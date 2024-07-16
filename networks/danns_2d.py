@@ -1,7 +1,8 @@
+from absl import flags
 import numpy as np
 import torch
 from torch import nn, optim
-from torch.utils.data import Subset, TensorDataset, DataLoader
+from torch.utils.data import TensorDataset, DataLoader
 
 from .conv2d import Conv2d
 from .conv1d_two_layers import Conv1dTwoLayers
@@ -11,6 +12,7 @@ from ..algo import dann2D_algo
 from ..utils import utils
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+FLAGS = flags.FLAGS
 
 class Danns2D:
     def __init__(self, experiment: str):
@@ -83,9 +85,12 @@ class Danns2D:
             self.do_early_stop = False
 
     def fit(self, source_loader, target_loader, target_prime_loader, test_target_prime_X, test_target_prime_y_task):
-        return self._fit(source_loader, target_loader, target_prime_loader, test_target_prime_X, test_target_prime_y_task)
+        if FLAGS.is_RV_tuning:
+            return self._fit_RV(source_loader, target_loader, target_prime_loader, test_target_prime_X, test_target_prime_y_task)
+        else:
+            return self._fit(source_loader, target_loader, target_prime_loader, test_target_prime_X, test_target_prime_y_task)
 
-    def fit_RV(self, source_loader, target_loader, target_prime_loader, test_target_prime_X, test_target_prime_y_task):
+    def _fit_RV(self, source_loader, target_loader, target_prime_loader, test_target_prime_X, test_target_prime_y_task):
         # S -> S', S_V
         source_X = torch.cat([X for X, _ in source_loader], dim=0)
         source_y_task = torch.cat([y for _, y in source_loader], dim=0)
