@@ -34,12 +34,14 @@ def fit(data, network, **kwargs):
         "is_changing_lr": False,
         "epoch_thr_for_changing_lr": 200,
         "changed_lrs": [0.00005, 0.00005],
-        "do_early_stop": False
+        "do_early_stop": False,
+        "do_plot": False,
     }
     config.update(kwargs)
     num_epochs, device = config["num_epochs"], config["device"]
     is_changing_lr, epoch_thr_for_changing_lr, changed_lrs = config["is_changing_lr"], config["epoch_thr_for_changing_lr"], config["changed_lrs"]
     do_early_stop = config["do_early_stop"]
+    do_plot = config["do_plot"]
 
     # Fit
     loss_tasks = []
@@ -146,19 +148,20 @@ def fit(data, network, **kwargs):
         print(f"Epoch: {epoch}, Loss Domain Dim1: {loss_domain_dim1}, Loss Domain Dim2: {loss_domain_dim2},  Loss Task: {loss_task}, Acc: {acc}")
     
     # Plot
-    plt.plot(loss_domain_dim1s, label="loss domain dim1")
-    plt.plot(loss_domain_dim2s, label="loss domain dim2")
-    plt.plot(loss_tasks, label="loss task")
-    plt.xlabel("batch")
-    plt.ylabel("entropy loss")
-    plt.legend()
-    plt.show()
+    if do_plot:
+        plt.plot(loss_domain_dim1s, label="loss domain dim1")
+        plt.plot(loss_domain_dim2s, label="loss domain dim2")
+        plt.plot(loss_tasks, label="loss task")
+        plt.xlabel("batch")
+        plt.ylabel("entropy loss")
+        plt.legend()
+        plt.show()
 
-    plt.figure()
-    plt.plot(loss_task_evals)
-    plt.xlabel("epoch")
-    plt.ylabel("accuracy")
-    plt.show()
+        plt.figure()
+        plt.plot(loss_task_evals)
+        plt.xlabel("epoch")
+        plt.ylabel("accuracy")
+        plt.show()
     return feature_extractor, task_classifier, acc.item()
 
 
