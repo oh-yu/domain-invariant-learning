@@ -1,6 +1,6 @@
 import torch
 from torch import nn, optim
-from torch.utils.data import Subset, TensorDataset
+from torch.utils.data import Subset, TensorDataset, DataLoader
 
 from .conv2d import Conv2d
 from .conv1d_two_layers import Conv1dTwoLayers
@@ -107,11 +107,27 @@ class Danns2D:
             self.do_early_stop = True
             self._fit(train_source_loader, target_loader, target_prime_loader, val_source_X, val_source_y_task)
             # Fit eta_r
+            target_prime_X = torch.cat([X for X, _ in target_prime_loader], dim=0)
+            pred_y_task = self.predict(target_prime_X)
+            target_prime_ds = TensorDataset(target_prime_X, torch.cat([pred_y_task.reshape(-1, 1), torch.zeros_like(pred_y_task).reshape(-1, 1)], dim=1))
+            target_prime_as_source_loader = DataLoader(target_prime_ds, batch_size=self.batch_size, shuffle=True)
+
+            train_source_X = torch.cat([X for X, _ in train_source_loader], dim=0)
+            train_source_ds = TensorDataset(train_source_X, torch.ones(train_source_X.shape[0]).to(torch.float32).to(utils.DEVICE))
+            train_source_as_target_prime_loader = DataLoader(train_source_ds, batch_size=self.batch_size, shuffle=True)
+            self.__init__(self.experiment)
+            self.feature_optimizer.param_groups[0].update(param)
+            self.domain_optimizer_dim1.param_groups[0].update(param)
+            self.domain_optimizer_dim2.param_groups[0].update(param)
+            self.task_optimizer.param_groups[0].update(param)
+            self.do_early_stop = True
+            self._fit(target_prime_as_source_loader, target_loader, train_source_as_target_prime_loader, target_prime_X, pred_y_task)
 
             # Get RV Loss
-
-
-        # Argmin
+            pred_y_task = self.predict(val_source_X)
+            acc_RV = sum(pred_y_task == val_source_y_task) / len(pred_y_task)
+            RV_scores["free_params"].append(param)
+            RV_scores["scores"].append(acc_RV.item())
 
         # Retraining
 
@@ -142,3 +158,8 @@ class Danns2D:
         }
         self.feature_extractor, self.task_classifier, acc = dann2D_algo.fit(data, network, **config)
         return acc
+    
+    def predict(self, X):
+        out = self.feature_extractor(X)
+        out = self.task_classifier(out)
+        return out
