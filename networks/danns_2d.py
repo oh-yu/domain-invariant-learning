@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 from torch import nn, optim
 from torch.utils.data import Subset, TensorDataset, DataLoader
@@ -109,7 +110,7 @@ class Danns2D:
             # Fit eta_r
             target_prime_X = torch.cat([X for X, _ in target_prime_loader], dim=0)
             pred_y_task = self.predict(target_prime_X)
-            target_prime_ds = TensorDataset(target_prime_X, torch.cat([pred_y_task.reshape(-1, 1), torch.zeros_like(pred_y_task).reshape(-1, 1)], dim=1))
+            target_prime_ds = TensorDataset(target_prime_X, torch.cat([pred_y_task.reshape(-1, 1), torch.zeros_like(pred_y_task).reshape(-1, 1).to(torch.float32)], dim=1))
             target_prime_as_source_loader = DataLoader(target_prime_ds, batch_size=self.batch_size, shuffle=True)
 
             train_source_X = torch.cat([X for X, _ in train_source_loader], dim=0)
@@ -170,5 +171,5 @@ class Danns2D:
     
     def predict(self, X):
         out = self.feature_extractor(X)
-        out = self.task_classifier(out)
+        out = self.task_classifier.predict(out)
         return out
