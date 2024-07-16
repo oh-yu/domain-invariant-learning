@@ -98,7 +98,8 @@ class Danns2D:
         train_source_loader, val_source_loader = utils.tensordataset_to_splitted_loaders(source_ds, self.batch_size)
 
         free_params = [
-            {"learning_rate": 0.005, "eps": 1e-08, "weight_decay": 0},
+            {"learning_rate": 0.00001, "eps": 1e-08, "weight_decay": 0},
+            {"learning_rate": 0.0001, "eps": 1e-08, "weight_decay": 0},
             {"learning_rate": 0.001, "eps": 1e-08, "weight_decay": 0},
         ]
         RV_scores = {"free_params": [], "scores": []}
