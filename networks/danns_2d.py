@@ -34,6 +34,7 @@ class Danns2D:
             self.num_epochs = 200
             self.device = DEVICE
             self.batch_size = 32
+            self.experiment = experiment
 
 
         elif experiment == "HHAR":
@@ -53,6 +54,7 @@ class Danns2D:
             self.num_epochs= 200
             self.device = DEVICE
             self.batch_size = 128
+            self.experiment = experiment
         
         elif experiment in ["MNIST"]:
             self.feature_extractor = Conv2d()
@@ -74,7 +76,11 @@ class Danns2D:
             self.domain_optimizer_dim2 = optim.Adam(self.domain_classifier_dim2.parameters(), lr=0.0001)
             self.device = torch.device("cpu")
             self.batch_size = 16
-    
+            self.experiment = experiment
+
+    def fit(self, source_loader, target_loader, target_prime_loader, test_target_prime_X, test_target_prime_y_task):
+        return self._fit(source_loader, target_loader, target_prime_loader, test_target_prime_X, test_target_prime_y_task)
+
     def fit_RV(self, source_loader, target_loader, target_prime_loader, test_target_prime_X, test_target_prime_y_task):
         # S -> S', S_V
         source_X = torch.cat([X for X, _ in source_loader], dim=0)
@@ -82,11 +88,27 @@ class Danns2D:
         source_ds = TensorDataset(source_X, source_y_task)
         train_source_loader, val_source_loader = utils.tensordataset_to_splitted_loaders(source_ds, self.batch_size)
 
-        # Fit eta
+        free_params = [
+            {"learning_rate": 0.005, "eps": 1e-08, "weight_decay": 0},
+            {"learning_rate": 0.001, "eps": 1e-08, "weight_decay": 0},
+        ]
+        RV_scores = {"free_params": [], "scores": []}
 
-        # Fit eta_r
+        for param in free_params:
+            # Fit eta
+            self.__init__(self.experiment)
+            self.feature_optimizer.param_groups[0].update(param)
+            self.domain_optimizer_dim1.param_groups[0].update(param)
+            self.domain_optimizer_dim2.param_groups[0].update(param)
+            self.task_optimizer.param_groups[0].update(param)
 
-        # Get RV Loss
+            val_source_X = torch.cat([X for X, _ in val_source_loader], dim=0)
+            val_source_y_task = torch.cat([y[:, utils.COL_IDX_TASK] for _, y in val_source_loader], dim=0)
+            self.do_early_stop = True
+            self._fit(train_source_loader, target_loader, target_prime_loader, val_source_X, val_source_y_task)
+            # Fit eta_r
+
+            # Get RV Loss
 
 
         # Argmin
@@ -95,7 +117,7 @@ class Danns2D:
 
 
     
-    def fit(self, source_loader, target_loader, target_prime_loader, test_target_prime_X, test_target_prime_y_task):
+    def _fit(self, source_loader, target_loader, target_prime_loader, test_target_prime_X, test_target_prime_y_task):
         data = {
             "source_loader": source_loader,
             "target_loader": target_loader,
