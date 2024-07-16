@@ -130,6 +130,15 @@ class Danns2D:
             RV_scores["scores"].append(acc_RV.item())
 
         # Retraining
+        best_param = RV_scores["free_params"][np.argmax(RV_scores["scores"])]
+        self.__init__(self.experiment)
+        self.feature_optimizer.param_groups[0].update(param)
+        self.domain_optimizer_dim1.param_groups[0].update(param)
+        self.domain_optimizer_dim2.param_groups[0].update(param)
+        self.task_optimizer.param_groups[0].update(param)
+        self.do_early_stop = False
+        return self._fit(source_loader, target_loader, target_prime_loader, test_target_prime_X, test_target_prime_y_task)
+
 
 
     
