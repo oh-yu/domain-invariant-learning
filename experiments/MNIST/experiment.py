@@ -143,10 +143,7 @@ def isih_da():
     target_y_task = torch.cat([y[:, 0] for _, y in target_loader_gt], dim=0)
     target_X = torch.tensor(target_X, dtype=torch.float32)
     target_y_task = torch.tensor(target_y_task, dtype=torch.long)
-    if not FLAGS.is_RV_tuning:
-        isih_dann.fit_1st_dim(source_loader, target_loader, target_X, target_y_task)
-    else:
-        isih_dann.fit_RV_1st_dim(source_ds, target_ds, target_X, target_y_task)
+    isih_dann.fit_1st_dim(source_ds, target_ds, target_X, target_y_task)
     pred_y_task = isih_dann.predict_proba(target_X, is_1st_dim=True)
 
     # Algo2 inter-reals DA
@@ -156,8 +153,7 @@ def isih_da():
     source_loader = DataLoader(source_ds, batch_size=64, shuffle=True)
     test_target_prime_X = torch.cat([X for X, _ in test_target_prime_loader_gt], dim=0)
     test_target_prime_y_task = torch.cat([y[:, 0] for _, y in test_target_prime_loader_gt], dim=0)
-    # isih_dann.fit_2nd_dim(source_loader, train_target_prime_loader, test_target_prime_X, test_target_prime_y_task)
-    isih_dann.fit_RV_2nd_dim(source_ds, target_prime_ds, test_target_prime_X, test_target_prime_y_task)
+    isih_dann.fit_2nd_dim(source_ds, target_prime_ds, test_target_prime_X, test_target_prime_y_task)
 
     # Algo3 Eval
     isih_dann.set_eval()
