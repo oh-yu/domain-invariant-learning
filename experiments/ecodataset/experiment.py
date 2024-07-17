@@ -140,10 +140,7 @@ def isih_da_house(source_idx: int, target_idx: int, winter_idx: int, summer_idx:
 
         ## isih-DA fit, predict for 1st dimension
         isih_dann = IsihDanns(experiment="ECOdataset")
-        if FLAGS.is_RV_tuning:
-            isih_dann.fit_RV_1st_dim(source_ds, target_ds, test_target_X, test_target_y_task)
-        else:
-            isih_dann.fit_1st_dim(source_loader, target_loader, test_target_X, test_target_y_task)
+        isih_dann.fit_1st_dim(source_ds, target_ds, test_target_X, test_target_y_task)
         pred_y_task = isih_dann.predict_proba(test_target_X, is_1st_dim=True)
 
         # Algo2. Inter-Seasons DA
@@ -175,10 +172,7 @@ def isih_da_house(source_idx: int, target_idx: int, winter_idx: int, summer_idx:
             train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True, return_ds=True
         )
         ## isih-DA fit, predict for 2nd dimension
-        if FLAGS.is_RV_tuning:
-            isih_dann.fit_RV_2nd_dim(source_ds, target_ds, test_target_X, test_target_y_task)
-        else:
-            isih_dann.fit_2nd_dim(source_loader, target_loader, test_target_X, test_target_y_task)
+        isih_dann.fit_2nd_dim(source_ds, target_ds, test_target_X, test_target_y_task)
         isih_dann.set_eval()
         pred_y_task = isih_dann.predict(test_target_X, is_1st_dim=False)
 
@@ -238,10 +232,7 @@ def isih_da_season(source_idx: int, target_idx: int, winter_idx: int, summer_idx
 
         ## isih-DA fit, predict for 1st dimension
         isih_dann = IsihDanns(experiment="ECOdataset")
-        if FLAGS.is_RV_tuning:
-            isih_dann.fit_RV_1st_dim(source_ds, target_ds, test_target_X, test_target_y_task)
-        else:
-            isih_dann.fit_1st_dim(source_loader, target_loader, test_target_X, test_target_y_task)
+        isih_dann.fit_1st_dim(source_ds, target_ds, test_target_X, test_target_y_task)
         pred_y_task = isih_dann.predict_proba(test_target_X, is_1st_dim=True)
 
         # Algo2. Inter-Households DA
@@ -274,10 +265,7 @@ def isih_da_season(source_idx: int, target_idx: int, winter_idx: int, summer_idx
         test_target_X = test_target_X.to(DEVICE)
         test_target_y_task = test_target_y_task.to(DEVICE)
         ## isih-DA fit, predict for 2nd dimension
-        if FLAGS.is_RV_tuning:
-            isih_dann.fit_RV_2nd_dim(source_ds, target_ds, test_target_X, test_target_y_task)
-        else:
-            isih_dann.fit_2nd_dim(source_loader, target_loader, test_target_X, test_target_y_task)
+        isih_dann.fit_2nd_dim(source_ds, target_ds, test_target_X, test_target_y_task)
         isih_dann.set_eval()
         pred_y_task = isih_dann.predict(test_target_X, is_1st_dim=False)
 
