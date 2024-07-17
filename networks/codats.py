@@ -72,7 +72,8 @@ class Codats:
             source_loader = DataLoader(source_ds, batch_size=self.batch_size, shuffle=True)
             target_loader = DataLoader(target_ds, batch_size=self.batch_size, shuffle=True)
             self._fit(source_loader, target_loader, test_target_X, test_target_y_task)
-            pred_y_task = self.task_classifier.predict(self.feature_extractor(test_target_X))
+            self.set_eval()
+            pred_y_task = self.predict(test_target_X)
             acc = sum(pred_y_task == test_target_y_task) / len(pred_y_task)
             return acc.item()
 
