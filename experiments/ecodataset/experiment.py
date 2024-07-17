@@ -333,14 +333,7 @@ def codats(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, n
 
         ## CoDATS fit, predict
         codats = Codats(experiment="ECOdataset")
-        if FLAGS.is_RV_tuning:
-            acc = codats.fit_RV(source_ds, target_ds, test_target_X, test_target_y_task)
-        else:
-            codats.fit(source_loader, target_loader, test_target_X, test_target_y_task)
-            codats.set_eval()
-            pred_y_task = codats.predict(test_target_X)
-            acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
-            acc = acc.item()
+        acc = codats.fit(source_ds, target_ds, test_target_X, test_target_y_task)
         accs.append(acc)
     return sum(accs) / num_repeats
 

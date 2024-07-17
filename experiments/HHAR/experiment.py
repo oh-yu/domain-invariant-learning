@@ -208,14 +208,7 @@ def codats(pattern):
     test_target_prime_y_task = test_target_prime_y_task.to(utils.DEVICE)
 
     codats = Codats(experiment="HHAR")
-    if not FLAGS.is_RV_tuning:
-        codats.fit(source_loader, target_loader, test_target_prime_X, test_target_prime_y_task)
-        codats.set_eval()
-        pred_y_task = codats.predict(test_target_prime_X)
-        acc = sum(pred_y_task == test_target_prime_y_task) / test_target_prime_y_task.shape[0]
-        acc = acc.item()
-    else:
-        acc = codats.fit_RV(source_ds, target_ds, test_target_prime_X, test_target_prime_y_task)
+    acc = codats.fit(source_ds, target_ds, test_target_prime_X, test_target_prime_y_task)
     return acc
 
 

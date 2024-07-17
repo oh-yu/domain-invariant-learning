@@ -243,14 +243,7 @@ def codats(source_idx=2, season_idx=0, num_repeats: int = 10):
         )
         ## CoDATS fit, predict
         codats = Codats(experiment="ECOdataset_synthetic")
-        if not FLAGS.is_RV_tuning:
-            codats.fit(source_loader, target_loader, test_target_X, test_target_y_task)
-            codats.set_eval()
-            pred_y_task = codats.predict(test_target_X)
-            acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
-            acc = acc.item()
-        else:
-            acc = codats.fit_RV(source_ds, target_ds, test_target_X, test_target_y_task)
+        acc = codats.fit(source_ds, target_ds, test_target_X, test_target_y_task)
         accs.append(acc)
     return sum(accs) / num_repeats
 
