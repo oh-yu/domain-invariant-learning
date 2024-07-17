@@ -161,10 +161,7 @@ def isih_da(source_idx=2, season_idx=0, num_repeats: int = 10):
         test_target_y_task = test_target_y_task.to(DEVICE)
 
         isih_dann = IsihDanns(experiment="ECOdataset_synthetic")
-        if not FLAGS.is_RV_tuning:
-            isih_dann.fit_1st_dim(source_loader, target_loader, test_target_X, test_target_y_task)
-        else:
-            isih_dann.fit_RV_1st_dim(source_ds, target_ds, test_target_X, test_target_y_task)
+        isih_dann.fit_1st_dim(source_ds, target_ds, test_target_X, test_target_y_task)
         pred_y_task = isih_dann.predict_proba(test_target_X, is_1st_dim=True)
         train_source_X = target_X
         train_source_y_task = pred_y_task.cpu().detach().numpy()
@@ -189,10 +186,7 @@ def isih_da(source_idx=2, season_idx=0, num_repeats: int = 10):
             train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True, return_ds=True
         )
         ## isih-DA fit, predict for 2nd dimension
-        if not FLAGS.is_RV_tuning:
-            isih_dann.fit_2nd_dim(source_loader, target_loader, test_target_X, test_target_y_task)
-        else:
-            isih_dann.fit_RV_2nd_dim(source_ds, target_ds, test_target_X, test_target_y_task)
+        isih_dann.fit_2nd_dim(source_ds, target_ds, test_target_X, test_target_y_task)
         isih_dann.set_eval()
         pred_y_task = isih_dann.predict(test_target_X, is_1st_dim=False)
 
