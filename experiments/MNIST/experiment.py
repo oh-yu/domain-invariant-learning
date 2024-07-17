@@ -170,22 +170,12 @@ def dann():
     # Load Data
     source_loader, source_ds = MNIST
     train_target_prime_loader, test_target_prime_loader_gt, target_prime_ds = SVHN
-
     # Model Init
     dann = Dann()
     # Fit DANN
     test_target_prime_X = torch.cat([X for X, _ in test_target_prime_loader_gt], dim=0)
     test_target_prime_y_task = torch.cat([y[:, 0] for _, y in test_target_prime_loader_gt], dim=0)
-    if not FLAGS.is_RV_tuning:
-        dann.fit(
-            source_loader, train_target_prime_loader, test_target_prime_X, test_target_prime_y_task,
-        )
-        dann.set_eval()
-        pred_y_task = dann.predict(test_target_prime_X)
-        acc = sum(pred_y_task == test_target_prime_y_task) / len(test_target_prime_y_task)
-        acc = acc.item()
-    else:
-        acc = dann.fit_RV(source_ds, target_prime_ds, test_target_prime_X, test_target_prime_y_task)
+    acc = dann.fit(source_ds, target_prime_ds, test_target_prime_X, test_target_prime_y_task)
     return acc
 
 

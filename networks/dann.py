@@ -38,7 +38,7 @@ class Dann:
         self.is_target_weights = False
 
 
-    def fit_RV(
+    def _fit_RV(
         self,
         source_ds: torch.utils.data.TensorDataset,
         target_ds: torch.utils.data.TensorDataset,
@@ -115,9 +115,22 @@ class Dann:
         pred_y_task = self.predict(test_target_X)
         acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
         return acc.item()
+    
+
+    def fit(self, source_ds, target_ds, test_target_X, test_target_y_task):
+        if FLAGS.is_RV_tuning:
+            return self._fit_RV(source_ds, target_ds, test_target_X, test_target_y_task)
+        else:
+            source_loader = DataLoader(source_ds, batch_size=self.batch_size, shuffle=True)
+            target_loader = DataLoader(target_ds, batch_size=self.batch_size, shuffle=True)
+            self._fit(source_loader, target_loader, test_target_X, test_target_y_task)
+            self.set_eval()
+            pred_y_task = self.predict(test_target_X)
+            acc = sum(pred_y_task == test_target_y_task) / len(pred_y_task)
+            return acc.item()
 
 
-    def fit(self, source_loader, target_loader, test_target_X, test_target_y_task):
+    def _fit(self, source_loader, target_loader, test_target_X, test_target_y_task):
         data = {
             "source_loader": source_loader,
             "target_loader": target_loader,
