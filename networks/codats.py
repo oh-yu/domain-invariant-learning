@@ -58,8 +58,25 @@ class Codats:
             self.experiment = experiment
             self.batch_size = 128
             self.do_early_stop = False
+    
+    def fit(
+        self,
+        source_ds: torch.utils.data.TensorDataset,
+        target_ds: torch.utils.data.TensorDataset,
+        test_target_X: torch.Tensor,
+        test_target_y_task: torch.Tensor, 
+    ):
+        if FLAGS.is_RV_tuning:
+            return self._fit_RV(source_ds, target_ds, test_target_X, test_target_y_task)
+        else:
+            source_loader = DataLoader(source_ds, batch_size=self.batch_size, shuffle=True)
+            target_loader = DataLoader(target_ds, batch_size=self.batch_size, shuffle=True)
+            self._fit(source_loader, target_loader, test_target_X, test_target_y_task)
+            pred_y_task = self.task_classifier.predict(self.feature_extractor(test_target_X))
+            acc = sum(pred_y_task == test_target_y_task) / len(pred_y_task)
+            return acc.item()
 
-    def fit_RV(
+    def _fit_RV(
         self,
         source_ds: torch.utils.data.TensorDataset,
         target_ds: torch.utils.data.TensorDataset,
@@ -139,7 +156,7 @@ class Codats:
         return acc.item()
 
 
-    def fit(
+    def _fit(
         self,
         source_loader: torch.utils.data.dataloader.DataLoader,
         target_loader: torch.utils.data.dataloader.DataLoader,
