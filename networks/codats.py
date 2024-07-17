@@ -109,7 +109,7 @@ class Codats:
             val_source_X = torch.cat([X for X, _ in val_source_loader], dim=0)
             val_source_y_task = torch.cat([y[:, utils.COL_IDX_TASK] for _, y in val_source_loader], dim=0)
             self.do_early_stop = True
-            self.fit(train_source_loader, train_target_loader, val_source_X, val_source_y_task)
+            self._fit(train_source_loader, train_target_loader, val_source_X, val_source_y_task)
 
             ## 3.2 fit \bar{f}_i
             train_target_X = torch.cat([X for X, _ in train_target_loader], dim=0)
@@ -129,7 +129,7 @@ class Codats:
             self.domain_optimizer.param_groups[0].update(param)
             self.task_optimizer.param_groups[0].update(param)
             self.do_early_stop = True
-            self.fit(target_as_source_loader, train_source_as_target_loader, val_target_X, val_target_pred_y_task)
+            self._fit(target_as_source_loader, train_source_as_target_loader, val_target_X, val_target_pred_y_task)
 
             ## 3.3 get RV loss
             pred_y_task = self.predict(val_source_X)
@@ -149,7 +149,7 @@ class Codats:
         source_loader = DataLoader(source_ds, batch_size=self.batch_size, shuffle=True)
         target_loader = DataLoader(target_ds, batch_size=self.batch_size, shuffle=True)
         self.do_early_stop = False
-        self.fit(source_loader, target_loader, val_source_X, val_source_y_task)
+        self._fit(source_loader, target_loader, val_source_X, val_source_y_task)
         self.set_eval()
         pred_y_task = self.predict(test_target_X)
         acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
