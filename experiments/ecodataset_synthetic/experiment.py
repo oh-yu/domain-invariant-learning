@@ -76,7 +76,7 @@ def get_source_target_targetprime_from_ecodataset(source_idx, season_idx):
 def danns_2d(source_idx=2, season_idx=0, num_repeats: int = 10):
     accs = []
     for _ in range(num_repeats):
-        source_loader, target_loader, _, _, target_prime_X, target_prime_y_task = get_source_target_targetprime_from_ecodataset(season_idx=source_idx, season_idx=season_idx)
+        source_loader, target_loader, _, _, target_prime_X, target_prime_y_task = get_source_target_targetprime_from_ecodataset(source_idx=source_idx, season_idx=season_idx)
 
         train_target_prime_X, test_target_prime_X, train_target_prime_y_task, test_target_prime_y_task = train_test_split(
             target_prime_X, target_prime_y_task, test_size=0.5, shuffle=False
