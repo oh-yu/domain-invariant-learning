@@ -53,7 +53,7 @@ def danns_2d(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int,
     accs = []
     for _ in range(num_repeats):
         # Prepare Data
-        source_loader, target_loader, scaler = get_source_target_from_ecodataset(source_idx=source_idx, target_idx=target_idx, source_season_idx=winter_idx, target_season_idx=winter_idx)    
+        source_loader, target_loader, scaler, _, _, _, _ = get_source_target_from_ecodataset(source_idx=source_idx, target_idx=target_idx, source_season_idx=winter_idx, target_season_idx=winter_idx)    
         target_prime_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_X_train.csv")
         target_prime_y_task = pd.read_csv(
             f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_Y_train.csv"
