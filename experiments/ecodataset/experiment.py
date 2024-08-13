@@ -176,23 +176,7 @@ def isih_da_season(source_idx: int, target_idx: int, winter_idx: int, summer_idx
         ## Prepare Data
         train_source_X = target_X
         train_source_y_task = pred_y_task.cpu().detach().numpy()
-        target_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_X_train.csv")
-        target_y_task = pd.read_csv(
-            f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_Y_train.csv"
-        )[target_X.Season == summer_idx].values.reshape(-1)
-        target_X = target_X[target_X.Season == summer_idx].values
-
-        train_target_X, test_target_X, train_target_y_task, test_target_y_task = train_test_split(
-            target_X, target_y_task, test_size=0.5, shuffle=False
-        )
-        scaler.fit(train_target_X)
-        train_target_X = scaler.transform(train_target_X)
-        test_target_X = scaler.transform(test_target_X)
-        test_target_X, test_target_y_task = utils.apply_sliding_window(test_target_X, test_target_y_task, filter_len=6)
-        train_target_X, train_target_y_task = utils.apply_sliding_window(
-            train_target_X, train_target_y_task, filter_len=6
-        )
-
+        train_target_X, train_target_y_task, test_target_X, test_target_y_task = get_target_prime_from_ecodataset(target_prime_idx=target_idx, target_prime_season_idx=summer_idx)
         source_loader, target_loader, _, _, _, _, source_ds, target_ds = utils.get_loader(
             train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True, return_ds=True
         )
