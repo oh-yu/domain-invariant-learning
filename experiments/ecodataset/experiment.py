@@ -43,10 +43,11 @@ def get_source_target_from_ecodataset(source_idx, target_idx, source_season_idx,
     )
     target_X, target_y_task = utils.apply_sliding_window(target_X, target_y_task, filter_len=6)
 
-    source_loader, target_loader, _, _, _, _ = utils.get_loader(
-        train_source_X, target_X, train_source_y_task, target_y_task, shuffle=True, batch_size=32
+    source_loader, target_loader, _, _, _, _, source_ds, target_ds = utils.get_loader(
+        train_source_X, target_X, train_source_y_task, target_y_task, shuffle=True, batch_size=32, return_ds=True
     )
-    return source_loader, target_loader, scaler
+    # Note: batch_size=32, because exploding gradient when batch_size=34(this leads to one sample loss)
+    return source_loader, target_loader, scaler, source_ds, target_ds, target_X, target_y_task
 
 def danns_2d(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, num_repeats: int = 10,) -> float:
     accs = []
@@ -102,39 +103,11 @@ def isih_da_house(source_idx: int, target_idx: int, winter_idx: int, summer_idx:
     for _ in range(num_repeats):
         # Algo1. Inter-Households DA
         ## Prepare Data
-        train_source_X = pd.read_csv(
-            f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv"
-        )
-        target_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_X_train.csv")
-        train_source_y_task = pd.read_csv(
-            f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_Y_train.csv"
-        )[train_source_X.Season == winter_idx].values.reshape(-1)
-        target_y_task = pd.read_csv(
-            f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_Y_train.csv"
-        )[target_X.Season == winter_idx].values.reshape(-1)
-        train_source_X = train_source_X[train_source_X.Season == winter_idx]
-        target_X = target_X[target_X.Season == winter_idx]
-
-        scaler = preprocessing.StandardScaler()
-        train_source_X = scaler.fit_transform(train_source_X)
-        scaler.fit(target_X)
-        target_X = scaler.transform(target_X)
-
-        train_source_X, train_source_y_task = utils.apply_sliding_window(
-            train_source_X, train_source_y_task, filter_len=6
-        )
-        target_X, target_y_task = utils.apply_sliding_window(target_X, target_y_task, filter_len=6)
-
-        train_target_X, test_target_X, train_target_y_task, test_target_y_task = (
-            target_X,
-            target_X,
-            target_y_task,
-            target_y_task,
-        )
-        source_loader, target_loader, _, _, _, _, source_ds, target_ds = utils.get_loader(
-            train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True, batch_size=32, return_ds=True
-        )
-        # Note: batch_size=32, because exploding gradient when batch_size=34(this leads to one sample loss)
+        _, _, scaler, source_ds, target_ds, test_target_X, test_target_y_task = get_source_target_from_ecodataset(source_idx=source_idx,
+                                                                                                                  target_idx=target_idx,
+                                                                                                                  source_season_idx=winter_idx,
+                                                                                                                  target_season_idx=winter_idx
+                                                                                                                  )   
 
         test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
         test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
