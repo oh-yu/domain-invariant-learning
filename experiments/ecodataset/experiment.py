@@ -72,32 +72,32 @@ def get_target_prime_from_ecodataset(target_prime_idx, target_prime_season_idx):
 
 def get_source_target_prime_from_ecodataset(source_idx, target_prime_idx, source_season_idx, target_prime_season_ix):
     train_source_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv")
-    target_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_prime_idx}_X_train.csv")
+    target_prime_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_prime_idx}_X_train.csv")
 
     train_source_y_task = pd.read_csv(
         f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_Y_train.csv"
     )[train_source_X.Season == source_season_idx].values.reshape(-1)
-    target_y_task = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_prime_idx}_Y_train.csv")[
-        target_X.Season == target_prime_season_ix
+    target_prime_y_task = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_prime_idx}_Y_train.csv")[
+        target_prime_X.Season == target_prime_season_ix
     ].values.reshape(-1)
 
     train_source_X = train_source_X[train_source_X.Season == source_season_idx]
-    target_X = target_X[target_X.Season == target_prime_season_ix]
+    target_prime_X = target_prime_X[target_prime_X.Season == target_prime_season_ix]
 
     scaler = preprocessing.StandardScaler()
     scaler.fit(train_source_X)
     train_source_X = scaler.transform(train_source_X)
     train_source_X, train_source_y_task = utils.apply_sliding_window(train_source_X, train_source_y_task, filter_len=6)
 
-    train_target_X, test_target_X, train_target_y_task, test_target_y_task = train_test_split(
-        target_X, target_y_task, test_size=0.5, shuffle=False
+    train_target_prime_X, test_target_prime_X, train_target_prime_y_task, test_target_prime_y_task = train_test_split(
+        target_prime_X, target_prime_y_task, test_size=0.5, shuffle=False
     )
-    scaler.fit(train_target_X)
-    train_target_X = scaler.transform(train_target_X)
-    test_target_X = scaler.transform(test_target_X)
-    train_target_X, train_target_y_task = utils.apply_sliding_window(train_target_X, train_target_y_task, filter_len=6)
-    test_target_X, test_target_y_task = utils.apply_sliding_window(test_target_X, test_target_y_task, filter_len=6)
-    return train_source_X, train_source_y_task, train_target_X, train_target_y_task, test_target_X, test_target_y_task
+    scaler.fit(train_target_prime_X)
+    train_target_prime_X = scaler.transform(train_target_prime_X)
+    test_target_prime_X = scaler.transform(test_target_prime_X)
+    train_target_prime_X, train_target_prime_y_task = utils.apply_sliding_window(train_target_prime_X, train_target_prime_y_task, filter_len=6)
+    test_target_prime_X, test_target_prime_y_task = utils.apply_sliding_window(test_target_prime_X, test_target_prime_y_task, filter_len=6)
+    return train_source_X, train_source_y_task, train_target_prime_X, train_target_prime_y_task, test_target_prime_X, test_target_prime_y_task
 
 def danns_2d(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, num_repeats: int = 10,) -> float:
     accs = []
