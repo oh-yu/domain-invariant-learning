@@ -258,34 +258,13 @@ def codats(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, n
 
 
 def without_adapt(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, num_repeats: int = 10,) -> float:
-    train_source_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv")
-    target_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_X_train.csv")
-
-    train_source_y_task = pd.read_csv(
-        f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_Y_train.csv"
-    )[train_source_X.Season == winter_idx].values.reshape(-1)
-    target_y_task = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_Y_train.csv")[
-        target_X.Season == summer_idx
-    ].values.reshape(-1)
-
-    train_source_X = train_source_X[train_source_X.Season == winter_idx]
-    target_X = target_X[target_X.Season == summer_idx]
-
-    scaler = preprocessing.StandardScaler()
-    scaler.fit(train_source_X)
-    train_source_X = scaler.transform(train_source_X)
-    train_source_X, train_source_y_task = utils.apply_sliding_window(train_source_X, train_source_y_task, filter_len=6)
-
-    accs = []
-    train_target_X, test_target_X, train_target_y_task, test_target_y_task = train_test_split(
-        target_X, target_y_task, test_size=0.5, shuffle=False
+    train_source_X, train_source_y_task, train_target_X, train_target_y_task, test_target_X, test_target_y_task = get_source_target_prime_from_ecodataset(
+        source_idx=source_idx,
+        target_prime_idx=target_idx,
+        source_season_idx=winter_idx,
+        target_prime_season_ix=summer_idx
     )
-    scaler.fit(train_target_X)
-    train_target_X = scaler.transform(train_target_X)
-    test_target_X = scaler.transform(test_target_X)
-
-    train_target_X, train_target_y_task = utils.apply_sliding_window(train_target_X, train_target_y_task, filter_len=6)
-    test_target_X, test_target_y_task = utils.apply_sliding_window(test_target_X, test_target_y_task, filter_len=6)
+    accs = []
     for _ in range(num_repeats):
 
         source_loader, _, _, _, _, _ = utils.get_loader(
