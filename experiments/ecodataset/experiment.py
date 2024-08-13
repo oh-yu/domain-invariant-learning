@@ -49,28 +49,33 @@ def get_source_target_from_ecodataset(source_idx, target_idx, source_season_idx,
     # Note: batch_size=32, because exploding gradient when batch_size=34(this leads to one sample loss)
     return source_loader, target_loader, scaler, source_ds, target_ds, target_X, target_y_task
 
+def get_target_prime_from_ecodataset(target_prime_idx, target_prime_season_idx):
+    target_prime_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_prime_idx}_X_train.csv")
+    target_prime_y_task = pd.read_csv(
+        f"./domain-invariant-learning/deep_occupancy_detection/data/{target_prime_idx}_Y_train.csv"
+    )[target_prime_X.Season == target_prime_season_idx].values.reshape(-1)
+    target_prime_X = target_prime_X[target_prime_X.Season == target_prime_season_idx].values
+
+    train_target_prime_X, test_target_prime_X, train_target_prime_y_task, test_target_prime_y_task = train_test_split(
+        target_prime_X, target_prime_y_task, test_size=0.5, shuffle=False
+    )
+    scaler = preprocessing.StandardScaler()
+    scaler.fit(train_target_prime_X)
+    train_target_prime_X = scaler.transform(train_target_prime_X)
+    test_target_prime_X = scaler.transform(test_target_prime_X)
+    train_target_prime_X, train_target_prime_y_task = utils.apply_sliding_window(
+        train_target_prime_X, train_target_prime_y_task, filter_len=6
+    )
+    test_target_prime_X, test_target_prime_y_task = utils.apply_sliding_window(test_target_prime_X, test_target_prime_y_task, filter_len=6)
+    return train_target_prime_X, train_target_prime_y_task, test_target_prime_X, test_target_prime_y_task
+
 def danns_2d(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, num_repeats: int = 10,) -> float:
     accs = []
     for _ in range(num_repeats):
         # Prepare Data
-        source_loader, target_loader, scaler, _, _, _, _ = get_source_target_from_ecodataset(source_idx=source_idx, target_idx=target_idx, source_season_idx=winter_idx, target_season_idx=winter_idx)    
-        target_prime_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_X_train.csv")
-        target_prime_y_task = pd.read_csv(
-            f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_Y_train.csv"
-        )[target_prime_X.Season == summer_idx].values.reshape(-1)
-        target_prime_X = target_prime_X[target_prime_X.Season == summer_idx].values
+        source_loader, target_loader, scaler, _, _, _, _ = get_source_target_from_ecodataset(source_idx=source_idx, target_idx=target_idx, source_season_idx=winter_idx, target_season_idx=winter_idx)
+        train_target_prime_X, _, test_target_prime_X, test_target_prime_y_task = get_target_prime_from_ecodataset(target_prime_idx=target_idx, target_prime_season_idx=summer_idx)
 
-        train_target_prime_X, test_target_prime_X, train_target_prime_y_task, test_target_prime_y_task = train_test_split(
-            target_prime_X, target_prime_y_task, test_size=0.5, shuffle=False
-        )
-
-        scaler.fit(train_target_prime_X)
-        train_target_prime_X = scaler.transform(train_target_prime_X)
-        test_target_prime_X = scaler.transform(test_target_prime_X)
-        train_target_prime_X, train_target_prime_y_task = utils.apply_sliding_window(
-            train_target_prime_X, train_target_prime_y_task, filter_len=6
-        )
-        test_target_prime_X, test_target_prime_y_task = utils.apply_sliding_window(test_target_prime_X, test_target_prime_y_task, filter_len=6)
         test_target_prime_X = torch.tensor(test_target_prime_X, dtype=torch.float32)
         test_target_prime_y_task = torch.tensor(test_target_prime_y_task, dtype=torch.float32)
         test_target_prime_X = test_target_prime_X.to(DEVICE)
