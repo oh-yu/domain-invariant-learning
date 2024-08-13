@@ -19,37 +19,40 @@ flags.DEFINE_integer("num_repeats", 10, "the number of evaluation trials")
 flags.DEFINE_boolean("is_RV_tuning", True, "Whether or not use Reverse Validation based free params tuning method(5.1.2 algo from DANN paper)")
 
 
+def get_source_target_from_ecodataset(source_idx, target_idx, source_season_idx, target_season_idx):
+    train_source_X = pd.read_csv(
+        f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv"
+    )
+    target_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_X_train.csv")
+    train_source_y_task = pd.read_csv(
+        f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_Y_train.csv"
+    )[train_source_X.Season == source_season_idx].values.reshape(-1)
+    target_y_task = pd.read_csv(
+        f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_Y_train.csv"
+    )[target_X.Season == target_season_idx].values.reshape(-1)
+    train_source_X = train_source_X[train_source_X.Season == source_season_idx]
+    target_X = target_X[target_X.Season == target_season_idx]
+
+    scaler = preprocessing.StandardScaler()
+    train_source_X = scaler.fit_transform(train_source_X)
+    scaler.fit(target_X)
+    target_X = scaler.transform(target_X)
+
+    train_source_X, train_source_y_task = utils.apply_sliding_window(
+        train_source_X, train_source_y_task, filter_len=6
+    )
+    target_X, target_y_task = utils.apply_sliding_window(target_X, target_y_task, filter_len=6)
+
+    source_loader, target_loader, _, _, _, _ = utils.get_loader(
+        train_source_X, target_X, train_source_y_task, target_y_task, shuffle=True, batch_size=32
+    )
+    return source_loader, target_loader, scaler
+
 def danns_2d(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, num_repeats: int = 10,) -> float:
     accs = []
     for _ in range(num_repeats):
         # Prepare Data
-        train_source_X = pd.read_csv(
-            f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv"
-        )
-        target_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_X_train.csv")
-        train_source_y_task = pd.read_csv(
-            f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_Y_train.csv"
-        )[train_source_X.Season == winter_idx].values.reshape(-1)
-        target_y_task = pd.read_csv(
-            f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_Y_train.csv"
-        )[target_X.Season == winter_idx].values.reshape(-1)
-        train_source_X = train_source_X[train_source_X.Season == winter_idx]
-        target_X = target_X[target_X.Season == winter_idx]
-
-        scaler = preprocessing.StandardScaler()
-        train_source_X = scaler.fit_transform(train_source_X)
-        scaler.fit(target_X)
-        target_X = scaler.transform(target_X)
-
-        train_source_X, train_source_y_task = utils.apply_sliding_window(
-            train_source_X, train_source_y_task, filter_len=6
-        )
-        target_X, target_y_task = utils.apply_sliding_window(target_X, target_y_task, filter_len=6)
-
-        source_loader, target_loader, _, _, _, _ = utils.get_loader(
-            train_source_X, target_X, train_source_y_task, target_y_task, shuffle=True, batch_size=32
-        )
-
+        source_loader, target_loader, scaler = get_source_target_from_ecodataset(source_idx=source_idx, target_idx=target_idx, source_season_idx=winter_idx, target_season_idx=winter_idx)    
         target_prime_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_X_train.csv")
         target_prime_y_task = pd.read_csv(
             f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_Y_train.csv"
