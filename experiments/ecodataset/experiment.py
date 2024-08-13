@@ -237,7 +237,7 @@ def codats(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, n
         source_idx=source_idx,
         target_prime_idx=target_idx,
         source_season_idx=winter_idx,
-        target_prime_season_ix=winter_idx
+        target_prime_season_ix=summer_idx
     )
     accs = []
     for _ in range(num_repeats):
