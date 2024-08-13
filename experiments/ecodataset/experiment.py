@@ -107,7 +107,8 @@ def isih_da_house(source_idx: int, target_idx: int, winter_idx: int, summer_idx:
                                                                                                                   target_idx=target_idx,
                                                                                                                   source_season_idx=winter_idx,
                                                                                                                   target_season_idx=winter_idx
-                                                                                                                  )   
+                                                                                                                  )
+        target_X = test_target_X
 
         test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
         test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
@@ -168,6 +169,7 @@ def isih_da_season(source_idx: int, target_idx: int, winter_idx: int, summer_idx
         # Algo1. Inter-Seasons DA
         ## Prepare Data
         _, _, scaler, source_ds, target_ds, test_target_X, test_target_y_task = get_source_target_from_ecodataset(source_idx=source_idx, target_idx=source_idx, source_season_idx=winter_idx, target_season_idx=summer_idx)
+        target_X = test_target_X
         
         test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
         test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
