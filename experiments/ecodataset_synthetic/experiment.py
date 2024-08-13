@@ -67,16 +67,16 @@ def get_source_target_targetprime_from_ecodataset(source_idx, season_idx):
         train_source_X, train_source_y_task, filter_len=6
     )
     target_X, target_y_task = utils.apply_sliding_window(target_X, target_y_task, filter_len=6)
-    source_loader, target_loader, _, _, _, _  = utils.get_loader(
-        train_source_X, target_X, train_source_y_task, target_y_task, shuffle=True, batch_size=32
+    source_loader, target_loader, _, _, _, _, source_ds, target_ds  = utils.get_loader(
+        train_source_X, target_X, train_source_y_task, target_y_task, shuffle=True, batch_size=32, return_ds=True
     )
-    return source_loader, target_loader, target_prime_X, target_prime_y_task
+    return source_loader, target_loader, source_ds, target_ds, target_prime_X, target_prime_y_task
 
 
 def danns_2d(source_idx=2, season_idx=0, num_repeats: int = 10):
     accs = []
     for _ in range(num_repeats):
-        source_loader, target_loader, target_prime_X, target_prime_y_task = get_source_target_targetprime_from_ecodataset(season_idx=source_idx, season_idx=season_idx)
+        source_loader, target_loader, _, _, target_prime_X, target_prime_y_task = get_source_target_targetprime_from_ecodataset(season_idx=source_idx, season_idx=season_idx)
 
         train_target_prime_X, test_target_prime_X, train_target_prime_y_task, test_target_prime_y_task = train_test_split(
             target_prime_X, target_prime_y_task, test_size=0.5, shuffle=False
@@ -116,51 +116,7 @@ def danns_2d(source_idx=2, season_idx=0, num_repeats: int = 10):
 def isih_da(source_idx=2, season_idx=0, num_repeats: int = 10):
     accs = []
     for _ in range(num_repeats):
-        train_source_X = pd.read_csv(
-            f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv"
-        )
-        train_source_y_task = pd.read_csv(
-            f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_Y_train.csv"
-        )[train_source_X.Season == season_idx]
-        train_source_X = train_source_X[train_source_X.Season == season_idx]
-
-        target_X = train_source_X.copy()
-        time_list = LAG_NUM_TO_TIME_LIST[FLAGS.lag_1]
-        time_list = time_list * int(train_source_X.shape[0] / 32)
-        target_X["Time"] = time_list
-        target_y_task = train_source_y_task
-
-        target_prime_X = train_source_X.copy()
-        time_list = LAG_NUM_TO_TIME_LIST[FLAGS.lag_2]
-        time_list = time_list * int(train_source_X.shape[0] / 32)
-        target_prime_X["Time"] = time_list
-        target_prime_y_task = train_source_y_task
-
-        train_source_y_task = train_source_y_task.values.reshape(-1)
-        target_y_task = target_y_task.values.reshape(-1)
-        target_prime_y_task = target_prime_y_task.values.reshape(-1)
-
-        scaler = preprocessing.StandardScaler()
-        train_source_X = scaler.fit_transform(train_source_X)
-        scaler.fit(target_X)
-        target_X = scaler.transform(target_X)
-
-        train_source_X, train_source_y_task = utils.apply_sliding_window(
-            train_source_X, train_source_y_task, filter_len=6
-        )
-        target_X, target_y_task = utils.apply_sliding_window(target_X, target_y_task, filter_len=6)
-
-        train_target_X, test_target_X, train_target_y_task, test_target_y_task = (
-            target_X,
-            target_X,
-            target_y_task,
-            target_y_task,
-        )
-        source_loader, target_loader, train_source_y_task, train_source_X, _, _, source_ds, target_ds = utils.get_loader(
-            train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True, batch_size=32, return_ds=True
-        )
-        # Note: batch_size=32, because exploding gradient when batch_size=34(this leads to one sample loss)
-
+        _, _, source_ds, target_ds, target_prime_X, target_prime_y_task = get_source_target_targetprime_from_ecodataset(source_idx=source_idx, season_idx=season_idx)
         test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
         test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
         test_target_X = test_target_X.to(DEVICE)
@@ -177,6 +133,7 @@ def isih_da(source_idx=2, season_idx=0, num_repeats: int = 10):
         train_target_X, test_target_X, train_target_y_task, test_target_y_task = train_test_split(
             target_X, target_y_task, test_size=0.5, shuffle=False
         )
+        scaler = preprocessing.StandardScaler()
         scaler.fit(train_target_X)
         train_target_X = scaler.transform(train_target_X)
         test_target_X = scaler.transform(test_target_X)
