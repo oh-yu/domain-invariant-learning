@@ -19,7 +19,7 @@ flags.DEFINE_integer("num_repeats", 10, "the number of evaluation trials")
 flags.DEFINE_boolean("is_RV_tuning", True, "Whether or not use Reverse Validation based free params tuning method(5.1.2 algo from DANN paper)")
 
 
-def get_source_target_from_ecodataset(source_idx, target_idx, source_season_idx, target_season_idx):
+def _get_source_target_from_ecodataset(source_idx, target_idx, source_season_idx, target_season_idx):
     train_source_X = pd.read_csv(
         f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv"
     )
@@ -49,7 +49,7 @@ def get_source_target_from_ecodataset(source_idx, target_idx, source_season_idx,
     # Note: batch_size=32, because exploding gradient when batch_size=34(this leads to one sample loss)
     return source_loader, target_loader, scaler, source_ds, target_ds, target_X, target_y_task
 
-def get_target_prime_from_ecodataset(target_prime_idx, target_prime_season_idx):
+def _get_target_prime_from_ecodataset(target_prime_idx, target_prime_season_idx):
     target_prime_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_prime_idx}_X_train.csv")
     target_prime_y_task = pd.read_csv(
         f"./domain-invariant-learning/deep_occupancy_detection/data/{target_prime_idx}_Y_train.csv"
@@ -70,7 +70,7 @@ def get_target_prime_from_ecodataset(target_prime_idx, target_prime_season_idx):
     return train_target_prime_X, train_target_prime_y_task, test_target_prime_X, test_target_prime_y_task
 
 
-def get_source_target_prime_from_ecodataset(source_idx, target_prime_idx, source_season_idx, target_prime_season_ix):
+def _get_source_target_prime_from_ecodataset(source_idx, target_prime_idx, source_season_idx, target_prime_season_ix):
     train_source_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv")
     target_prime_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_prime_idx}_X_train.csv")
 
@@ -103,8 +103,8 @@ def danns_2d(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int,
     accs = []
     for _ in range(num_repeats):
         # Prepare Data
-        source_loader, target_loader, scaler, _, _, _, _ = get_source_target_from_ecodataset(source_idx=source_idx, target_idx=target_idx, source_season_idx=winter_idx, target_season_idx=winter_idx)
-        train_target_prime_X, _, test_target_prime_X, test_target_prime_y_task = get_target_prime_from_ecodataset(target_prime_idx=target_idx, target_prime_season_idx=summer_idx)
+        source_loader, target_loader, scaler, _, _, _, _ = _get_source_target_from_ecodataset(source_idx=source_idx, target_idx=target_idx, source_season_idx=winter_idx, target_season_idx=winter_idx)
+        train_target_prime_X, _, test_target_prime_X, test_target_prime_y_task = _get_target_prime_from_ecodataset(target_prime_idx=target_idx, target_prime_season_idx=summer_idx)
 
         test_target_prime_X = torch.tensor(test_target_prime_X, dtype=torch.float32)
         test_target_prime_y_task = torch.tensor(test_target_prime_y_task, dtype=torch.float32)
@@ -138,7 +138,7 @@ def isih_da_house(source_idx: int, target_idx: int, winter_idx: int, summer_idx:
     for _ in range(num_repeats):
         # Algo1. Inter-Households DA
         ## Prepare Data
-        _, _, scaler, source_ds, target_ds, test_target_X, test_target_y_task = get_source_target_from_ecodataset(source_idx=source_idx,
+        _, _, scaler, source_ds, target_ds, test_target_X, test_target_y_task = _get_source_target_from_ecodataset(source_idx=source_idx,
                                                                                                                   target_idx=target_idx,
                                                                                                                   source_season_idx=winter_idx,
                                                                                                                   target_season_idx=winter_idx
@@ -159,7 +159,7 @@ def isih_da_house(source_idx: int, target_idx: int, winter_idx: int, summer_idx:
         ## Prepare Data
         train_source_X = target_X
         train_source_y_task = pred_y_task.cpu().detach().numpy()
-        train_target_X, train_target_y_task, test_target_X, test_target_y_task = get_target_prime_from_ecodataset(target_prime_idx=target_idx, target_prime_season_idx=summer_idx)
+        train_target_X, train_target_y_task, test_target_X, test_target_y_task = _get_target_prime_from_ecodataset(target_prime_idx=target_idx, target_prime_season_idx=summer_idx)
 
         test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
         test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
@@ -189,7 +189,7 @@ def isih_da_season(source_idx: int, target_idx: int, winter_idx: int, summer_idx
     for _ in range(num_repeats):
         # Algo1. Inter-Seasons DA
         ## Prepare Data
-        _, _, scaler, source_ds, target_ds, test_target_X, test_target_y_task = get_source_target_from_ecodataset(source_idx=source_idx, target_idx=source_idx, source_season_idx=winter_idx, target_season_idx=summer_idx)
+        _, _, scaler, source_ds, target_ds, test_target_X, test_target_y_task = _get_source_target_from_ecodataset(source_idx=source_idx, target_idx=source_idx, source_season_idx=winter_idx, target_season_idx=summer_idx)
         target_X = test_target_X
         
         test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
@@ -206,7 +206,7 @@ def isih_da_season(source_idx: int, target_idx: int, winter_idx: int, summer_idx
         ## Prepare Data
         train_source_X = target_X
         train_source_y_task = pred_y_task.cpu().detach().numpy()
-        train_target_X, train_target_y_task, test_target_X, test_target_y_task = get_target_prime_from_ecodataset(target_prime_idx=target_idx, target_prime_season_idx=summer_idx)
+        train_target_X, train_target_y_task, test_target_X, test_target_y_task = _get_target_prime_from_ecodataset(target_prime_idx=target_idx, target_prime_season_idx=summer_idx)
         source_loader, target_loader, _, _, _, _, source_ds, target_ds = utils.get_loader(
             train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True, return_ds=True
         )
@@ -233,7 +233,7 @@ def codats(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, n
     """
     # Direct Inter-Seasons and Inter-Households DA
     ## Prepare Data
-    train_source_X, train_source_y_task, train_target_X, train_target_y_task, test_target_X, test_target_y_task = get_source_target_prime_from_ecodataset(
+    train_source_X, train_source_y_task, train_target_X, train_target_y_task, test_target_X, test_target_y_task = _get_source_target_prime_from_ecodataset(
         source_idx=source_idx,
         target_prime_idx=target_idx,
         source_season_idx=winter_idx,
@@ -258,7 +258,7 @@ def codats(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, n
 
 
 def without_adapt(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, num_repeats: int = 10,) -> float:
-    train_source_X, train_source_y_task, train_target_X, train_target_y_task, test_target_X, test_target_y_task = get_source_target_prime_from_ecodataset(
+    train_source_X, train_source_y_task, train_target_X, train_target_y_task, test_target_X, test_target_y_task = _get_source_target_prime_from_ecodataset(
         source_idx=source_idx,
         target_prime_idx=target_idx,
         source_season_idx=winter_idx,
