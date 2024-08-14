@@ -73,7 +73,7 @@ def get_source_target_targetprime_from_ecodataset(source_idx, season_idx):
     return source_loader, target_loader, source_ds, target_ds, target_X, target_y_task, target_prime_X, target_prime_y_task
 
 
-def split_normalize_sliding_window_for_target_prime(target_prime_X, target_prime_y_task)
+def split_normalize_sliding_window_for_target_prime(target_prime_X, target_prime_y_task):
     train_target_prime_X, test_target_prime_X, train_target_prime_y_task, test_target_prime_y_task = train_test_split(
         target_prime_X, target_prime_y_task, test_size=0.5, shuffle=False
     )
