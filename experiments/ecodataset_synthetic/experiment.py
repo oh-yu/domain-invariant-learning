@@ -175,7 +175,7 @@ def codats(source_idx=2, season_idx=0, num_repeats: int = 10):
     train_source_X, train_source_y_task = utils.apply_sliding_window(train_source_X, train_source_y_task, filter_len=6)
 
     accs = []
-    train_target_X, test_target_X, train_target_y_task, test_target_y_task = split_normalize_sliding_window_for_target_prime(
+    train_target_X, train_target_y_task, test_target_X, test_target_y_task = split_normalize_sliding_window_for_target_prime(
         target_prime_X=target_X,
         target_prime_y_task=target_y_task
     )
@@ -213,7 +213,7 @@ def without_adapt(source_idx=2, season_idx=0, num_repeats: int = 10):
     train_source_X, train_source_y_task = utils.apply_sliding_window(train_source_X, train_source_y_task, filter_len=6)
 
     accs = []
-    train_target_X, test_target_X, train_target_y_task, test_target_y_task = split_normalize_sliding_window_for_target_prime(
+    train_target_X, train_target_y_task, test_target_X, test_target_y_task = split_normalize_sliding_window_for_target_prime(
         target_prime_X=target_X,
         target_prime_y_task=target_y_task
     )
