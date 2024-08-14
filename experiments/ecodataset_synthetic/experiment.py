@@ -34,6 +34,14 @@ flags.mark_flag_as_required("lag_2")
 
 
 def _get_source_target_targetprime_from_ecodataset(source_idx, season_idx):
+    """
+    1. load X_S, Y_S
+    2. create X_T, Y_T
+    3. create X_T', Y_T'
+    4. normalize X_S, X_T
+    5. sliding window X_S, X_T(N*H -> N*T*H)
+    6. loader X_S, X_T
+    """
     train_source_X = pd.read_csv(
         f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv"
     )
@@ -74,6 +82,12 @@ def _get_source_target_targetprime_from_ecodataset(source_idx, season_idx):
 
 
 def _split_normalize_sliding_window_for_target_prime(target_prime_X, target_prime_y_task):
+    """
+    1. split X_T', Y_T' into train, test
+    2. normalize X_T', Y_T'
+    3. sliding window X_T', Y_T'(N*H -> N*T*H)
+    4. torch.tensor(), to(device) X_{T', test}, Y_{T', test}
+    """
     train_target_prime_X, test_target_prime_X, train_target_prime_y_task, test_target_prime_y_task = train_test_split(
         target_prime_X, target_prime_y_task, test_size=0.5, shuffle=False
     )
