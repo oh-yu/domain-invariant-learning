@@ -20,6 +20,12 @@ flags.DEFINE_boolean("is_RV_tuning", True, "Whether or not use Reverse Validatio
 
 
 def _get_source_target_from_ecodataset(source_idx, target_idx, source_season_idx, target_season_idx):
+    """
+    1. load X_S, Y_S, X_T, Y_T
+    2. normalize
+    3. sliding window
+    4. loader
+    """
     train_source_X = pd.read_csv(
         f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv"
     )
@@ -50,6 +56,12 @@ def _get_source_target_from_ecodataset(source_idx, target_idx, source_season_idx
     return source_loader, target_loader, scaler, source_ds, target_ds, target_X, target_y_task
 
 def _get_target_prime_from_ecodataset(target_prime_idx, target_prime_season_idx):
+    """
+    1. load X_T', Y_T'
+    2. split into train, test
+    3. normalize
+    4. sliding window
+    """
     target_prime_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_prime_idx}_X_train.csv")
     target_prime_y_task = pd.read_csv(
         f"./domain-invariant-learning/deep_occupancy_detection/data/{target_prime_idx}_Y_train.csv"
@@ -71,6 +83,14 @@ def _get_target_prime_from_ecodataset(target_prime_idx, target_prime_season_idx)
 
 
 def _get_source_target_prime_from_ecodataset(source_idx, target_prime_idx, source_season_idx, target_prime_season_ix):
+    """
+    1. load X_S, Y_S, X_T', Y_T'
+    2. normalize X_S
+    3. sliding window X_S
+    4. split X_T', Y_T' into train, test
+    5. normalize X_T', Y_T'
+    6. sliding window X_T', Y_T'
+    """
     train_source_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv")
     target_prime_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_prime_idx}_X_train.csv")
 
