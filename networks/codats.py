@@ -87,6 +87,7 @@ class Codats:
         """
         Algorythm: 5.1.2 from https://arxiv.org/abs/1505.07818
         Theory: 3.1 ~ 4.2 from https://link.springer.com/chapter/10.1007/978-3-642-15939-8_35
+        Proof: https://drive.google.com/file/d/1BLldo_Kun1Kx_Hhq1o2IJF7ssKXGKoCX/view?usp=sharing
         """
         # 1. split source into train, val
         train_source_loader, val_source_loader = utils.tensordataset_to_splitted_loaders(source_ds, self.batch_size)
