@@ -73,7 +73,7 @@ class Danns2D:
             self.domain_optimizer_dim1 = optim.Adam(self.domain_classifier_dim1.parameters(), lr=0.0001)
             self.task_optimizer = optim.Adam(self.task_classifier.parameters(), lr=0.0001)
             self.criterion = nn.BCELoss()
-            self.num_epochs = 10
+            self.num_epochs = 100
 
             self.domain_classifier_dim2 = ThreeLayersDecoder(
                 input_size=1152, output_size=1, fc1_size=1024, fc2_size=1024
