@@ -168,6 +168,7 @@ def main(argv):
     }
     config = {
         "num_epochs": 1000,
+        "do_plot": True
     }
     feature_extractor_dim12, task_classifier, _ = dann2D_algo.fit(data, network, **config)
     y_grid = task_classifier.predict_proba(feature_extractor_dim12(x_grid.T)).cpu().detach().numpy()
