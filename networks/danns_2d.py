@@ -55,7 +55,7 @@ class Danns2D:
             self.domain_optimizer_dim2 = optim.Adam(self.domain_classifier_dim2.parameters(), lr=0.0001)
             self.task_optimizer = optim.Adam(self.task_classifier.parameters(), lr=0.0001)
             self.criterion = nn.BCELoss()
-            self.num_epochs= 200
+            self.num_epochs= 300
             self.device = DEVICE
             self.batch_size = 128
             self.experiment = experiment
