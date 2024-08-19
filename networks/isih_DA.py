@@ -117,7 +117,6 @@ class IsihDanns:
             self.is_target_weights = False
 
             self.device = torch.device("cpu")
-            self.stop_during_epochs = True
             self.batch_size = 64
             self.experiment = experiment
             self.do_early_stop = False
@@ -224,8 +223,6 @@ class IsihDanns:
                 "num_epochs": self.num_epochs_dim1,
                 "is_target_weights": self.is_target_weights,
                 "device": self.device,
-                "stop_during_epochs": self.stop_during_epochs,
-                "epoch_thr_for_stopping": 11,
                 "do_early_stop": self.do_early_stop
             }
         elif FLAGS.algo_name == "CoRAL":
@@ -368,8 +365,6 @@ class IsihDanns:
                 "is_psuedo_weights": True,
                 "is_target_weights": self.is_target_weights,
                 "device": self.device,
-                "stop_during_epochs": self.stop_during_epochs,
-                "epoch_thr_for_stopping": 11,
                 "do_early_stop": self.do_early_stop
             }
         elif FLAGS.algo_name == "CoRAL":
