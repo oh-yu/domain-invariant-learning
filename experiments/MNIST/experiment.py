@@ -62,7 +62,7 @@ def get_image_data_for_uda(name="MNIST"):
             transform=custom_transform,
         )
         train_data = CustomUDADataset(train_data, "source")
-        train_loader = torch.utils.data.DataLoader(train_data, batch_size=16, shuffle=True)
+        train_loader = torch.utils.data.DataLoader(train_data, batch_size=64, shuffle=True)
         return train_loader, train_data
 
     elif name == "MNIST-M":
