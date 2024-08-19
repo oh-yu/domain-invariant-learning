@@ -7,7 +7,7 @@ implementations of domain invariant learning algo.
 |---|---|
 |dann_algo.py|DANNs algo https://arxiv.org/pdf/1505.07818|
 |coral_algo.py|CoRAL algo https://arxiv.org/abs/1607.01719|
-|dan_alog.py|DAN algo https://arxiv.org/abs/1502.02791|
+|dan_algo.py|DAN algo https://arxiv.org/abs/1502.02791|
 |dann2D_algo.py|see our paper(TODO: Attach in the near future)|
 |supervised_algo.py|supervised deep learning boilerplate for comparison test|
 
