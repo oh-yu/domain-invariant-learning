@@ -1,14 +1,16 @@
 # domain-invariant-learning
-python 3.9.7  
-![dann](/make_moons_experiemnt_dann.png) ![without_adapt](/make_moons_experiment_withoutadapt.png)
+python 3.9.7
 ## algo/
 implementations of domain invariant learning algo.
 --algo_name can switch them.
 |file name|note|
 |---|---|
-|algo.py|DANN algo https://arxiv.org/pdf/1505.07818|
-|coral_alog.py|CoRAL algo https://arxiv.org/abs/1607.01719
+|dann_algo.py|DANNs algo https://arxiv.org/pdf/1505.07818|
+|coral_alog.py|CoRAL algo https://arxiv.org/abs/1607.01719|
 |dan_alog.py|DAN algo https://arxiv.org/abs/1502.02791|
+|dann2D_algo.py|see our paper(TODO: Attach in the near future)|
+|supervised_algo.py|supervised deep learning boilerplate|
+
 ## experiments/
 implementations of experiment workflow (data load, preprocess, init NN, training, evaluation).
 |dir name|data|execution|
@@ -22,6 +24,13 @@ implementations of experiment workflow (data load, preprocess, init NN, training
 ## networks/
 implementations of networks which include layers, fit method, predict method, predict_proba method.
 Domain Invariant Laerning and Without Adapt and Train on Target related free params should be set here.
+|file name|note|
+|---|---|
+|dann.py|Figure 4: from https://arxiv.org/pdf/1505.07818|
+|codats.py|Figure 3: from https://arxiv.org/pdf/2005.10996|
+|danns_2d.py|see our paper(TODO: Attach in the near future)|
+|isih-DA.py|see our paper(TODO: Attach in the near future)|
+
 ## utils/
 Definition of generic functions to be called in multiple locations within the above dir structure.
 
