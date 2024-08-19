@@ -6,7 +6,7 @@ from torch import nn
 from tqdm import tqdm
 
 from ..utils import utils
-from .algo_utils import get_psuedo_label_weights, get_terminal_weights, EarlyStopping
+from .algo_utils import EarlyStopping, get_psuedo_label_weights, get_terminal_weights
 
 
 class ReverseGradient(torch.autograd.Function):

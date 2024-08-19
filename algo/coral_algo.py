@@ -5,7 +5,7 @@ import torch
 from torch import nn
 
 from ..utils import utils
-from .algo_utils import get_psuedo_label_weights, EarlyStopping
+from .algo_utils import EarlyStopping, get_psuedo_label_weights
 
 
 def get_MSE(x, y):

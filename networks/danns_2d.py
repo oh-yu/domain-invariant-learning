@@ -1,15 +1,15 @@
-from absl import flags
 import numpy as np
 import torch
+from absl import flags
 from torch import nn, optim
-from torch.utils.data import TensorDataset, DataLoader
+from torch.utils.data import DataLoader, TensorDataset
 
-from .conv2d import Conv2d
-from .conv1d_two_layers import Conv1dTwoLayers
-from .conv1d_three_layers import Conv1dThreeLayers
-from .mlp_decoder_three_layers import ThreeLayersDecoder
 from ..algo import dann2D_algo
 from ..utils import utils
+from .conv1d_three_layers import Conv1dThreeLayers
+from .conv1d_two_layers import Conv1dTwoLayers
+from .conv2d import Conv2d
+from .mlp_decoder_three_layers import ThreeLayersDecoder
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 FLAGS = flags.FLAGS

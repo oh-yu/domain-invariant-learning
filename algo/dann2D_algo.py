@@ -3,13 +3,13 @@ from typing import List
 import matplotlib.pyplot as plt
 import torch
 from torch import nn, optim
-from torch.utils.data import TensorDataset, DataLoader
+from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 
-from ..utils import utils
-from .dann_algo import ReverseGradient
 from ..networks import Encoder, ThreeLayersDecoder
+from ..utils import utils
 from .algo_utils import EarlyStopping
+from .dann_algo import ReverseGradient
 
 
 def fit(data, network, **kwargs):

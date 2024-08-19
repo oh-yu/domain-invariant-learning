@@ -8,7 +8,7 @@ from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 
-from ...networks import Codats, CoDATS_F_C, IsihDanns, Danns2D
+from ...networks import Codats, CoDATS_F_C, Danns2D, IsihDanns
 from ...utils import utils
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")

@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader, TensorDataset
 from torchvision import datasets, transforms
 from torchvision.datasets import ImageFolder
 
-from ...networks import Dann, Dann_F_C, IsihDanns, Danns2D
+from ...networks import Dann, Dann_F_C, Danns2D, IsihDanns
 
 FLAGS = flags.FLAGS
 flags.DEFINE_string("algo_name", "DANN", "which algo to be used, DANN or CoRAL")

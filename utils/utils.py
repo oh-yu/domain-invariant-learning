@@ -3,7 +3,7 @@ import numpy as np
 import torch
 from sklearn.datasets import make_moons
 from sklearn.manifold import TSNE
-from torch.utils.data import DataLoader, TensorDataset, Subset
+from torch.utils.data import DataLoader, Subset, TensorDataset
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 COL_IDX_TASK = 0

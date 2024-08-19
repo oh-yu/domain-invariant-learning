@@ -2,12 +2,12 @@ import numpy as np
 import torch
 from absl import flags
 from torch import nn, optim
-from torch.utils.data import TensorDataset, DataLoader
+from torch.utils.data import DataLoader, TensorDataset
 
 from ..algo import coral_algo, dann_algo
+from ..utils import utils
 from .conv2d import Conv2d
 from .mlp_decoder_three_layers import ThreeLayersDecoder
-from ..utils import utils
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 FLAGS = flags.FLAGS
