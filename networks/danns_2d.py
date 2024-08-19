@@ -14,6 +14,7 @@ from ..utils import utils
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 FLAGS = flags.FLAGS
 
+
 class Danns2D:
     def __init__(self, experiment: str):
         assert experiment in ["ECOdataset", "ECOdataset_synthetic", "HHAR", "MNIST"]
@@ -40,7 +41,6 @@ class Danns2D:
             self.experiment = experiment
             self.do_early_stop = False
 
-
         elif experiment == "HHAR":
             self.feature_extractor = Conv1dThreeLayers(input_size=6).to(DEVICE)
             self.domain_classifier_dim1 = ThreeLayersDecoder(input_size=128, output_size=1, dropout_ratio=0.3).to(
@@ -49,23 +49,21 @@ class Danns2D:
             self.domain_classifier_dim2 = ThreeLayersDecoder(input_size=128, output_size=1, dropout_ratio=0.3).to(
                 DEVICE
             )
-            self.task_classifier= ThreeLayersDecoder(input_size=128, output_size=6, dropout_ratio=0.3).to(DEVICE)
+            self.task_classifier = ThreeLayersDecoder(input_size=128, output_size=6, dropout_ratio=0.3).to(DEVICE)
             self.feature_optimizer = optim.Adam(self.feature_extractor.parameters(), lr=0.0001)
             self.domain_optimizer_dim1 = optim.Adam(self.domain_classifier_dim1.parameters(), lr=0.0001)
             self.domain_optimizer_dim2 = optim.Adam(self.domain_classifier_dim2.parameters(), lr=0.0001)
             self.task_optimizer = optim.Adam(self.task_classifier.parameters(), lr=0.0001)
             self.criterion = nn.BCELoss()
-            self.num_epochs= 300
+            self.num_epochs = 300
             self.device = DEVICE
             self.batch_size = 128
             self.experiment = experiment
             self.do_early_stop = False
-        
+
         elif experiment in ["MNIST"]:
             self.feature_extractor = Conv2d()
-            self.task_classifier = ThreeLayersDecoder(
-                input_size=1152, output_size=10, fc1_size=3072, fc2_size=2048
-            )
+            self.task_classifier = ThreeLayersDecoder(input_size=1152, output_size=10, fc1_size=3072, fc2_size=2048)
             self.domain_classifier_dim1 = ThreeLayersDecoder(
                 input_size=1152, output_size=1, fc1_size=1024, fc2_size=1024
             )
@@ -86,9 +84,13 @@ class Danns2D:
 
     def fit(self, source_loader, target_loader, target_prime_loader, test_target_prime_X, test_target_prime_y_task):
         if FLAGS.is_RV_tuning:
-            return self._fit_RV(source_loader, target_loader, target_prime_loader, test_target_prime_X, test_target_prime_y_task)
+            return self._fit_RV(
+                source_loader, target_loader, target_prime_loader, test_target_prime_X, test_target_prime_y_task
+            )
         else:
-            return self._fit(source_loader, target_loader, target_prime_loader, test_target_prime_X, test_target_prime_y_task)
+            return self._fit(
+                source_loader, target_loader, target_prime_loader, test_target_prime_X, test_target_prime_y_task
+            )
 
     def _fit_RV(self, source_loader, target_loader, target_prime_loader, test_target_prime_X, test_target_prime_y_task):
         """
@@ -123,11 +125,18 @@ class Danns2D:
             # Fit eta_r
             target_prime_X = torch.cat([X for X, _ in target_prime_loader], dim=0)
             pred_y_task = self.predict(target_prime_X)
-            target_prime_ds = TensorDataset(target_prime_X, torch.cat([pred_y_task.reshape(-1, 1), torch.zeros_like(pred_y_task).reshape(-1, 1).to(torch.float32)], dim=1))
+            target_prime_ds = TensorDataset(
+                target_prime_X,
+                torch.cat(
+                    [pred_y_task.reshape(-1, 1), torch.zeros_like(pred_y_task).reshape(-1, 1).to(torch.float32)], dim=1
+                ),
+            )
             target_prime_as_source_loader = DataLoader(target_prime_ds, batch_size=self.batch_size, shuffle=True)
 
             train_source_X = torch.cat([X for X, _ in train_source_loader], dim=0)
-            train_source_ds = TensorDataset(train_source_X, torch.ones(train_source_X.shape[0]).to(torch.float32).to(self.device))
+            train_source_ds = TensorDataset(
+                train_source_X, torch.ones(train_source_X.shape[0]).to(torch.float32).to(self.device)
+            )
             train_source_as_target_prime_loader = DataLoader(train_source_ds, batch_size=self.batch_size, shuffle=True)
             self.__init__(self.experiment)
             self.feature_optimizer.param_groups[0].update(param)
@@ -135,7 +144,13 @@ class Danns2D:
             self.domain_optimizer_dim2.param_groups[0].update(param)
             self.task_optimizer.param_groups[0].update(param)
             self.do_early_stop = True
-            self._fit(target_prime_as_source_loader, target_loader, train_source_as_target_prime_loader, target_prime_X, pred_y_task)
+            self._fit(
+                target_prime_as_source_loader,
+                target_loader,
+                train_source_as_target_prime_loader,
+                target_prime_X,
+                pred_y_task,
+            )
 
             # Get RV Loss
             pred_y_task = self.predict(val_source_X)
@@ -153,9 +168,6 @@ class Danns2D:
         self.do_early_stop = True
         return self._fit(source_loader, target_loader, target_prime_loader, val_source_X, val_source_y_task)
 
-
-
-    
     def _fit(self, source_loader, target_loader, target_prime_loader, test_target_prime_X, test_target_prime_y_task):
         data = {
             "source_loader": source_loader,
@@ -175,14 +187,10 @@ class Danns2D:
             "domain_optimizer_dim2": self.domain_optimizer_dim2,
             "task_optimizer": self.task_optimizer,
         }
-        config = {
-            "num_epochs": self.num_epochs,
-            "device": self.device,
-            "do_early_stop": self.do_early_stop
-        }
+        config = {"num_epochs": self.num_epochs, "device": self.device, "do_early_stop": self.do_early_stop}
         self.feature_extractor, self.task_classifier, acc = dann2D_algo.fit(data, network, **config)
         return acc
-    
+
     def predict(self, X):
         out = self.feature_extractor(X)
         out = self.task_classifier.predict(out)

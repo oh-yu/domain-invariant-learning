@@ -37,13 +37,12 @@ class Dann:
 
         self.is_target_weights = False
 
-
     def _fit_RV(
         self,
         source_ds: torch.utils.data.TensorDataset,
         target_ds: torch.utils.data.TensorDataset,
         test_target_X: torch.Tensor,
-        test_target_y_task: torch.Tensor, 
+        test_target_y_task: torch.Tensor,
     ) -> float:
         """
         Algorythm: 5.1.2 from https://arxiv.org/abs/1505.07818
@@ -80,7 +79,16 @@ class Dann:
             val_target_X = torch.cat([X for X, _ in val_target_loader], dim=0)
             val_target_pred_y_task = self.predict(val_target_X)
 
-            train_target_ds = TensorDataset(train_target_X, torch.cat([train_target_pred_y_task.reshape(-1, 1), torch.zeros_like(train_target_pred_y_task).reshape(-1, 1).to(torch.float32)], dim=1))
+            train_target_ds = TensorDataset(
+                train_target_X,
+                torch.cat(
+                    [
+                        train_target_pred_y_task.reshape(-1, 1),
+                        torch.zeros_like(train_target_pred_y_task).reshape(-1, 1).to(torch.float32),
+                    ],
+                    dim=1,
+                ),
+            )
             target_as_source_loader = DataLoader(train_target_ds, batch_size=64, shuffle=True)
 
             train_source_X = torch.cat([X for X, _ in train_source_loader], dim=0)
@@ -96,7 +104,6 @@ class Dann:
             ## 3.3 get RV loss
             pred_y_task = self.predict(val_source_X)
             acc_RV = sum(pred_y_task == val_source_y_task) / val_source_y_task.shape[0]
-
 
             # 3.4 get terminal evaluation
             RV_scores["free_params"].append(param)
@@ -116,7 +123,6 @@ class Dann:
         pred_y_task = self.predict(test_target_X)
         acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
         return acc.item()
-    
 
     def fit(self, source_ds, target_ds, test_target_X, test_target_y_task):
         if FLAGS.is_RV_tuning:
@@ -129,7 +135,6 @@ class Dann:
             pred_y_task = self.predict(test_target_X)
             acc = sum(pred_y_task == test_target_y_task) / len(pred_y_task)
             return acc.item()
-
 
     def _fit(self, source_loader, target_loader, test_target_X, test_target_y_task):
         data = {
@@ -152,7 +157,7 @@ class Dann:
                 "num_epochs": self.num_ecochs,
                 "device": self.device,
                 "is_target_weights": self.is_target_weights,
-                "do_early_stop": True
+                "do_early_stop": True,
             }
         elif FLAGS.algo_name == "CoRAL":
             network = {
@@ -162,11 +167,7 @@ class Dann:
                 "feature_optimizer": self.feature_optimizer,
                 "task_optimizer": self.task_optimizer,
             }
-            config = {
-                "num_epochs": self.num_ecochs,
-                "device": self.device,
-                "do_early_stop": self.do_early_stop
-            }
+            config = {"num_epochs": self.num_ecochs, "device": self.device, "do_early_stop": self.do_early_stop}
         self.feature_extractor, self.task_classifier, _ = ALGORYTHMS[FLAGS.algo_name].fit(data, network, **config)
 
     def predict(self, x):

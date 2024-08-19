@@ -68,7 +68,7 @@ def fit(data, network, **kwargs):
         "changed_lrs": [0.00005, 0.00005],
         "stop_during_epochs": False,
         "epoch_thr_for_stopping": 2,
-        "do_early_stop": False
+        "do_early_stop": False,
     }
     config.update(kwargs)
     num_epochs = config["num_epochs"]
@@ -89,7 +89,6 @@ def fit(data, network, **kwargs):
     # Fit
     reverse_grad = ReverseGradient.apply
     early_stopping = EarlyStopping()
-
 
     # TODO: Understand torch.autograd.Function.apply
     loss_domains = []

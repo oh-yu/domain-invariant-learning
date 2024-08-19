@@ -105,7 +105,7 @@ class EarlyStopping:
         self.early_stop = False
         self.val_loss_min = 0
         self.delta = delta
-    
+
     def __call__(self, val_loss):
         score = val_loss
 

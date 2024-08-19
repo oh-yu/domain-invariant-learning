@@ -22,7 +22,7 @@ def get_source_target_from_make_moons(n_samples=100, noise=0.05, rotation_degree
     target_X = source_X.dot(rotate_matrix)
     target_y = source_y
 
-    theta = np.radians(rotation_degree*2)
+    theta = np.radians(rotation_degree * 2)
     cos, sin = np.cos(theta), np.sin(theta)
     rotate_matrix = np.array([[cos, -sin], [sin, cos]])
     target_prime_X = source_X.dot(rotate_matrix)
@@ -229,8 +229,8 @@ def visualize_tSNE(target_feature, source_feature):
 
 def tensordataset_to_splitted_loaders(ds, batch_size):
     N_dataset = len(ds)
-    train_idx = [i for i in range(0, N_dataset//2, 1)]
-    val_idx = [i for i in range(N_dataset//2, N_dataset, 1)]
+    train_idx = [i for i in range(0, N_dataset // 2, 1)]
+    val_idx = [i for i in range(N_dataset // 2, N_dataset, 1)]
     train_ds = Subset(ds, train_idx)
     val_ds = Subset(ds, val_idx)
     train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)

@@ -28,9 +28,17 @@ ALGORYTHMS = {
 
 def main(argv):
     # Prepare Data
-    (source_X, source_y_task, target_X, target_y_task, target_prime_X, target_prime_y_task, x_grid, x1_grid, x2_grid) = utils.get_source_target_from_make_moons(
-        rotation_degree=FLAGS.rotation_degree
-    )
+    (
+        source_X,
+        source_y_task,
+        target_X,
+        target_y_task,
+        target_prime_X,
+        target_prime_y_task,
+        x_grid,
+        x1_grid,
+        x2_grid,
+    ) = utils.get_source_target_from_make_moons(rotation_degree=FLAGS.rotation_degree)
     source_loader, target_prime_loader, source_y_task, source_X, target_prime_X, target_prime_y_task = utils.get_loader(
         source_X, target_prime_X, source_y_task, target_prime_y_task
     )
@@ -58,7 +66,6 @@ def main(argv):
     domain_optimizer = optim.Adam(domain_classifier.parameters(), lr=learning_rate)
     task_optimizer = optim.Adam(task_classifier.parameters(), lr=learning_rate)
 
-    
     data = {
         "source_loader": source_loader,
         "target_loader": target_prime_loader,
@@ -89,12 +96,12 @@ def main(argv):
             "feature_optimizer": feature_optimizer,
         }
         config = {
-            "num_epochs": 1000, 
+            "num_epochs": 1000,
             "alpha": 1,
             "is_changing_lr": True,
             "epoch_thr_for_changing_lr": 200,
             "changed_lrs": [0.00005, 0.00005],
-            "do_plot": True
+            "do_plot": True,
         }
     feature_extractor, task_classifier, _ = ALGORYTHMS[FLAGS.algo_name].fit(data, network, **config)
 
@@ -127,7 +134,6 @@ def main(argv):
     plt.colorbar()
     plt.show()
 
-
     # 2D-DANNs
     hidden_size = 10
     num_domains = 1
@@ -153,7 +159,7 @@ def main(argv):
         "target_loader": target_loader,
         "target_prime_loader": target_prime_loader,
         "target_prime_X": target_prime_X.to(utils.DEVICE),
-        "target_prime_y_task": target_prime_y_task,   
+        "target_prime_y_task": target_prime_y_task,
     }
     network = {
         "feature_extractor": feature_extractor_dim12,
@@ -166,10 +172,7 @@ def main(argv):
         "domain_optimizer_dim2": domain_optimizer_dim2,
         "task_optimizer": task_optimizer,
     }
-    config = {
-        "num_epochs": 1000,
-        "do_plot": True
-    }
+    config = {"num_epochs": 1000, "do_plot": True}
     feature_extractor_dim12, task_classifier, _ = dann2D_algo.fit(data, network, **config)
     y_grid = task_classifier.predict_proba(feature_extractor_dim12(x_grid.T)).cpu().detach().numpy()
     pred_y_task = task_classifier.predict(feature_extractor_dim12(target_prime_X.to(device)))
@@ -185,8 +188,6 @@ def main(argv):
     plt.colorbar()
     plt.show()
 
-
-
     # step-by-step DANNs
     hidden_size = 10
     num_domains = 1
@@ -197,13 +198,13 @@ def main(argv):
     ).to(device)
     task_classifier_dim1 = ThreeLayersDecoder(
         input_size=hidden_size, output_size=num_classes, dropout_ratio=0, fc1_size=50, fc2_size=10
-    ).to(device) 
+    ).to(device)
     domain_classifier_dim2 = ThreeLayersDecoder(
         input_size=hidden_size, output_size=num_domains, dropout_ratio=0, fc1_size=50, fc2_size=10
     ).to(device)
     task_classifier_dim2 = ThreeLayersDecoder(
         input_size=hidden_size, output_size=num_classes, dropout_ratio=0, fc1_size=50, fc2_size=10
-    ).to(device) 
+    ).to(device)
 
     criterion = nn.BCELoss()
     feature_optimizer_dim1 = optim.Adam(feature_extractor_dim12.parameters(), lr=learning_rate)
@@ -236,7 +237,7 @@ def main(argv):
             "do_plot": True,
             "is_target_weights": True,
         }
-    
+
     elif FLAGS.algo_name == "CoRAL":
         network = {
             "feature_extractor": feature_extractor_dim12,
@@ -252,9 +253,11 @@ def main(argv):
     pred_y_task = task_classifier_dim1(target_feature_eval)
     pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
 
-    
     ## 2nd dim
-    target_ds = TensorDataset(target_X, torch.cat([pred_y_task.detach().reshape(-1, 1), torch.zeros_like(target_y_task).reshape(-1, 1)], dim=1))
+    target_ds = TensorDataset(
+        target_X,
+        torch.cat([pred_y_task.detach().reshape(-1, 1), torch.zeros_like(target_y_task).reshape(-1, 1)], dim=1),
+    )
     target_loader = DataLoader(target_ds, batch_size=34, shuffle=False)
 
     data = {
@@ -273,13 +276,8 @@ def main(argv):
             "domain_optimizer": domain_optimizer_dim2,
             "task_optimizer": task_optimizer_dim2,
         }
-        config = {
-            "num_epochs": 800,
-            "do_plot": True,
-            "is_target_weights": True,
-            "is_psuedo_weights": True
-        }
-    
+        config = {"num_epochs": 800, "do_plot": True, "is_target_weights": True, "is_psuedo_weights": True}
+
     elif FLAGS.algo_name == "CoRAL":
         network = {
             "feature_extractor": feature_extractor_dim12,
@@ -299,7 +297,6 @@ def main(argv):
     stepbystep_dann_acc = sum(pred_y_task == target_prime_y_task) / target_prime_y_task.shape[0]
     print(f"step-by-step DANNs Accuracy:{stepbystep_dann_acc}")
 
-
     x_grid_feature = feature_extractor_dim12(x_grid.T)
     y_grid = task_classifier_dim2(x_grid_feature)
     y_grid = torch.sigmoid(y_grid)
@@ -315,15 +312,12 @@ def main(argv):
     plt.colorbar()
     plt.show()
 
-
     # Without Adaptation
     task_classifier = ThreeLayersDecoder(
         input_size=source_X.shape[1], output_size=num_classes, dropout_ratio=0, fc1_size=50, fc2_size=10
     ).to(device)
     task_optimizer = optim.Adam(task_classifier.parameters(), lr=learning_rate)
-    task_classifier = utils.fit_without_adaptation(
-        source_loader, task_classifier, task_optimizer, criterion, 1000
-    )
+    task_classifier = utils.fit_without_adaptation(source_loader, task_classifier, task_optimizer, criterion, 1000)
     pred_y_task = task_classifier(target_prime_X.to(device))
     pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
     pred_y_task = pred_y_task > 0.5
@@ -359,7 +353,6 @@ def main(argv):
     df["DANNs"] = [dann_acc.item()]
     df["WithoutAdapt"] = [without_adapt_acc.item()]
     df.to_csv(f"make_moons_{str(datetime.now())}_{FLAGS.algo_name}.csv", index=False)
-
 
 
 if __name__ == "__main__":

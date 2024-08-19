@@ -120,12 +120,13 @@ class IsihDanns:
             self.batch_size = 64
             self.experiment = experiment
             self.do_early_stop = False
+
     def fit_1st_dim(
-            self, 
-            source_ds: torch.utils.data.TensorDataset, 
-            target_ds: torch.utils.data.TensorDataset,
-            test_target_X: torch.Tensor,
-            test_target_y_task: torch.Tensor
+        self,
+        source_ds: torch.utils.data.TensorDataset,
+        target_ds: torch.utils.data.TensorDataset,
+        test_target_X: torch.Tensor,
+        test_target_y_task: torch.Tensor,
     ):
         if FLAGS.is_RV_tuning:
             self._fit_RV_1st_dim(source_ds, target_ds, test_target_X, test_target_y_task)
@@ -133,14 +134,13 @@ class IsihDanns:
             source_loader = DataLoader(source_ds, batch_size=self.batch_size, shuffle=True)
             target_loader = DataLoader(target_ds, batch_size=self.batch_size, shuffle=True)
             self._fit_1st_dim(source_loader, target_loader, test_target_X, test_target_y_task)
-        
 
     def _fit_RV_1st_dim(
-            self, 
-            source_ds: torch.utils.data.TensorDataset, 
-            target_ds: torch.utils.data.TensorDataset,
-            test_target_X: torch.Tensor,
-            test_target_y_task: torch.Tensor
+        self,
+        source_ds: torch.utils.data.TensorDataset,
+        target_ds: torch.utils.data.TensorDataset,
+        test_target_X: torch.Tensor,
+        test_target_y_task: torch.Tensor,
     ) -> None:
         # 1. split source into train, val
         train_source_loader, val_source_loader = utils.tensordataset_to_splitted_loaders(source_ds, self.batch_size)
@@ -170,20 +170,32 @@ class IsihDanns:
             val_target_X = torch.cat([X for X, _ in val_target_loader], dim=0)
             val_target_pred_y_task = self.predict(val_target_X, is_1st_dim=True)
 
-
-            train_target_ds = TensorDataset(train_target_X, torch.cat([train_target_pred_y_task.reshape(-1, 1), torch.zeros_like(train_target_pred_y_task).reshape(-1, 1).to(torch.float32)], dim=1))
+            train_target_ds = TensorDataset(
+                train_target_X,
+                torch.cat(
+                    [
+                        train_target_pred_y_task.reshape(-1, 1),
+                        torch.zeros_like(train_target_pred_y_task).reshape(-1, 1).to(torch.float32),
+                    ],
+                    dim=1,
+                ),
+            )
             target_as_source_loader = DataLoader(train_target_ds, batch_size=self.batch_size, shuffle=True)
 
             train_source_X = torch.cat([X for X, _ in train_source_loader], dim=0)
-            train_source_ds = TensorDataset(train_source_X, torch.ones(train_source_X.shape[0]).to(torch.float32).to(self.device))
+            train_source_ds = TensorDataset(
+                train_source_X, torch.ones(train_source_X.shape[0]).to(torch.float32).to(self.device)
+            )
             train_source_as_target_loader = DataLoader(train_source_ds, batch_size=self.batch_size, shuffle=True)
-    
+
             self.__init__(self.experiment)
             self.feature_optimizer_dim1.param_groups[0].update(param)
             self.domain_optimizer_dim1.param_groups[0].update(param)
             self.task_optimizer_dim1.param_groups[0].update(param)
             self.do_early_stop = True
-            self._fit_1st_dim(target_as_source_loader, train_source_as_target_loader, val_target_X, val_target_pred_y_task)
+            self._fit_1st_dim(
+                target_as_source_loader, train_source_as_target_loader, val_target_X, val_target_pred_y_task
+            )
             ## 3.3 get RV loss
             pred_y_task = self.predict(val_source_X, is_1st_dim=True)
             acc_RV = sum(pred_y_task == val_source_y_task) / val_source_y_task.shape[0]
@@ -200,7 +212,6 @@ class IsihDanns:
         target_loader = DataLoader(target_ds, batch_size=self.batch_size, shuffle=True)
         self.do_early_stop = True
         self._fit_1st_dim(source_loader, target_loader, val_source_X, val_source_y_task)
-
 
     def _fit_1st_dim(self, source_loader, target_loader, test_target_X: torch.Tensor, test_target_y_task: torch.Tensor):
         data = {
@@ -223,7 +234,7 @@ class IsihDanns:
                 "num_epochs": self.num_epochs_dim1,
                 "is_target_weights": self.is_target_weights,
                 "device": self.device,
-                "do_early_stop": self.do_early_stop
+                "do_early_stop": self.do_early_stop,
             }
         elif FLAGS.algo_name == "CoRAL":
             network = {
@@ -238,17 +249,16 @@ class IsihDanns:
                 "device": self.device,
                 "stop_during_epochs": self.stop_during_epochs,
                 "epoch_thr_for_stopping": 11,
-                "do_early_stop": self.do_early_stop
+                "do_early_stop": self.do_early_stop,
             }
         self.feature_extractor, self.task_classifier_dim1, _ = ALGORYTHMS[FLAGS.algo_name].fit(data, network, **config)
-    
 
     def fit_2nd_dim(
-            self, 
-            source_ds: torch.utils.data.TensorDataset, 
-            target_ds: torch.utils.data.TensorDataset,
-            test_target_X: torch.Tensor,
-            test_target_y_task: torch.Tensor       
+        self,
+        source_ds: torch.utils.data.TensorDataset,
+        target_ds: torch.utils.data.TensorDataset,
+        test_target_X: torch.Tensor,
+        test_target_y_task: torch.Tensor,
     ):
         if FLAGS.is_RV_tuning:
             return self._fit_RV_2nd_dim(source_ds, target_ds, test_target_X, test_target_y_task)
@@ -262,11 +272,11 @@ class IsihDanns:
             return acc.item()
 
     def _fit_RV_2nd_dim(
-            self, 
-            source_ds: torch.utils.data.TensorDataset, 
-            target_ds: torch.utils.data.TensorDataset,
-            test_target_X: torch.Tensor,
-            test_target_y_task: torch.Tensor
+        self,
+        source_ds: torch.utils.data.TensorDataset,
+        target_ds: torch.utils.data.TensorDataset,
+        test_target_X: torch.Tensor,
+        test_target_y_task: torch.Tensor,
     ) -> float:
         # 1. split source into train, val
         train_source_loader, val_source_loader = utils.tensordataset_to_splitted_loaders(source_ds, self.batch_size)
@@ -281,13 +291,13 @@ class IsihDanns:
         RV_scores = {"free_params": [], "scores": []}
         tmp = self.feature_extractor
 
-        for param in free_params:            
+        for param in free_params:
             self.__init__(self.experiment)
             self.feature_extractor.load_state_dict(tmp.state_dict())
             self.feature_optimizer_dim2.param_groups[0].update(param)
             self.domain_optimizer_dim2.param_groups[0].update(param)
             self.task_optimizer_dim2.param_groups[0].update(param)
-            
+
             # 3. RV algo
             ## 3.1 fit f_i
             val_source_X = torch.cat([X for X, _ in val_source_loader], dim=0)
@@ -303,11 +313,22 @@ class IsihDanns:
             val_target_X = torch.cat([X for X, _ in val_target_loader], dim=0)
             val_target_pred_y_task = self.predict(val_target_X, is_1st_dim=False)
 
-            train_target_ds = TensorDataset(train_target_X, torch.cat([train_target_pred_y_task.reshape(-1, 1), torch.zeros_like(train_target_pred_y_task).reshape(-1, 1).to(torch.float32)], dim=1))
+            train_target_ds = TensorDataset(
+                train_target_X,
+                torch.cat(
+                    [
+                        train_target_pred_y_task.reshape(-1, 1),
+                        torch.zeros_like(train_target_pred_y_task).reshape(-1, 1).to(torch.float32),
+                    ],
+                    dim=1,
+                ),
+            )
             target_as_source_loader = DataLoader(train_target_ds, batch_size=self.batch_size, shuffle=True)
 
             train_source_X = torch.cat([X for X, _ in train_source_loader], dim=0)
-            train_source_ds = TensorDataset(train_source_X, torch.ones(train_source_X.shape[0]).to(torch.float32).to(self.device))
+            train_source_ds = TensorDataset(
+                train_source_X, torch.ones(train_source_X.shape[0]).to(torch.float32).to(self.device)
+            )
             train_source_as_target_loader = DataLoader(train_source_ds, batch_size=self.batch_size, shuffle=True)
 
             self.__init__(self.experiment)
@@ -316,7 +337,9 @@ class IsihDanns:
             self.domain_optimizer_dim1.param_groups[0].update(param)
             self.task_optimizer_dim1.param_groups[0].update(param)
             self.do_early_stop = True
-            self._fit_1st_dim(target_as_source_loader, train_source_as_target_loader, val_target_X, val_target_pred_y_task)
+            self._fit_1st_dim(
+                target_as_source_loader, train_source_as_target_loader, val_target_X, val_target_pred_y_task
+            )
             ## 3.3 get RV loss
             pred_y_task = self.predict(val_source_X, is_1st_dim=True)
             acc_RV = sum(pred_y_task == val_source_y_task) / val_source_y_task.shape[0]
@@ -329,7 +352,7 @@ class IsihDanns:
         self.feature_extractor.load_state_dict(tmp.state_dict())
         # self.feature_optimizer_dim2 = optim.Adam(self.feature_extractor.parameters())
         # TODO: Understand that this line causes lower evaluation score
-    
+
         self.feature_optimizer_dim2.param_groups[0].update(best_param)
         self.domain_optimizer_dim2.param_groups[0].update(best_param)
         self.task_optimizer_dim2.param_groups[0].update(best_param)
@@ -341,7 +364,6 @@ class IsihDanns:
         pred_y_task = self.predict(test_target_X, is_1st_dim=False)
         acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
         return acc.item()
-
 
     def _fit_2nd_dim(self, source_loader, target_loader, test_target_X: torch.Tensor, test_target_y_task: torch.Tensor):
         data = {
@@ -365,7 +387,7 @@ class IsihDanns:
                 "is_psuedo_weights": True,
                 "is_target_weights": self.is_target_weights,
                 "device": self.device,
-                "do_early_stop": self.do_early_stop
+                "do_early_stop": self.do_early_stop,
             }
         elif FLAGS.algo_name == "CoRAL":
             network = {
@@ -381,7 +403,7 @@ class IsihDanns:
                 "device": self.device,
                 "stop_during_epochs": self.stop_during_epochs,
                 "epoch_thr_for_stopping": 11,
-                "do_early_stop": self.do_early_stop
+                "do_early_stop": self.do_early_stop,
             }
 
         self.feature_extractor, self.task_classifier_dim2, _ = ALGORYTHMS[FLAGS.algo_name].fit(data, network, **config)

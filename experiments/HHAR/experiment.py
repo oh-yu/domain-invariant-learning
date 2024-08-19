@@ -24,7 +24,11 @@ GYROSCOPE_DF = GYROSCOPE_DF.add_suffix("_gyro")
 FLAGS = flags.FLAGS
 flags.DEFINE_string("algo_name", "DANN", "which algo to be used, DANN or CoRAL")
 flags.DEFINE_integer("num_repeats", 10, "the number of repetitions for hold-out test")
-flags.DEFINE_boolean("is_RV_tuning", True, "Whether or not use Reverse Validation based free params tuning method(5.1.2 algo from DANN paper)")
+flags.DEFINE_boolean(
+    "is_RV_tuning",
+    True,
+    "Whether or not use Reverse Validation based free params tuning method(5.1.2 algo from DANN paper)",
+)
 
 
 class Pattern:
@@ -103,16 +107,8 @@ def danns_2d(pattern):
     test_target_prime_y_task = torch.tensor(test_target_prime_y_task).to(utils.DEVICE)
     # 2d DANNs
     danns_2d = Danns2D(experiment="HHAR")
-    acc = danns_2d.fit(
-        source_loader,
-        target_loader,
-        target_prime_loader,
-        test_target_prime_X,
-        test_target_prime_y_task
-    )
+    acc = danns_2d.fit(source_loader, target_loader, target_prime_loader, test_target_prime_X, test_target_prime_y_task)
     return acc
-
-
 
 
 def isih_da_user(pattern):
@@ -135,7 +131,13 @@ def isih_da_user(pattern):
     source_X = target_X.cpu().detach().numpy()
     source_y_task = pred_y_task.cpu().detach().numpy()
     source_loader, target_loader, _, _, _, _, source_ds, target_ds = utils.get_loader(
-        source_X, train_target_prime_X, source_y_task, train_target_prime_y_task, batch_size=128, shuffle=True, return_ds=True
+        source_X,
+        train_target_prime_X,
+        source_y_task,
+        train_target_prime_y_task,
+        batch_size=128,
+        shuffle=True,
+        return_ds=True,
     )
     test_target_prime_X = torch.tensor(test_target_prime_X, dtype=torch.float32).to(utils.DEVICE)
     test_target_prime_y_task = torch.tensor(test_target_prime_y_task, dtype=torch.long).to(utils.DEVICE)
@@ -168,7 +170,13 @@ def isih_da_model(pattern):
     source_X = target_X.cpu().detach().numpy()
     source_y_task = pred_y_task.cpu().detach().numpy()
     source_loader, target_loader, _, _, _, _, source_ds, target_ds = utils.get_loader(
-        source_X, train_target_prime_X, source_y_task, train_target_prime_y_task, batch_size=128, shuffle=True, return_ds=True
+        source_X,
+        train_target_prime_X,
+        source_y_task,
+        train_target_prime_y_task,
+        batch_size=128,
+        shuffle=True,
+        return_ds=True,
     )
     test_target_prime_X = torch.tensor(test_target_prime_X, dtype=torch.float32).to(utils.DEVICE)
     test_target_prime_y_task = torch.tensor(test_target_prime_y_task, dtype=torch.long).to(utils.DEVICE)
@@ -189,8 +197,23 @@ def codats(pattern):
     )
 
     # Direct Inter-Users and Inter-models DA
-    source_loader, target_loader, _, _, train_target_prime_X, train_target_prime_y_task, source_ds, target_ds = utils.get_loader(
-        source_X, train_target_prime_X, source_y_task, train_target_prime_y_task, batch_size=128, shuffle=True, return_ds=True
+    (
+        source_loader,
+        target_loader,
+        _,
+        _,
+        train_target_prime_X,
+        train_target_prime_y_task,
+        source_ds,
+        target_ds,
+    ) = utils.get_loader(
+        source_X,
+        train_target_prime_X,
+        source_y_task,
+        train_target_prime_y_task,
+        batch_size=128,
+        shuffle=True,
+        return_ds=True,
     )
     test_target_prime_X = torch.tensor(test_target_prime_X, dtype=torch.float32)
     test_target_prime_y_task = torch.tensor(test_target_prime_y_task, dtype=torch.float32)

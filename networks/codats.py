@@ -58,13 +58,13 @@ class Codats:
             self.experiment = experiment
             self.batch_size = 128
             self.do_early_stop = False
-    
+
     def fit(
         self,
         source_ds: torch.utils.data.TensorDataset,
         target_ds: torch.utils.data.TensorDataset,
         test_target_X: torch.Tensor,
-        test_target_y_task: torch.Tensor, 
+        test_target_y_task: torch.Tensor,
     ):
         if FLAGS.is_RV_tuning:
             return self._fit_RV(source_ds, target_ds, test_target_X, test_target_y_task)
@@ -82,7 +82,7 @@ class Codats:
         source_ds: torch.utils.data.TensorDataset,
         target_ds: torch.utils.data.TensorDataset,
         test_target_X: torch.Tensor,
-        test_target_y_task: torch.Tensor, 
+        test_target_y_task: torch.Tensor,
     ) -> float:
         """
         Algorythm: 5.1.2 from https://arxiv.org/abs/1505.07818
@@ -92,7 +92,7 @@ class Codats:
         # 1. split source into train, val
         train_source_loader, val_source_loader = utils.tensordataset_to_splitted_loaders(source_ds, self.batch_size)
         train_target_loader, val_target_loader = utils.tensordataset_to_splitted_loaders(target_ds, self.batch_size)
-        
+
         # 2. free params
         free_params = [
             {"lr": 0.00001, "eps": 1e-08, "weight_decay": 0},
@@ -119,12 +119,22 @@ class Codats:
             val_target_X = torch.cat([X for X, _ in val_target_loader], dim=0)
             val_target_pred_y_task = self.predict(val_target_X)
 
-
-            train_target_ds = TensorDataset(train_target_X, torch.cat([train_target_pred_y_task.reshape(-1, 1), torch.zeros_like(train_target_pred_y_task).reshape(-1, 1).to(torch.float32)], dim=1))
+            train_target_ds = TensorDataset(
+                train_target_X,
+                torch.cat(
+                    [
+                        train_target_pred_y_task.reshape(-1, 1),
+                        torch.zeros_like(train_target_pred_y_task).reshape(-1, 1).to(torch.float32),
+                    ],
+                    dim=1,
+                ),
+            )
             target_as_source_loader = DataLoader(train_target_ds, batch_size=self.batch_size, shuffle=True)
 
             train_source_X = torch.cat([X for X, _ in train_source_loader], dim=0)
-            train_source_ds = TensorDataset(train_source_X, torch.ones(train_source_X.shape[0]).to(torch.float32).to(utils.DEVICE))
+            train_source_ds = TensorDataset(
+                train_source_X, torch.ones(train_source_X.shape[0]).to(torch.float32).to(utils.DEVICE)
+            )
             train_source_as_target_loader = DataLoader(train_source_ds, batch_size=self.batch_size, shuffle=True)
             self.__init__(self.experiment)
             self.feature_optimizer.param_groups[0].update(param)
@@ -136,7 +146,6 @@ class Codats:
             ## 3.3 get RV loss
             pred_y_task = self.predict(val_source_X)
             acc_RV = sum(pred_y_task == val_source_y_task) / val_source_y_task.shape[0]
-
 
             # 3.4 get terminal evaluation
             RV_scores["free_params"].append(param)
@@ -156,7 +165,6 @@ class Codats:
         pred_y_task = self.predict(test_target_X)
         acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
         return acc.item()
-
 
     def _fit(
         self,
@@ -184,7 +192,7 @@ class Codats:
             config = {
                 "num_epochs": self.num_epochs,
                 "is_target_weights": self.is_target_weights,
-                "do_early_stop": self.do_early_stop
+                "do_early_stop": self.do_early_stop,
             }
         elif FLAGS.algo_name == "CoRAL":
             network = {

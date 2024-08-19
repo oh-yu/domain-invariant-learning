@@ -31,36 +31,25 @@ class CoDATS_F_C(nn.Module):
             self.num_epochs = 300
 
     def fit_without_adapt(self, source_loader):
-        data = {
-            "loader": source_loader
-        }
+        data = {"loader": source_loader}
         network = {
             "decoder": self.decoder,
             "encoder": self.conv1d,
             "optimizer": self.optimizer,
-            "criterion": self.criterion
+            "criterion": self.criterion,
         }
-        config = {
-            "use_source_loader": True,
-            "num_epochs": self.num_epochs
-        }
+        config = {"use_source_loader": True, "num_epochs": self.num_epochs}
         supervised_algo.fit(data, network, **config)
 
-
     def fit_on_target(self, target_prime_loader):
-        data = {
-            "loader": target_prime_loader
-        }
+        data = {"loader": target_prime_loader}
         network = {
             "decoder": self.decoder,
             "encoder": self.conv1d,
             "optimizer": self.optimizer,
-            "criterion": self.criterion
+            "criterion": self.criterion,
         }
-        config = {
-            "use_source_loader": False,
-            "num_epochs": self.num_epochs
-        }
+        config = {"use_source_loader": False, "num_epochs": self.num_epochs}
         supervised_algo.fit(data, network, **config)
 
     def forward(self, x):

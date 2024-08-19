@@ -11,9 +11,14 @@ from .dann_algo import ReverseGradient
 from ..networks import Encoder, ThreeLayersDecoder
 from .algo_utils import EarlyStopping
 
+
 def fit(data, network, **kwargs):
     # Args
-    source_loader, target_loader, target_prime_loader = data["source_loader"], data["target_loader"], data["target_prime_loader"]
+    source_loader, target_loader, target_prime_loader = (
+        data["source_loader"],
+        data["target_loader"],
+        data["target_prime_loader"],
+    )
     target_prime_X, target_prime_y_task = data["target_prime_X"], data["target_prime_y_task"]
     feature_extractor, domain_classifier_dim1, domain_classifier_dim2, task_classifier = (
         network["feature_extractor"],
@@ -39,7 +44,11 @@ def fit(data, network, **kwargs):
     }
     config.update(kwargs)
     num_epochs, device = config["num_epochs"], config["device"]
-    is_changing_lr, epoch_thr_for_changing_lr, changed_lrs = config["is_changing_lr"], config["epoch_thr_for_changing_lr"], config["changed_lrs"]
+    is_changing_lr, epoch_thr_for_changing_lr, changed_lrs = (
+        config["is_changing_lr"],
+        config["epoch_thr_for_changing_lr"],
+        config["changed_lrs"],
+    )
     do_early_stop = config["do_early_stop"]
     do_plot = config["do_plot"]
 
@@ -51,23 +60,30 @@ def fit(data, network, **kwargs):
     reverse_grad = ReverseGradient.apply
     early_stopping = EarlyStopping()
     num_epochs = torch.tensor(num_epochs, dtype=torch.int32).to(device)
-    for epoch in tqdm(range(1, num_epochs+1)):
+    for epoch in tqdm(range(1, num_epochs + 1)):
         epoch = torch.tensor(epoch, dtype=torch.float32).to(device)
         feature_extractor.train()
         task_classifier.train()
         if is_changing_lr:
-            feature_optimizer, domain_optimizer_dim1, domain_optimizer_dim2, task_optimizer = _change_lr_during_dann2D_training(
+            (
+                feature_optimizer,
+                domain_optimizer_dim1,
+                domain_optimizer_dim2,
+                task_optimizer,
+            ) = _change_lr_during_dann2D_training(
                 feature_optimizer,
                 domain_optimizer_dim1,
                 domain_optimizer_dim2,
                 task_optimizer,
                 epoch,
                 epoch_thr=epoch_thr_for_changing_lr,
-                changed_lrs=changed_lrs
+                changed_lrs=changed_lrs,
             )
-        for (source_X_batch, source_Y_batch), (target_X_batch, target_y_domain_batch), (target_prime_X_batch, target_prime_y_domain_batch) in zip(
-            source_loader, target_loader, target_prime_loader
-        ):
+        for (
+            (source_X_batch, source_Y_batch),
+            (target_X_batch, target_y_domain_batch),
+            (target_prime_X_batch, target_prime_y_domain_batch),
+        ) in zip(source_loader, target_loader, target_prime_loader):
             # 0. Prep Data
             target_prime_y_domain_batch = target_prime_y_domain_batch - 1
 
@@ -101,14 +117,14 @@ def fit(data, network, **kwargs):
             pred_target_y_domain_dim2 = domain_classifier_dim2(target_X_batch)
             pred_target_prime_y_domain = domain_classifier_dim2(target_prime_X_batch)
 
-            pred_target_y_domain_dim2  = torch.sigmoid(pred_target_y_domain_dim2).reshape(-1)
-            pred_target_prime_y_domain  = torch.sigmoid(pred_target_prime_y_domain).reshape(-1)
+            pred_target_y_domain_dim2 = torch.sigmoid(pred_target_y_domain_dim2).reshape(-1)
+            pred_target_prime_y_domain = torch.sigmoid(pred_target_prime_y_domain).reshape(-1)
 
             loss_domain_dim2 = criterion(pred_target_y_domain_dim2, target_y_domain_batch)
             loss_domain_dim2 += criterion(pred_target_prime_y_domain, target_prime_y_domain_batch)
             loss_domain_dim2s.append(loss_domain_dim2.item())
 
-            loss_domain = loss_domain_dim1  + loss_domain_dim2
+            loss_domain = loss_domain_dim1 + loss_domain_dim2
             ## 1.3 Task Classifier
             pred_y_task = task_classifier.predict_proba(source_X_batch)
             if task_classifier.output_size == 1:
@@ -117,7 +133,6 @@ def fit(data, network, **kwargs):
                 criterion_task = nn.CrossEntropyLoss()
             loss_task = criterion_task(pred_y_task, source_y_task_batch)
             loss_tasks.append(loss_task.item())
-
 
             # 2. Backward
             feature_optimizer.zero_grad()
@@ -138,15 +153,17 @@ def fit(data, network, **kwargs):
         feature_extractor.eval()
         task_classifier.eval()
         with torch.no_grad():
-                target_prime_feature_eval = feature_extractor(target_prime_X)
-                pred_y_task_eval = task_classifier.predict(target_prime_feature_eval)
-                acc = sum(pred_y_task_eval == target_prime_y_task) / target_prime_y_task.shape[0]
-                early_stopping(acc)
+            target_prime_feature_eval = feature_extractor(target_prime_X)
+            pred_y_task_eval = task_classifier.predict(target_prime_feature_eval)
+            acc = sum(pred_y_task_eval == target_prime_y_task) / target_prime_y_task.shape[0]
+            early_stopping(acc)
         loss_task_evals.append(acc.item())
         if early_stopping.early_stop & do_early_stop:
             break
-        print(f"Epoch: {epoch}, Loss Domain Dim1: {loss_domain_dim1}, Loss Domain Dim2: {loss_domain_dim2},  Loss Task: {loss_task}, Acc: {acc}")
-    
+        print(
+            f"Epoch: {epoch}, Loss Domain Dim1: {loss_domain_dim1}, Loss Domain Dim2: {loss_domain_dim2},  Loss Task: {loss_task}, Acc: {acc}"
+        )
+
     # Plot
     if do_plot:
         plt.plot(loss_domain_dim1s, label="loss domain dim1")

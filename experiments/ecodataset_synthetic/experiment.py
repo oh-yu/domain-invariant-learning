@@ -26,8 +26,12 @@ FLAGS = flags.FLAGS
 flags.DEFINE_integer("lag_1", 1, "time lag for intermediate domain")
 flags.DEFINE_integer("lag_2", 6, "time lag for terminal domain")
 flags.DEFINE_string("algo_name", "DANN", "which algo to be used, DANN or CoRAL")
-flags.DEFINE_integer("num_repeats", 10 , "the number of evaluation trials")
-flags.DEFINE_boolean("is_RV_tuning", True, "Whether or not use Reverse Validation based free params tuning method(5.1.2 algo from DANN paper)")
+flags.DEFINE_integer("num_repeats", 10, "the number of evaluation trials")
+flags.DEFINE_boolean(
+    "is_RV_tuning",
+    True,
+    "Whether or not use Reverse Validation based free params tuning method(5.1.2 algo from DANN paper)",
+)
 
 flags.mark_flag_as_required("lag_1")
 flags.mark_flag_as_required("lag_2")
@@ -42,9 +46,7 @@ def _get_source_target_targetprime_from_ecodataset(source_idx, season_idx):
     5. sliding window X_S, X_T(N*H -> N*T*H)
     6. loader X_S, X_T
     """
-    train_source_X = pd.read_csv(
-        f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv"
-    )
+    train_source_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv")
     train_source_y_task = pd.read_csv(
         f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_Y_train.csv"
     )[train_source_X.Season == season_idx]
@@ -71,14 +73,21 @@ def _get_source_target_targetprime_from_ecodataset(source_idx, season_idx):
     scaler.fit(target_X)
     target_X = scaler.transform(target_X)
 
-    train_source_X, train_source_y_task = utils.apply_sliding_window(
-        train_source_X, train_source_y_task, filter_len=6
-    )
+    train_source_X, train_source_y_task = utils.apply_sliding_window(train_source_X, train_source_y_task, filter_len=6)
     target_X, target_y_task = utils.apply_sliding_window(target_X, target_y_task, filter_len=6)
-    source_loader, target_loader, _, _, _, _, source_ds, target_ds  = utils.get_loader(
+    source_loader, target_loader, _, _, _, _, source_ds, target_ds = utils.get_loader(
         train_source_X, target_X, train_source_y_task, target_y_task, shuffle=True, batch_size=32, return_ds=True
     )
-    return source_loader, target_loader, source_ds, target_ds, target_X, target_y_task, target_prime_X, target_prime_y_task
+    return (
+        source_loader,
+        target_loader,
+        source_ds,
+        target_ds,
+        target_X,
+        target_y_task,
+        target_prime_X,
+        target_prime_y_task,
+    )
 
 
 def _split_normalize_sliding_window_for_target_prime(target_prime_X, target_prime_y_task):
@@ -98,7 +107,9 @@ def _split_normalize_sliding_window_for_target_prime(target_prime_X, target_prim
     train_target_prime_X, train_target_prime_y_task = utils.apply_sliding_window(
         train_target_prime_X, train_target_prime_y_task, filter_len=6
     )
-    test_target_prime_X, test_target_prime_y_task = utils.apply_sliding_window(test_target_prime_X, test_target_prime_y_task, filter_len=6)
+    test_target_prime_X, test_target_prime_y_task = utils.apply_sliding_window(
+        test_target_prime_X, test_target_prime_y_task, filter_len=6
+    )
     test_target_prime_X = torch.tensor(test_target_prime_X, dtype=torch.float32)
     test_target_prime_y_task = torch.tensor(test_target_prime_y_task, dtype=torch.float32)
     test_target_prime_X = test_target_prime_X.to(DEVICE)
@@ -109,8 +120,24 @@ def _split_normalize_sliding_window_for_target_prime(target_prime_X, target_prim
 def danns_2d(source_idx=2, season_idx=0, num_repeats: int = 10):
     accs = []
     for _ in range(num_repeats):
-        source_loader, target_loader, _, _, _, _, target_prime_X, target_prime_y_task = _get_source_target_targetprime_from_ecodataset(source_idx=source_idx, season_idx=season_idx)
-        train_target_prime_X, train_target_prime_y_task, test_target_prime_X, test_target_prime_y_task = _split_normalize_sliding_window_for_target_prime(target_prime_X=target_prime_X, target_prime_y_task=target_prime_y_task)
+        (
+            source_loader,
+            target_loader,
+            _,
+            _,
+            _,
+            _,
+            target_prime_X,
+            target_prime_y_task,
+        ) = _get_source_target_targetprime_from_ecodataset(source_idx=source_idx, season_idx=season_idx)
+        (
+            train_target_prime_X,
+            train_target_prime_y_task,
+            test_target_prime_X,
+            test_target_prime_y_task,
+        ) = _split_normalize_sliding_window_for_target_prime(
+            target_prime_X=target_prime_X, target_prime_y_task=target_prime_y_task
+        )
 
         train_target_prime_X = torch.tensor(train_target_prime_X, dtype=torch.float32).to(DEVICE)
         train_target_prime_y_domain = torch.ones(train_target_prime_X.shape[0]).to(DEVICE)
@@ -120,21 +147,25 @@ def danns_2d(source_idx=2, season_idx=0, num_repeats: int = 10):
         # 2D-DANNs
         danns_2d = Danns2D(experiment="ECOdataset_synthetic")
         acc = danns_2d.fit(
-            source_loader,
-            target_loader,
-            target_prime_loader,
-            test_target_prime_X,
-            test_target_prime_y_task
+            source_loader, target_loader, target_prime_loader, test_target_prime_X, test_target_prime_y_task
         )
         accs.append(acc)
     return sum(accs) / num_repeats
 
 
-
 def isih_da(source_idx=2, season_idx=0, num_repeats: int = 10):
     accs = []
     for _ in range(num_repeats):
-        _, _, source_ds, target_ds, test_target_X, test_target_y_task, target_prime_X, target_prime_y_task = _get_source_target_targetprime_from_ecodataset(source_idx=source_idx, season_idx=season_idx)
+        (
+            _,
+            _,
+            source_ds,
+            target_ds,
+            test_target_X,
+            test_target_y_task,
+            target_prime_X,
+            target_prime_y_task,
+        ) = _get_source_target_targetprime_from_ecodataset(source_idx=source_idx, season_idx=season_idx)
         target_X = test_target_X
 
         test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
@@ -150,7 +181,12 @@ def isih_da(source_idx=2, season_idx=0, num_repeats: int = 10):
         target_X = target_prime_X.values
         target_y_task = target_prime_y_task
 
-        train_target_X, train_target_y_task, test_target_X, test_target_y_task = _split_normalize_sliding_window_for_target_prime(target_prime_X=target_X, target_prime_y_task=target_y_task)
+        (
+            train_target_X,
+            train_target_y_task,
+            test_target_X,
+            test_target_y_task,
+        ) = _split_normalize_sliding_window_for_target_prime(target_prime_X=target_X, target_prime_y_task=target_y_task)
 
         source_loader, target_loader, _, _, _, _, source_ds, target_ds = utils.get_loader(
             train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True, return_ds=True
@@ -189,10 +225,12 @@ def codats(source_idx=2, season_idx=0, num_repeats: int = 10):
     train_source_X, train_source_y_task = utils.apply_sliding_window(train_source_X, train_source_y_task, filter_len=6)
 
     accs = []
-    train_target_X, train_target_y_task, test_target_X, test_target_y_task = _split_normalize_sliding_window_for_target_prime(
-        target_prime_X=target_X,
-        target_prime_y_task=target_y_task
-    )
+    (
+        train_target_X,
+        train_target_y_task,
+        test_target_X,
+        test_target_y_task,
+    ) = _split_normalize_sliding_window_for_target_prime(target_prime_X=target_X, target_prime_y_task=target_y_task)
     for _ in range(num_repeats):
         source_loader, target_loader, _, _, _, _, source_ds, target_ds = utils.get_loader(
             train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True, return_ds=True
@@ -227,10 +265,12 @@ def without_adapt(source_idx=2, season_idx=0, num_repeats: int = 10):
     train_source_X, train_source_y_task = utils.apply_sliding_window(train_source_X, train_source_y_task, filter_len=6)
 
     accs = []
-    train_target_X, train_target_y_task, test_target_X, test_target_y_task = _split_normalize_sliding_window_for_target_prime(
-        target_prime_X=target_X,
-        target_prime_y_task=target_y_task
-    )
+    (
+        train_target_X,
+        train_target_y_task,
+        test_target_X,
+        test_target_y_task,
+    ) = _split_normalize_sliding_window_for_target_prime(target_prime_X=target_X, target_prime_y_task=target_y_task)
     for _ in range(num_repeats):
         source_loader, _, _, _, _, _ = utils.get_loader(
             train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True

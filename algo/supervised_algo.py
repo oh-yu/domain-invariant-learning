@@ -1,6 +1,7 @@
 import torch
 from ..utils import utils
 
+
 def fit(data, network, **kwargs):
     loader = data["loader"]
     decoder = network["decoder"]
@@ -8,10 +9,7 @@ def fit(data, network, **kwargs):
     optimizer = network["optimizer"]
     criterion = network["criterion"]
 
-    config = {
-        "use_source_loader": False,
-        "num_epochs": 100
-    }
+    config = {"use_source_loader": False, "num_epochs": 100}
     config.update(kwargs)
     use_source_loader = config["use_source_loader"]
     num_epochs = config["num_epochs"]
@@ -33,5 +31,5 @@ def fit(data, network, **kwargs):
 
             # Update Params
             optimizer.step()
-    
+
     return decoder, encoder

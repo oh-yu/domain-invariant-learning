@@ -13,7 +13,11 @@ from ...networks import Dann, Dann_F_C, IsihDanns, Danns2D
 FLAGS = flags.FLAGS
 flags.DEFINE_string("algo_name", "DANN", "which algo to be used, DANN or CoRAL")
 flags.DEFINE_integer("num_repeats", 10, "the number of repetitions for hold-out test")
-flags.DEFINE_boolean("is_RV_tuning", True, "Whether or not use Reverse Validation based free params tuning method(5.1.2 algo from DANN paper)")
+flags.DEFINE_boolean(
+    "is_RV_tuning",
+    True,
+    "Whether or not use Reverse Validation based free params tuning method(5.1.2 algo from DANN paper)",
+)
 
 
 class Reshape(object):
@@ -114,17 +118,13 @@ def danns_2d():
     # Load Data
     source_loader, _ = MNIST
     target_loader, _, _ = MNIST_M
-    train_target_prime_loader, test_target_prime_loader_gt, _ = SVHN 
+    train_target_prime_loader, test_target_prime_loader_gt, _ = SVHN
     test_target_prime_X = torch.cat([X for X, _ in test_target_prime_loader_gt], dim=0)
     test_target_prime_y_task = torch.cat([y[:, 0] for _, y in test_target_prime_loader_gt], dim=0)
     # DANNs 2D
     danns_2d = Danns2D(experiment="MNIST")
     acc = danns_2d.fit(
-        source_loader,
-        target_loader,
-        train_target_prime_loader,
-        test_target_prime_X,
-        test_target_prime_y_task
+        source_loader, target_loader, train_target_prime_loader, test_target_prime_X, test_target_prime_y_task
     )
     return acc
 

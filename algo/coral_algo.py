@@ -42,8 +42,8 @@ def fit(data, network, **kwargs):
         "changed_lrs": [0.00005, 0.00005],
         "stop_during_epochs": False,
         "epoch_thr_for_stopping": 2,
-        "do_plot": False, 
-        "do_early_stop": False
+        "do_plot": False,
+        "do_early_stop": False,
     }
     config.update(kwargs)
     num_epochs = config["num_epochs"]
@@ -139,8 +139,7 @@ def fit(data, network, **kwargs):
             loss_evals.append(acc.item())
         if early_stopping.early_stop & do_early_stop:
             break
-            
-    
+
     if do_plot:
         _plot_coral_loss(loss_corals, loss_tasks, loss_evals)
     return feature_extractor, task_classifier, None
