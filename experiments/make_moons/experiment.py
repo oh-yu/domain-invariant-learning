@@ -206,12 +206,12 @@ def main(argv):
     ).to(device) 
 
     criterion = nn.BCELoss()
-    feature_optimizer_dim1 = optim.Adam(feature_extractor_dim12.parameters(), lr=0.001)
-    domain_optimizer_dim1 = optim.Adam(domain_classifier_dim1.parameters(), lr=0.001)
-    task_optimizer_dim1 = optim.Adam(task_classifier_dim1.parameters(), lr=0.001)
-    feature_optimizer_dim2 = optim.Adam(feature_extractor_dim12.parameters(), lr=0.00005)
-    domain_optimizer_dim2 = optim.Adam(domain_classifier_dim2.parameters(), lr=0.00005)
-    task_optimizer_dim2 = optim.Adam(task_classifier_dim2.parameters(), lr=0.00005)
+    feature_optimizer_dim1 = optim.Adam(feature_extractor_dim12.parameters(), lr=learning_rate)
+    domain_optimizer_dim1 = optim.Adam(domain_classifier_dim1.parameters(), lr=learning_rate)
+    task_optimizer_dim1 = optim.Adam(task_classifier_dim1.parameters(), lr=learning_rate)
+    feature_optimizer_dim2 = optim.Adam(feature_extractor_dim12.parameters(), lr=learning_rate)
+    domain_optimizer_dim2 = optim.Adam(domain_classifier_dim2.parameters(), lr=learning_rate)
+    task_optimizer_dim2 = optim.Adam(task_classifier_dim2.parameters(), lr=learning_rate)
     ## 1st dim
 
     data = {
