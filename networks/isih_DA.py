@@ -149,8 +149,8 @@ class IsihDanns:
 
         # 2. free params
         free_params = [
-            {"learning_rate": 0.0001, "eps": 1e-08, "weight_decay": 0},
-            {"learning_rate": 0.001, "eps": 1e-08, "weight_decay": 0},
+            {"lr": 0.0001, "eps": 1e-08, "weight_decay": 0},
+            {"lr": 0.001, "eps": 1e-08, "weight_decay": 0},
         ]
         RV_scores = {"free_params": [], "scores": []}
         for param in free_params:
@@ -276,8 +276,8 @@ class IsihDanns:
 
         # 2. free params
         free_params = [
-            {"learning_rate": 0.00001, "eps": 1e-08, "weight_decay": 0},
-            {"learning_rate": 0.00005, "eps": 1e-08, "weight_decay": 0},
+            {"lr": 0.00001, "eps": 1e-08, "weight_decay": 0},
+            {"lr": 0.00005, "eps": 1e-08, "weight_decay": 0},
         ]
         RV_scores = {"free_params": [], "scores": []}
         tmp = self.feature_extractor
