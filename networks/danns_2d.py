@@ -150,7 +150,7 @@ class Danns2D:
         self.domain_optimizer_dim1.param_groups[0].update(best_param)
         self.domain_optimizer_dim2.param_groups[0].update(best_param)
         self.task_optimizer.param_groups[0].update(best_param)
-        self.do_early_stop = False
+        self.do_early_stop = True
         return self._fit(source_loader, target_loader, target_prime_loader, test_target_prime_X, test_target_prime_y_task)
 
 
