@@ -91,6 +91,10 @@ class Danns2D:
             return self._fit(source_loader, target_loader, target_prime_loader, test_target_prime_X, test_target_prime_y_task)
 
     def _fit_RV(self, source_loader, target_loader, target_prime_loader, test_target_prime_X, test_target_prime_y_task):
+        """
+        Algorythm, Proof: https://drive.google.com/file/d/1YkNMMKeOY4P-HfL2G5GgIrnRJD-lYY96/view?usp=sharing
+        Theory: 3.1 ~ 4.2 from https://link.springer.com/chapter/10.1007/978-3-642-15939-8_35
+        """
         # S -> S', S_V
         source_X = torch.cat([X for X, _ in source_loader], dim=0)
         source_y_task = torch.cat([y for _, y in source_loader], dim=0)
