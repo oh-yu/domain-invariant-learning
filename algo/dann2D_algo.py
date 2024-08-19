@@ -2,11 +2,9 @@ from typing import List
 
 import matplotlib.pyplot as plt
 import torch
-from torch import nn, optim
-from torch.utils.data import DataLoader, TensorDataset
+from torch import nn
 from tqdm import tqdm
 
-from ..networks import Encoder, ThreeLayersDecoder
 from ..utils import utils
 from .algo_utils import EarlyStopping
 from .dann_algo import ReverseGradient

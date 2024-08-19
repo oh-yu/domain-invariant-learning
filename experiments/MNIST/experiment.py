@@ -150,7 +150,6 @@ def isih_da():
     domain_labels = torch.ones(pred_y_task.shape[0]).reshape(-1, 1)
     pred_y_task = torch.cat((pred_y_task, domain_labels), dim=1)
     source_ds = TensorDataset(target_X, pred_y_task)
-    source_loader = DataLoader(source_ds, batch_size=64, shuffle=True)
     test_target_prime_X = torch.cat([X for X, _ in test_target_prime_loader_gt], dim=0)
     test_target_prime_y_task = torch.cat([y[:, 0] for _, y in test_target_prime_loader_gt], dim=0)
     isih_dann.fit_2nd_dim(source_ds, target_prime_ds, test_target_prime_X, test_target_prime_y_task)

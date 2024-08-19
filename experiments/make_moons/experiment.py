@@ -1,7 +1,6 @@
 from datetime import datetime
 
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 import torch
 from absl import app, flags

@@ -2,7 +2,7 @@ import numpy as np
 import torch
 from absl import flags
 from torch import nn, optim
-from torch.utils.data import DataLoader, Subset, TensorDataset
+from torch.utils.data import DataLoader, TensorDataset
 
 from ..algo import coral_algo, dann_algo
 from ..utils import utils

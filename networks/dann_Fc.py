@@ -2,7 +2,6 @@ import torch
 from torch import nn, optim
 
 from ..algo import supervised_algo
-from ..utils import utils
 from .conv2d import Conv2d
 from .mlp_decoder_three_layers import ThreeLayersDecoder
 
