@@ -210,7 +210,10 @@ class IsihDanns:
         self.task_optimizer_dim1.param_groups[0].update(best_param)
         source_loader = DataLoader(source_ds, batch_size=self.batch_size, shuffle=True)
         target_loader = DataLoader(target_ds, batch_size=self.batch_size, shuffle=True)
-        self.do_early_stop = True
+        if self.experiment == "MNIST":
+            self.do_early_stop = True
+        else:
+            self.do_early_stop = False
         self._fit_1st_dim(source_loader, target_loader, val_source_X, val_source_y_task)
 
     def _fit_1st_dim(self, source_loader, target_loader, test_target_X: torch.Tensor, test_target_y_task: torch.Tensor):
@@ -358,7 +361,10 @@ class IsihDanns:
         self.task_optimizer_dim2.param_groups[0].update(best_param)
         source_loader = DataLoader(source_ds, batch_size=self.batch_size, shuffle=True)
         target_loader = DataLoader(target_ds, batch_size=self.batch_size, shuffle=True)
-        self.do_early_stop = True
+        if self.experiment == "MNIST":
+            self.do_early_stop = True
+        else:
+            self.do_early_stop = False
         self._fit_2nd_dim(source_loader, target_loader, val_source_X, val_source_y_task)
         self.set_eval()
         pred_y_task = self.predict(test_target_X, is_1st_dim=False)

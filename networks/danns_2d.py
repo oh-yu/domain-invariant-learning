@@ -165,8 +165,14 @@ class Danns2D:
         self.domain_optimizer_dim1.param_groups[0].update(best_param)
         self.domain_optimizer_dim2.param_groups[0].update(best_param)
         self.task_optimizer.param_groups[0].update(best_param)
-        self.do_early_stop = True
-        return self._fit(source_loader, target_loader, target_prime_loader, val_source_X, val_source_y_task)
+        if self.experiment == "MNIST":
+            self.do_early_stop = True
+        else:
+            self.do_early_stop = False
+        self._fit(source_loader, target_loader, target_prime_loader, val_source_X, val_source_y_task)
+        pred_y_task = self.predict(test_target_prime_X)
+        acc = sum(pred_y_task == test_target_prime_y_task) / pred_y_task.shape[0]
+        return acc.item()
 
     def _fit(self, source_loader, target_loader, target_prime_loader, test_target_prime_X, test_target_prime_y_task):
         data = {
