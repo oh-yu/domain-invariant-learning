@@ -8,11 +8,16 @@ from torch.utils.data import DataLoader, TensorDataset
 from torchvision import datasets, transforms
 from torchvision.datasets import ImageFolder
 
-from ...networks import Dann, Dann_F_C, IsihDanns
+from ...networks import Dann, Dann_F_C, Danns2D, IsihDanns
 
 FLAGS = flags.FLAGS
 flags.DEFINE_string("algo_name", "DANN", "which algo to be used, DANN or CoRAL")
 flags.DEFINE_integer("num_repeats", 10, "the number of repetitions for hold-out test")
+flags.DEFINE_boolean(
+    "is_RV_tuning",
+    True,
+    "Whether or not use Reverse Validation based free params tuning method(5.1.2 algo from DANN paper)",
+)
 
 
 class Reshape(object):
@@ -61,8 +66,8 @@ def get_image_data_for_uda(name="MNIST"):
             transform=custom_transform,
         )
         train_data = CustomUDADataset(train_data, "source")
-        train_loader = torch.utils.data.DataLoader(train_data, batch_size=16, shuffle=True)
-        return train_loader
+        train_loader = torch.utils.data.DataLoader(train_data, batch_size=64, shuffle=True)
+        return train_loader, train_data
 
     elif name == "MNIST-M":
         custom_transform = transforms.Compose([transforms.ToTensor(),])
@@ -74,7 +79,7 @@ def get_image_data_for_uda(name="MNIST"):
 
         train_data_gt = CustomUDADataset(imagefolder_data, "source")
         train_loader_gt = DataLoader(train_data_gt, batch_size=128, shuffle=False)
-        return train_loader, train_loader_gt
+        return train_loader, train_loader_gt, train_data
 
     elif name == "SVHN":
         custom_transform = transforms.Compose([transforms.ToTensor(),])
@@ -94,7 +99,7 @@ def get_image_data_for_uda(name="MNIST"):
         )
         test_data = CustomUDADataset(test_data, "source")
         test_loader = DataLoader(test_data, batch_size=128, shuffle=False)
-        return train_loader, test_loader
+        return train_loader, test_loader, train_data
 
     elif name == "SVHN-trainontarget":
         custom_transform = transforms.Compose([transforms.ToTensor(),])
@@ -109,11 +114,26 @@ def get_image_data_for_uda(name="MNIST"):
         return train_loader
 
 
+def danns_2d():
+    # Load Data
+    source_loader, _ = MNIST
+    target_loader, _, _ = MNIST_M
+    train_target_prime_loader, test_target_prime_loader_gt, _ = SVHN
+    test_target_prime_X = torch.cat([X for X, _ in test_target_prime_loader_gt], dim=0)
+    test_target_prime_y_task = torch.cat([y[:, 0] for _, y in test_target_prime_loader_gt], dim=0)
+    # DANNs 2D
+    danns_2d = Danns2D(experiment="MNIST")
+    acc = danns_2d.fit(
+        source_loader, target_loader, train_target_prime_loader, test_target_prime_X, test_target_prime_y_task
+    )
+    return acc
+
+
 def isih_da():
     # Load Data
-    source_loader = MNIST
-    target_loader, target_loader_gt = MNIST_M
-    train_target_prime_loader, test_target_prime_loader_gt = SVHN
+    source_loader, source_ds = MNIST
+    target_loader, target_loader_gt, target_ds = MNIST_M
+    train_target_prime_loader, test_target_prime_loader_gt, target_prime_ds = SVHN
 
     # Model Init
     isih_dann = IsihDanns(experiment="MNIST")
@@ -123,17 +143,16 @@ def isih_da():
     target_y_task = torch.cat([y[:, 0] for _, y in target_loader_gt], dim=0)
     target_X = torch.tensor(target_X, dtype=torch.float32)
     target_y_task = torch.tensor(target_y_task, dtype=torch.long)
-    isih_dann.fit_1st_dim(source_loader, target_loader, target_X, target_y_task)
+    isih_dann.fit_1st_dim(source_ds, target_ds, target_X, target_y_task)
     pred_y_task = isih_dann.predict_proba(target_X, is_1st_dim=True)
 
     # Algo2 inter-reals DA
     domain_labels = torch.ones(pred_y_task.shape[0]).reshape(-1, 1)
     pred_y_task = torch.cat((pred_y_task, domain_labels), dim=1)
     source_ds = TensorDataset(target_X, pred_y_task)
-    source_loader = DataLoader(source_ds, batch_size=64, shuffle=True)
     test_target_prime_X = torch.cat([X for X, _ in test_target_prime_loader_gt], dim=0)
     test_target_prime_y_task = torch.cat([y[:, 0] for _, y in test_target_prime_loader_gt], dim=0)
-    isih_dann.fit_2nd_dim(source_loader, train_target_prime_loader, test_target_prime_X, test_target_prime_y_task)
+    isih_dann.fit_2nd_dim(source_ds, target_prime_ds, test_target_prime_X, test_target_prime_y_task)
 
     # Algo3 Eval
     isih_dann.set_eval()
@@ -144,29 +163,21 @@ def isih_da():
 
 def dann():
     # Load Data
-    source_loader = MNIST
-    train_target_prime_loader, test_target_prime_loader_gt = SVHN
-
+    source_loader, source_ds = MNIST
+    train_target_prime_loader, test_target_prime_loader_gt, target_prime_ds = SVHN
     # Model Init
     dann = Dann()
     # Fit DANN
     test_target_prime_X = torch.cat([X for X, _ in test_target_prime_loader_gt], dim=0)
     test_target_prime_y_task = torch.cat([y[:, 0] for _, y in test_target_prime_loader_gt], dim=0)
-    dann.fit(
-        source_loader, train_target_prime_loader, test_target_prime_X, test_target_prime_y_task,
-    )
-
-    # Eval
-    dann.set_eval()
-    pred_y_task = dann.predict(test_target_prime_X)
-    acc = sum(pred_y_task == test_target_prime_y_task) / len(test_target_prime_y_task)
-    return acc.item()
+    acc = dann.fit(source_ds, target_prime_ds, test_target_prime_X, test_target_prime_y_task)
+    return acc
 
 
 def without_adapt():
     # Load Data
-    source_loader = MNIST
-    _, test_target_prime_loader_gt = SVHN
+    source_loader, _ = MNIST
+    _, test_target_prime_loader_gt, _ = SVHN
 
     # Model Init
     without_adapt = Dann_F_C()
@@ -182,7 +193,7 @@ def without_adapt():
 def train_on_target():
     # Load Data
     train_target_prime_loader = SVHN_TRAIN_ON_TARGET
-    _, test_target_prime_loader_gt = SVHN
+    _, test_target_prime_loader_gt, _ = SVHN
 
     # Model Init
     train_on_target = Dann_F_C()
@@ -198,15 +209,18 @@ def train_on_target():
 
 def main(argv):
     num_repeats = FLAGS.num_repeats
+    danns_2d_acc = 0
     isih_da_acc = 0
     dann_acc = 0
     without_adapt_acc = 0
     train_on_target_acc = 0
     for _ in range(num_repeats):
+        danns_2d_acc += danns_2d()
         isih_da_acc += isih_da()
         dann_acc += dann()
         without_adapt_acc += without_adapt()
         train_on_target_acc += train_on_target()
+    danns_2d_acc /= num_repeats
     isih_da_acc /= num_repeats
     dann_acc /= num_repeats
     without_adapt_acc /= num_repeats
@@ -214,6 +228,7 @@ def main(argv):
 
     df = pd.DataFrame()
     df["PAT"] = ["(non-color, non-real) -> (color, real)"]
+    df["DANNs 2D"] = [danns_2d_acc]
     df["isih-DA"] = [isih_da_acc]
     df["DANN"] = [dann_acc]
     df["Without Adapt"] = [without_adapt_acc]

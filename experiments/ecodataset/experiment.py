@@ -8,13 +8,164 @@ from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 
-from ...networks import Codats, CoDATS_F_C, IsihDanns
+from ...networks import Codats, CoDATS_F_C, Danns2D, IsihDanns
 from ...utils import utils
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 HOUSEHOLD_IDXS = [1, 2, 3, 4, 5]
 FLAGS = flags.FLAGS
 flags.DEFINE_string("algo_name", "DANN", "which algo to be used, DANN or CoRAL")
+flags.DEFINE_integer("num_repeats", 10, "the number of evaluation trials")
+flags.DEFINE_boolean(
+    "is_RV_tuning",
+    True,
+    "Whether or not use Reverse Validation based free params tuning method(5.1.2 algo from DANN paper)",
+)
+
+
+def _get_source_target_from_ecodataset(source_idx, target_idx, source_season_idx, target_season_idx):
+    """
+    1. load X_S, Y_S, X_T, Y_T
+    2. normalize
+    3. sliding window
+    4. loader
+    """
+    train_source_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv")
+    target_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_X_train.csv")
+    train_source_y_task = pd.read_csv(
+        f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_Y_train.csv"
+    )[train_source_X.Season == source_season_idx].values.reshape(-1)
+    target_y_task = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_Y_train.csv")[
+        target_X.Season == target_season_idx
+    ].values.reshape(-1)
+    train_source_X = train_source_X[train_source_X.Season == source_season_idx]
+    target_X = target_X[target_X.Season == target_season_idx]
+
+    scaler = preprocessing.StandardScaler()
+    train_source_X = scaler.fit_transform(train_source_X)
+    scaler.fit(target_X)
+    target_X = scaler.transform(target_X)
+
+    train_source_X, train_source_y_task = utils.apply_sliding_window(train_source_X, train_source_y_task, filter_len=6)
+    target_X, target_y_task = utils.apply_sliding_window(target_X, target_y_task, filter_len=6)
+
+    source_loader, target_loader, _, _, _, _, source_ds, target_ds = utils.get_loader(
+        train_source_X, target_X, train_source_y_task, target_y_task, shuffle=True, batch_size=32, return_ds=True
+    )
+    # Note: batch_size=32, because exploding gradient when batch_size=34(this leads to one sample loss)
+    return source_loader, target_loader, scaler, source_ds, target_ds, target_X, target_y_task
+
+
+def _get_target_prime_from_ecodataset(target_prime_idx, target_prime_season_idx):
+    """
+    1. load X_T', Y_T'
+    2. split into train, test
+    3. normalize
+    4. sliding window
+    """
+    target_prime_X = pd.read_csv(
+        f"./domain-invariant-learning/deep_occupancy_detection/data/{target_prime_idx}_X_train.csv"
+    )
+    target_prime_y_task = pd.read_csv(
+        f"./domain-invariant-learning/deep_occupancy_detection/data/{target_prime_idx}_Y_train.csv"
+    )[target_prime_X.Season == target_prime_season_idx].values.reshape(-1)
+    target_prime_X = target_prime_X[target_prime_X.Season == target_prime_season_idx].values
+
+    train_target_prime_X, test_target_prime_X, train_target_prime_y_task, test_target_prime_y_task = train_test_split(
+        target_prime_X, target_prime_y_task, test_size=0.5, shuffle=False
+    )
+    scaler = preprocessing.StandardScaler()
+    scaler.fit(train_target_prime_X)
+    train_target_prime_X = scaler.transform(train_target_prime_X)
+    test_target_prime_X = scaler.transform(test_target_prime_X)
+    train_target_prime_X, train_target_prime_y_task = utils.apply_sliding_window(
+        train_target_prime_X, train_target_prime_y_task, filter_len=6
+    )
+    test_target_prime_X, test_target_prime_y_task = utils.apply_sliding_window(
+        test_target_prime_X, test_target_prime_y_task, filter_len=6
+    )
+    return train_target_prime_X, train_target_prime_y_task, test_target_prime_X, test_target_prime_y_task
+
+
+def _get_source_target_prime_from_ecodataset(source_idx, target_prime_idx, source_season_idx, target_prime_season_ix):
+    """
+    1. load X_S, Y_S, X_T', Y_T'
+    2. normalize X_S
+    3. sliding window X_S
+    4. split X_T', Y_T' into train, test
+    5. normalize X_T', Y_T'
+    6. sliding window X_T', Y_T'
+    """
+    train_source_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv")
+    target_prime_X = pd.read_csv(
+        f"./domain-invariant-learning/deep_occupancy_detection/data/{target_prime_idx}_X_train.csv"
+    )
+
+    train_source_y_task = pd.read_csv(
+        f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_Y_train.csv"
+    )[train_source_X.Season == source_season_idx].values.reshape(-1)
+    target_prime_y_task = pd.read_csv(
+        f"./domain-invariant-learning/deep_occupancy_detection/data/{target_prime_idx}_Y_train.csv"
+    )[target_prime_X.Season == target_prime_season_ix].values.reshape(-1)
+
+    train_source_X = train_source_X[train_source_X.Season == source_season_idx]
+    target_prime_X = target_prime_X[target_prime_X.Season == target_prime_season_ix]
+
+    scaler = preprocessing.StandardScaler()
+    scaler.fit(train_source_X)
+    train_source_X = scaler.transform(train_source_X)
+    train_source_X, train_source_y_task = utils.apply_sliding_window(train_source_X, train_source_y_task, filter_len=6)
+
+    train_target_prime_X, test_target_prime_X, train_target_prime_y_task, test_target_prime_y_task = train_test_split(
+        target_prime_X, target_prime_y_task, test_size=0.5, shuffle=False
+    )
+    scaler.fit(train_target_prime_X)
+    train_target_prime_X = scaler.transform(train_target_prime_X)
+    test_target_prime_X = scaler.transform(test_target_prime_X)
+    train_target_prime_X, train_target_prime_y_task = utils.apply_sliding_window(
+        train_target_prime_X, train_target_prime_y_task, filter_len=6
+    )
+    test_target_prime_X, test_target_prime_y_task = utils.apply_sliding_window(
+        test_target_prime_X, test_target_prime_y_task, filter_len=6
+    )
+    return (
+        train_source_X,
+        train_source_y_task,
+        train_target_prime_X,
+        train_target_prime_y_task,
+        test_target_prime_X,
+        test_target_prime_y_task,
+    )
+
+
+def danns_2d(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, num_repeats: int = 10,) -> float:
+    accs = []
+    for _ in range(num_repeats):
+        # Prepare Data
+        source_loader, target_loader, scaler, _, _, _, _ = _get_source_target_from_ecodataset(
+            source_idx=source_idx, target_idx=target_idx, source_season_idx=winter_idx, target_season_idx=winter_idx
+        )
+        train_target_prime_X, _, test_target_prime_X, test_target_prime_y_task = _get_target_prime_from_ecodataset(
+            target_prime_idx=target_idx, target_prime_season_idx=summer_idx
+        )
+
+        test_target_prime_X = torch.tensor(test_target_prime_X, dtype=torch.float32)
+        test_target_prime_y_task = torch.tensor(test_target_prime_y_task, dtype=torch.float32)
+        test_target_prime_X = test_target_prime_X.to(DEVICE)
+        test_target_prime_y_task = test_target_prime_y_task.to(DEVICE)
+
+        train_target_prime_X = torch.tensor(train_target_prime_X, dtype=torch.float32).to(DEVICE)
+        train_target_prime_y_domain = torch.ones(train_target_prime_X.shape[0]).to(DEVICE)
+        target_prime_ds = TensorDataset(train_target_prime_X, train_target_prime_y_domain)
+        target_prime_loader = DataLoader(target_prime_ds, shuffle=True)
+
+        # Init 2D-DANNs
+        danns_2d = Danns2D(experiment="ECOdataset")
+        acc = danns_2d.fit(
+            source_loader, target_loader, target_prime_loader, test_target_prime_X, test_target_prime_y_task
+        )
+        accs.append(acc)
+    return sum(accs) / num_repeats
 
 
 def isih_da_house(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, num_repeats: int = 10,) -> float:
@@ -26,39 +177,10 @@ def isih_da_house(source_idx: int, target_idx: int, winter_idx: int, summer_idx:
     for _ in range(num_repeats):
         # Algo1. Inter-Households DA
         ## Prepare Data
-        train_source_X = pd.read_csv(
-            f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv"
+        _, _, scaler, source_ds, target_ds, test_target_X, test_target_y_task = _get_source_target_from_ecodataset(
+            source_idx=source_idx, target_idx=target_idx, source_season_idx=winter_idx, target_season_idx=winter_idx
         )
-        target_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_X_train.csv")
-        train_source_y_task = pd.read_csv(
-            f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_Y_train.csv"
-        )[train_source_X.Season == winter_idx].values.reshape(-1)
-        target_y_task = pd.read_csv(
-            f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_Y_train.csv"
-        )[target_X.Season == winter_idx].values.reshape(-1)
-        train_source_X = train_source_X[train_source_X.Season == winter_idx]
-        target_X = target_X[target_X.Season == winter_idx]
-
-        scaler = preprocessing.StandardScaler()
-        train_source_X = scaler.fit_transform(train_source_X)
-        scaler.fit(target_X)
-        target_X = scaler.transform(target_X)
-
-        train_source_X, train_source_y_task = utils.apply_sliding_window(
-            train_source_X, train_source_y_task, filter_len=6
-        )
-        target_X, target_y_task = utils.apply_sliding_window(target_X, target_y_task, filter_len=6)
-
-        train_target_X, test_target_X, train_target_y_task, test_target_y_task = (
-            target_X,
-            target_X,
-            target_y_task,
-            target_y_task,
-        )
-        source_loader, target_loader, _, _, _, _ = utils.get_loader(
-            train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True, batch_size=32
-        )
-        # Note: batch_size=32, because exploding gradient when batch_size=34(this leads to one sample loss)
+        target_X = test_target_X
 
         test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
         test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
@@ -67,39 +189,27 @@ def isih_da_house(source_idx: int, target_idx: int, winter_idx: int, summer_idx:
 
         ## isih-DA fit, predict for 1st dimension
         isih_dann = IsihDanns(experiment="ECOdataset")
-        isih_dann.fit_1st_dim(source_loader, target_loader, test_target_X, test_target_y_task)
+        isih_dann.fit_1st_dim(source_ds, target_ds, test_target_X, test_target_y_task)
         pred_y_task = isih_dann.predict_proba(test_target_X, is_1st_dim=True)
 
         # Algo2. Inter-Seasons DA
         ## Prepare Data
         train_source_X = target_X
         train_source_y_task = pred_y_task.cpu().detach().numpy()
-        target_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_X_train.csv")
-        target_y_task = pd.read_csv(
-            f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_Y_train.csv"
-        )[target_X.Season == summer_idx].values.reshape(-1)
-        target_X = target_X[target_X.Season == summer_idx].values
+        train_target_X, train_target_y_task, test_target_X, test_target_y_task = _get_target_prime_from_ecodataset(
+            target_prime_idx=target_idx, target_prime_season_idx=summer_idx
+        )
 
-        train_target_X, test_target_X, train_target_y_task, test_target_y_task = train_test_split(
-            target_X, target_y_task, test_size=0.5, shuffle=False
-        )
-        scaler.fit(train_target_X)
-        train_target_X = scaler.transform(train_target_X)
-        test_target_X = scaler.transform(test_target_X)
-        train_target_X, train_target_y_task = utils.apply_sliding_window(
-            train_target_X, train_target_y_task, filter_len=6
-        )
-        test_target_X, test_target_y_task = utils.apply_sliding_window(test_target_X, test_target_y_task, filter_len=6)
         test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
         test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
         test_target_X = test_target_X.to(DEVICE)
         test_target_y_task = test_target_y_task.to(DEVICE)
 
-        source_loader, target_loader, _, _, _, _ = utils.get_loader(
-            train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True
+        source_loader, target_loader, _, _, _, _, source_ds, target_ds = utils.get_loader(
+            train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True, return_ds=True
         )
         ## isih-DA fit, predict for 2nd dimension
-        isih_dann.fit_2nd_dim(source_loader, target_loader, test_target_X, test_target_y_task)
+        isih_dann.fit_2nd_dim(source_ds, target_ds, test_target_X, test_target_y_task)
         isih_dann.set_eval()
         pred_y_task = isih_dann.predict(test_target_X, is_1st_dim=False)
 
@@ -118,39 +228,10 @@ def isih_da_season(source_idx: int, target_idx: int, winter_idx: int, summer_idx
     for _ in range(num_repeats):
         # Algo1. Inter-Seasons DA
         ## Prepare Data
-        train_source_X = pd.read_csv(
-            f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv"
+        _, _, scaler, source_ds, target_ds, test_target_X, test_target_y_task = _get_source_target_from_ecodataset(
+            source_idx=source_idx, target_idx=source_idx, source_season_idx=winter_idx, target_season_idx=summer_idx
         )
-        target_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv")
-        train_source_y_task = pd.read_csv(
-            f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_Y_train.csv"
-        )[train_source_X.Season == winter_idx].values.reshape(-1)
-        target_y_task = pd.read_csv(
-            f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_Y_train.csv"
-        )[target_X.Season == summer_idx].values.reshape(-1)
-        train_source_X = train_source_X[train_source_X.Season == winter_idx]
-        target_X = target_X[target_X.Season == summer_idx]
-
-        scaler = preprocessing.StandardScaler()
-        train_source_X = scaler.fit_transform(train_source_X)
-        scaler.fit(target_X)
-        target_X = scaler.transform(target_X)
-
-        train_source_X, train_source_y_task = utils.apply_sliding_window(
-            train_source_X, train_source_y_task, filter_len=6
-        )
-        target_X, target_y_task = utils.apply_sliding_window(target_X, target_y_task, filter_len=6)
-
-        train_target_X, test_target_X, train_target_y_task, test_target_y_task = (
-            target_X,
-            target_X,
-            target_y_task,
-            target_y_task,
-        )
-        source_loader, target_loader, _, _, _, _ = utils.get_loader(
-            train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True, batch_size=32
-        )
-        # Note: batch_size=32, because exploding gradient when batch_size=34(this leads to one sample loss)
+        target_X = test_target_X
 
         test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
         test_target_y_task = torch.tensor(test_target_y_task, dtype=torch.float32)
@@ -159,32 +240,18 @@ def isih_da_season(source_idx: int, target_idx: int, winter_idx: int, summer_idx
 
         ## isih-DA fit, predict for 1st dimension
         isih_dann = IsihDanns(experiment="ECOdataset")
-        isih_dann.fit_1st_dim(source_loader, target_loader, test_target_X, test_target_y_task)
+        isih_dann.fit_1st_dim(source_ds, target_ds, test_target_X, test_target_y_task)
         pred_y_task = isih_dann.predict_proba(test_target_X, is_1st_dim=True)
 
         # Algo2. Inter-Households DA
         ## Prepare Data
         train_source_X = target_X
         train_source_y_task = pred_y_task.cpu().detach().numpy()
-        target_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_X_train.csv")
-        target_y_task = pd.read_csv(
-            f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_Y_train.csv"
-        )[target_X.Season == summer_idx].values.reshape(-1)
-        target_X = target_X[target_X.Season == summer_idx].values
-
-        train_target_X, test_target_X, train_target_y_task, test_target_y_task = train_test_split(
-            target_X, target_y_task, test_size=0.5, shuffle=False
+        train_target_X, train_target_y_task, test_target_X, test_target_y_task = _get_target_prime_from_ecodataset(
+            target_prime_idx=target_idx, target_prime_season_idx=summer_idx
         )
-        scaler.fit(train_target_X)
-        train_target_X = scaler.transform(train_target_X)
-        test_target_X = scaler.transform(test_target_X)
-        test_target_X, test_target_y_task = utils.apply_sliding_window(test_target_X, test_target_y_task, filter_len=6)
-        train_target_X, train_target_y_task = utils.apply_sliding_window(
-            train_target_X, train_target_y_task, filter_len=6
-        )
-
-        source_loader, target_loader, _, _, _, _ = utils.get_loader(
-            train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True
+        source_loader, target_loader, _, _, _, _, source_ds, target_ds = utils.get_loader(
+            train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True, return_ds=True
         )
 
         test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
@@ -192,7 +259,7 @@ def isih_da_season(source_idx: int, target_idx: int, winter_idx: int, summer_idx
         test_target_X = test_target_X.to(DEVICE)
         test_target_y_task = test_target_y_task.to(DEVICE)
         ## isih-DA fit, predict for 2nd dimension
-        isih_dann.fit_2nd_dim(source_loader, target_loader, test_target_X, test_target_y_task)
+        isih_dann.fit_2nd_dim(source_ds, target_ds, test_target_X, test_target_y_task)
         isih_dann.set_eval()
         pred_y_task = isih_dann.predict(test_target_X, is_1st_dim=False)
 
@@ -209,36 +276,23 @@ def codats(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, n
     """
     # Direct Inter-Seasons and Inter-Households DA
     ## Prepare Data
-    train_source_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv")
-    target_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_X_train.csv")
-
-    train_source_y_task = pd.read_csv(
-        f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_Y_train.csv"
-    )[train_source_X.Season == winter_idx].values.reshape(-1)
-    target_y_task = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_Y_train.csv")[
-        target_X.Season == summer_idx
-    ].values.reshape(-1)
-
-    train_source_X = train_source_X[train_source_X.Season == winter_idx]
-    target_X = target_X[target_X.Season == summer_idx]
-
-    scaler = preprocessing.StandardScaler()
-    scaler.fit(train_source_X)
-    train_source_X = scaler.transform(train_source_X)
-    train_source_X, train_source_y_task = utils.apply_sliding_window(train_source_X, train_source_y_task, filter_len=6)
-
-    accs = []
-    train_target_X, test_target_X, train_target_y_task, test_target_y_task = train_test_split(
-        target_X, target_y_task, test_size=0.5, shuffle=False
+    (
+        train_source_X,
+        train_source_y_task,
+        train_target_X,
+        train_target_y_task,
+        test_target_X,
+        test_target_y_task,
+    ) = _get_source_target_prime_from_ecodataset(
+        source_idx=source_idx,
+        target_prime_idx=target_idx,
+        source_season_idx=winter_idx,
+        target_prime_season_ix=summer_idx,
     )
-    scaler.fit(train_target_X)
-    train_target_X = scaler.transform(train_target_X)
-    test_target_X = scaler.transform(test_target_X)
-    train_target_X, train_target_y_task = utils.apply_sliding_window(train_target_X, train_target_y_task, filter_len=6)
-    test_target_X, test_target_y_task = utils.apply_sliding_window(test_target_X, test_target_y_task, filter_len=6)
+    accs = []
     for _ in range(num_repeats):
-        source_loader, target_loader, _, _, _, _ = utils.get_loader(
-            train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True
+        source_loader, target_loader, _, _, _, _, source_ds, target_ds = utils.get_loader(
+            train_source_X, train_target_X, train_source_y_task, train_target_y_task, shuffle=True, return_ds=True
         )
 
         test_target_X = torch.tensor(test_target_X, dtype=torch.float32)
@@ -248,43 +302,26 @@ def codats(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, n
 
         ## CoDATS fit, predict
         codats = Codats(experiment="ECOdataset")
-        codats.fit(source_loader, target_loader, test_target_X, test_target_y_task)
-        codats.set_eval()
-        pred_y_task = codats.predict(test_target_X)
-        acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
-        accs.append(acc.item())
+        acc = codats.fit(source_ds, target_ds, test_target_X, test_target_y_task)
+        accs.append(acc)
     return sum(accs) / num_repeats
 
 
 def without_adapt(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int, num_repeats: int = 10,) -> float:
-    train_source_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_X_train.csv")
-    target_X = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_X_train.csv")
-
-    train_source_y_task = pd.read_csv(
-        f"./domain-invariant-learning/deep_occupancy_detection/data/{source_idx}_Y_train.csv"
-    )[train_source_X.Season == winter_idx].values.reshape(-1)
-    target_y_task = pd.read_csv(f"./domain-invariant-learning/deep_occupancy_detection/data/{target_idx}_Y_train.csv")[
-        target_X.Season == summer_idx
-    ].values.reshape(-1)
-
-    train_source_X = train_source_X[train_source_X.Season == winter_idx]
-    target_X = target_X[target_X.Season == summer_idx]
-
-    scaler = preprocessing.StandardScaler()
-    scaler.fit(train_source_X)
-    train_source_X = scaler.transform(train_source_X)
-    train_source_X, train_source_y_task = utils.apply_sliding_window(train_source_X, train_source_y_task, filter_len=6)
-
-    accs = []
-    train_target_X, test_target_X, train_target_y_task, test_target_y_task = train_test_split(
-        target_X, target_y_task, test_size=0.5, shuffle=False
+    (
+        train_source_X,
+        train_source_y_task,
+        train_target_X,
+        train_target_y_task,
+        test_target_X,
+        test_target_y_task,
+    ) = _get_source_target_prime_from_ecodataset(
+        source_idx=source_idx,
+        target_prime_idx=target_idx,
+        source_season_idx=winter_idx,
+        target_prime_season_ix=summer_idx,
     )
-    scaler.fit(train_target_X)
-    train_target_X = scaler.transform(train_target_X)
-    test_target_X = scaler.transform(test_target_X)
-
-    train_target_X, train_target_y_task = utils.apply_sliding_window(train_target_X, train_target_y_task, filter_len=6)
-    test_target_X, test_target_y_task = utils.apply_sliding_window(test_target_X, test_target_y_task, filter_len=6)
+    accs = []
     for _ in range(num_repeats):
 
         source_loader, _, _, _, _, _ = utils.get_loader(
@@ -350,6 +387,7 @@ def train_on_target(target_idx: int, summer_idx: int, num_repeats: int = 10) -> 
 
 
 def main(argv):
+    danns_2d_accs = []
     isih_da_house_accs = []
     isih_da_season_accs = []
     codats_accs = []
@@ -370,12 +408,24 @@ def main(argv):
             elif (i != 4) and (i != 5):
                 if (j == 4) or (j == 5):
                     continue
-            isih_da_house_acc = isih_da_house(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
-            isih_da_season_acc = isih_da_season(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
-            codats_acc = codats(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
-            without_adapt_acc = without_adapt(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1)
-            train_on_target_acc, ground_truth_ratio = train_on_target(target_idx=j, summer_idx=1)
+            danns_2d_acc = danns_2d(
+                source_idx=i, target_idx=j, winter_idx=0, summer_idx=1, num_repeats=FLAGS.num_repeats
+            )
+            isih_da_house_acc = isih_da_house(
+                source_idx=i, target_idx=j, winter_idx=0, summer_idx=1, num_repeats=FLAGS.num_repeats
+            )
+            isih_da_season_acc = isih_da_season(
+                source_idx=i, target_idx=j, winter_idx=0, summer_idx=1, num_repeats=FLAGS.num_repeats
+            )
+            codats_acc = codats(source_idx=i, target_idx=j, winter_idx=0, summer_idx=1, num_repeats=FLAGS.num_repeats)
+            without_adapt_acc = without_adapt(
+                source_idx=i, target_idx=j, winter_idx=0, summer_idx=1, num_repeats=FLAGS.num_repeats
+            )
+            train_on_target_acc, ground_truth_ratio = train_on_target(
+                target_idx=j, summer_idx=1, num_repeats=FLAGS.num_repeats
+            )
 
+            danns_2d_accs.append(danns_2d_acc)
             isih_da_house_accs.append(isih_da_house_acc)
             isih_da_season_accs.append(isih_da_season_acc)
             codats_accs.append(codats_acc)
@@ -397,12 +447,24 @@ def main(argv):
             elif (i != 4) and (i != 5):
                 if (j == 4) or (j == 5):
                     continue
-            isih_da_house_acc = isih_da_house(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0)
-            isih_da_season_acc = isih_da_season(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0)
-            codats_acc = codats(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0)
-            without_adapt_acc = without_adapt(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0)
-            train_on_target_acc, ground_truth_ratio = train_on_target(target_idx=j, summer_idx=0)
+            danns_2d_acc = danns_2d(
+                source_idx=i, target_idx=j, winter_idx=1, summer_idx=0, num_repeats=FLAGS.num_repeats
+            )
+            isih_da_house_acc = isih_da_house(
+                source_idx=i, target_idx=j, winter_idx=1, summer_idx=0, num_repeats=FLAGS.num_repeats
+            )
+            isih_da_season_acc = isih_da_season(
+                source_idx=i, target_idx=j, winter_idx=1, summer_idx=0, num_repeats=FLAGS.num_repeats
+            )
+            codats_acc = codats(source_idx=i, target_idx=j, winter_idx=1, summer_idx=0, num_repeats=FLAGS.num_repeats)
+            without_adapt_acc = without_adapt(
+                source_idx=i, target_idx=j, winter_idx=1, summer_idx=0, num_repeats=FLAGS.num_repeats
+            )
+            train_on_target_acc, ground_truth_ratio = train_on_target(
+                target_idx=j, summer_idx=0, num_repeats=FLAGS.num_repeats
+            )
 
+            danns_2d_accs.append(danns_2d_acc)
             isih_da_house_accs.append(isih_da_house_acc)
             isih_da_season_accs.append(isih_da_season_acc)
             codats_accs.append(codats_acc)
@@ -412,7 +474,7 @@ def main(argv):
             patterns.append(f"({i}, s) -> ({j}, w)")
             if (i == 4) or (i == 5):
                 break
-
+    print(f"DANNs-2D Average: {sum(danns_2d_accs) / len(danns_2d_accs)}")
     print(f"isih-DA (Household => Season) Average: {sum(isih_da_house_accs)/len(isih_da_house_accs)}")
     print(f"isih-DA (Season => Household) Average: {sum(isih_da_season_accs)/len(isih_da_season_accs)}")
     print(f"CoDATS Average: {sum(codats_accs)/len(codats_accs)}")
@@ -420,6 +482,7 @@ def main(argv):
     print(f"Train on Target Average: {sum(train_on_target_accs)/len(train_on_target_accs)}")
 
     df["PAT"] = patterns
+    df["DANNs-2D"] = danns_2d_accs
     df["isih-DA (Household => Season)"] = isih_da_house_accs
     df["isih-DA (Season => Household)"] = isih_da_season_accs
     df["CoDATS"] = codats_accs

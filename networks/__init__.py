@@ -5,6 +5,7 @@ from .conv1d_two_layers import Conv1dTwoLayers
 from .conv2d import Conv2d
 from .dann import Dann
 from .dann_Fc import Dann_F_C
+from .danns_2d import Danns2D
 from .isih_DA import IsihDanns
 from .mlp_decoder_one_layer import OneLayerDecoder
 from .mlp_decoder_three_layers import ThreeLayersDecoder
