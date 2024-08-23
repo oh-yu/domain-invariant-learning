@@ -6,7 +6,7 @@ from torch import nn
 from tqdm import tqdm
 
 from ..utils import utils
-from .algo_utils import get_psuedo_label_weights, get_terminal_weights
+from .algo_utils import EarlyStopping, get_psuedo_label_weights, get_terminal_weights
 
 
 class ReverseGradient(torch.autograd.Function):
@@ -68,6 +68,7 @@ def fit(data, network, **kwargs):
         "changed_lrs": [0.00005, 0.00005],
         "stop_during_epochs": False,
         "epoch_thr_for_stopping": 2,
+        "do_early_stop": False,
     }
     config.update(kwargs)
     num_epochs = config["num_epochs"]
@@ -84,9 +85,11 @@ def fit(data, network, **kwargs):
         config["changed_lrs"],
     )
     stop_during_epochs, epoch_thr_for_stopping = config["stop_during_epochs"], config["epoch_thr_for_stopping"]
-
+    do_early_stop = config["do_early_stop"]
     # Fit
     reverse_grad = ReverseGradient.apply
+    early_stopping = EarlyStopping()
+
     # TODO: Understand torch.autograd.Function.apply
     loss_domains = []
     loss_tasks = []
@@ -190,8 +193,10 @@ def fit(data, network, **kwargs):
             target_feature_eval = feature_extractor(target_X)
             pred_y_task_eval = task_classifier.predict(target_feature_eval)
             acc = sum(pred_y_task_eval == target_y_task) / target_y_task.shape[0]
+            early_stopping(acc)
         loss_task_evals.append(acc.item())
-
+        if early_stopping.early_stop & do_early_stop:
+            break
         print(f"Epoch: {epoch}, Loss Domain: {loss_domain}, Loss Task: {loss_task}, Acc: {acc}")
     _plot_dann_loss(do_plot, loss_domains, loss_tasks, loss_task_evals)
     return feature_extractor, task_classifier, loss_task_evals

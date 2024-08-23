@@ -7,7 +7,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from torch.utils.data import DataLoader, TensorDataset
 
-from ...networks import Codats, CoDATS_F_C, IsihDanns
+from ...networks import Codats, CoDATS_F_C, Danns2D, IsihDanns
 from ...utils import utils
 
 GT_TO_INT = {"bike": 0, "stairsup": 1, "stairsdown": 2, "stand": 3, "walk": 4, "sit": 5}
@@ -23,7 +23,12 @@ GYROSCOPE_DF = pd.read_csv(
 GYROSCOPE_DF = GYROSCOPE_DF.add_suffix("_gyro")
 FLAGS = flags.FLAGS
 flags.DEFINE_string("algo_name", "DANN", "which algo to be used, DANN or CoRAL")
-flags.DEFINE_integer("num_repeat", 10, "the number of repetitions for hold-out test")
+flags.DEFINE_integer("num_repeats", 10, "the number of repetitions for hold-out test")
+flags.DEFINE_boolean(
+    "is_RV_tuning",
+    True,
+    "Whether or not use Reverse Validation based free params tuning method(5.1.2 algo from DANN paper)",
+)
 
 
 class Pattern:
@@ -83,6 +88,29 @@ def get_data_for_uda(user, model, is_targer_prime: bool = False):
         return train_X, train_y, test_X, test_y
 
 
+def danns_2d(pattern):
+    # Load Data
+    source_X, source_y_task = get_data_for_uda(user=pattern.source_user, model=pattern.source_model)
+    target_X, target_y_task = get_data_for_uda(user=pattern.target_user, model=pattern.source_model)
+    train_target_prime_X, train_target_prime_y_task, test_target_prime_X, test_target_prime_y_task = get_data_for_uda(
+        user=pattern.target_user, model=pattern.target_model, is_targer_prime=True
+    )
+    source_loader, target_loader, _, _, target_X, target_y_task = utils.get_loader(
+        source_X, target_X, source_y_task, target_y_task, batch_size=128, shuffle=True
+    )
+    train_target_prime_X = torch.tensor(train_target_prime_X, dtype=torch.float32).to(utils.DEVICE)
+    train_target_prime_y_domain = torch.ones(train_target_prime_X.shape[0]).to(utils.DEVICE)
+    train_tartget_prime_ds = TensorDataset(train_target_prime_X, train_target_prime_y_domain)
+    target_prime_loader = DataLoader(train_tartget_prime_ds, shuffle=True, batch_size=128)
+
+    test_target_prime_X = torch.tensor(test_target_prime_X, dtype=torch.float32).to(utils.DEVICE)
+    test_target_prime_y_task = torch.tensor(test_target_prime_y_task).to(utils.DEVICE)
+    # 2d DANNs
+    danns_2d = Danns2D(experiment="HHAR")
+    acc = danns_2d.fit(source_loader, target_loader, target_prime_loader, test_target_prime_X, test_target_prime_y_task)
+    return acc
+
+
 def isih_da_user(pattern):
     # Load Data
     source_X, source_y_task = get_data_for_uda(user=pattern.source_user, model=pattern.source_model)
@@ -92,22 +120,28 @@ def isih_da_user(pattern):
     )
 
     # Algo1: Inter-user DA
-    source_loader, target_loader, _, _, target_X, target_y_task = utils.get_loader(
-        source_X, target_X, source_y_task, target_y_task, batch_size=128, shuffle=True
+    source_loader, target_loader, _, _, target_X, target_y_task, source_ds, target_ds = utils.get_loader(
+        source_X, target_X, source_y_task, target_y_task, batch_size=128, shuffle=True, return_ds=True
     )
     isih_dann = IsihDanns(experiment="HHAR")
-    isih_dann.fit_1st_dim(source_loader, target_loader, target_X, target_y_task)
+    isih_dann.fit_1st_dim(source_ds, target_ds, target_X, target_y_task)
     pred_y_task = isih_dann.predict_proba(target_X, is_1st_dim=True)
 
     # Algo2: Inter-models DA
     source_X = target_X.cpu().detach().numpy()
     source_y_task = pred_y_task.cpu().detach().numpy()
-    source_loader, target_loader, _, _, _, _ = utils.get_loader(
-        source_X, train_target_prime_X, source_y_task, train_target_prime_y_task, batch_size=128, shuffle=True
+    source_loader, target_loader, _, _, _, _, source_ds, target_ds = utils.get_loader(
+        source_X,
+        train_target_prime_X,
+        source_y_task,
+        train_target_prime_y_task,
+        batch_size=128,
+        shuffle=True,
+        return_ds=True,
     )
     test_target_prime_X = torch.tensor(test_target_prime_X, dtype=torch.float32).to(utils.DEVICE)
     test_target_prime_y_task = torch.tensor(test_target_prime_y_task, dtype=torch.long).to(utils.DEVICE)
-    isih_dann.fit_2nd_dim(source_loader, target_loader, test_target_prime_X, test_target_prime_y_task)
+    isih_dann.fit_2nd_dim(source_ds, target_ds, test_target_prime_X, test_target_prime_y_task)
     isih_dann.set_eval()
     pred_y_task = isih_dann.predict(test_target_prime_X, is_1st_dim=False)
 
@@ -125,22 +159,28 @@ def isih_da_model(pattern):
     )
 
     # Algo1: Inter-models DA
-    source_loader, target_loader, _, _, target_X, target_y_task = utils.get_loader(
-        source_X, target_X, source_y_task, target_y_task, batch_size=128, shuffle=True
+    _, _, _, _, target_X, target_y_task, source_ds, target_ds = utils.get_loader(
+        source_X, target_X, source_y_task, target_y_task, batch_size=128, shuffle=True, return_ds=True
     )
     isih_dann = IsihDanns(experiment="HHAR")
-    isih_dann.fit_1st_dim(source_loader, target_loader, target_X, target_y_task)
+    isih_dann.fit_1st_dim(source_ds, target_ds, target_X, target_y_task)
     pred_y_task = isih_dann.predict_proba(target_X, is_1st_dim=True)
 
     # Algo2: Inter-users DA
     source_X = target_X.cpu().detach().numpy()
     source_y_task = pred_y_task.cpu().detach().numpy()
-    source_loader, target_loader, _, _, _, _ = utils.get_loader(
-        source_X, train_target_prime_X, source_y_task, train_target_prime_y_task, batch_size=128, shuffle=True
+    source_loader, target_loader, _, _, _, _, source_ds, target_ds = utils.get_loader(
+        source_X,
+        train_target_prime_X,
+        source_y_task,
+        train_target_prime_y_task,
+        batch_size=128,
+        shuffle=True,
+        return_ds=True,
     )
     test_target_prime_X = torch.tensor(test_target_prime_X, dtype=torch.float32).to(utils.DEVICE)
     test_target_prime_y_task = torch.tensor(test_target_prime_y_task, dtype=torch.long).to(utils.DEVICE)
-    isih_dann.fit_2nd_dim(source_loader, target_loader, test_target_prime_X, test_target_prime_y_task)
+    isih_dann.fit_2nd_dim(source_ds, target_ds, test_target_prime_X, test_target_prime_y_task)
     isih_dann.set_eval()
     pred_y_task = isih_dann.predict(test_target_prime_X, is_1st_dim=False)
 
@@ -157,8 +197,23 @@ def codats(pattern):
     )
 
     # Direct Inter-Users and Inter-models DA
-    source_loader, target_loader, _, _, train_target_prime_X, train_target_prime_y_task = utils.get_loader(
-        source_X, train_target_prime_X, source_y_task, train_target_prime_y_task, batch_size=128, shuffle=True
+    (
+        source_loader,
+        target_loader,
+        _,
+        _,
+        train_target_prime_X,
+        train_target_prime_y_task,
+        source_ds,
+        target_ds,
+    ) = utils.get_loader(
+        source_X,
+        train_target_prime_X,
+        source_y_task,
+        train_target_prime_y_task,
+        batch_size=128,
+        shuffle=True,
+        return_ds=True,
     )
     test_target_prime_X = torch.tensor(test_target_prime_X, dtype=torch.float32)
     test_target_prime_y_task = torch.tensor(test_target_prime_y_task, dtype=torch.float32)
@@ -166,11 +221,8 @@ def codats(pattern):
     test_target_prime_y_task = test_target_prime_y_task.to(utils.DEVICE)
 
     codats = Codats(experiment="HHAR")
-    codats.fit(source_loader, target_loader, test_target_prime_X, test_target_prime_y_task)
-    codats.set_eval()
-    pred_y_task = codats.predict(test_target_prime_X)
-    acc = sum(pred_y_task == test_target_prime_y_task) / len(test_target_prime_y_task)
-    return acc.item()
+    acc = codats.fit(source_ds, target_ds, test_target_prime_X, test_target_prime_y_task)
+    return acc
 
 
 def without_adapt(pattern):
@@ -220,36 +272,41 @@ def train_on_target(pattern):
 
 
 def main(argv):
+    danns_2d_accs = []
     train_on_taget_accs = []
     isihda_model_accs = []
     isihda_user_accs = []
     codats_accs = []
     without_adapt_accs = []
     executed_patterns = []
-    num_repeat = FLAGS.num_repeat
+    num_repeats = FLAGS.num_repeats
 
     for pat in get_experimental_PAT():
+        danns_2d_acc = 0
         train_on_taget_acc = 0
         isihda_model_acc = 0
         isihda_user_acc = 0
         codats_acc = 0
         without_adapt_acc = 0
-        for _ in range(num_repeat):
+        for _ in range(num_repeats):
+            danns_2d_acc += danns_2d(pat)
             train_on_taget_acc += train_on_target(pat)
             isihda_model_acc += isih_da_model(pat)
             isihda_user_acc += isih_da_user(pat)
             codats_acc += codats(pat)
             without_adapt_acc += without_adapt(pat)
-        train_on_taget_accs.append(train_on_taget_acc / num_repeat)
-        isihda_model_accs.append(isihda_model_acc / num_repeat)
-        isihda_user_accs.append(isihda_user_acc / num_repeat)
-        codats_accs.append(codats_acc / num_repeat)
-        without_adapt_accs.append(without_adapt_acc / num_repeat)
+        danns_2d_accs.append(danns_2d_acc / num_repeats)
+        train_on_taget_accs.append(train_on_taget_acc / num_repeats)
+        isihda_model_accs.append(isihda_model_acc / num_repeats)
+        isihda_user_accs.append(isihda_user_acc / num_repeats)
+        codats_accs.append(codats_acc / num_repeats)
+        without_adapt_accs.append(without_adapt_acc / num_repeats)
         executed_patterns.append(f"({pat.source_user},{pat.source_model})->({pat.target_user},{pat.target_model})")
 
     df = pd.DataFrame()
     df["PAT"] = executed_patterns
     df["Train on Target"] = train_on_taget_accs
+    df["DANNs-2D"] = danns_2d_accs
     df["Isih-DA(Model => User)"] = isihda_model_accs
     df["Isih-DA(User => Model)"] = isihda_user_accs
     df["CoDATS"] = codats_accs

@@ -1,12 +1,40 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from sklearn.datasets import make_moons
 from sklearn.manifold import TSNE
-from torch.utils.data import DataLoader, TensorDataset
+from torch.utils.data import DataLoader, Subset, TensorDataset
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 COL_IDX_TASK = 0
 COL_IDX_DOMAIN = 1
+
+
+def get_source_target_from_make_moons(n_samples=100, noise=0.05, rotation_degree=-30):
+    # pylint: disable=too-many-locals
+    # It seems reasonable in this case, since this method needs all of that.
+    source_X, source_y = make_moons(n_samples=n_samples, noise=noise)
+    source_X[:, 0] -= 0.5
+
+    theta = np.radians(rotation_degree)
+    cos, sin = np.cos(theta), np.sin(theta)
+    rotate_matrix = np.array([[cos, -sin], [sin, cos]])
+    target_X = source_X.dot(rotate_matrix)
+    target_y = source_y
+
+    theta = np.radians(rotation_degree * 2)
+    cos, sin = np.cos(theta), np.sin(theta)
+    rotate_matrix = np.array([[cos, -sin], [sin, cos]])
+    target_prime_X = source_X.dot(rotate_matrix)
+    target_prime_y = source_y
+
+    x1_min, x2_min = np.min([source_X.min(0), target_prime_X.min(0)], axis=0)
+    x1_max, x2_max = np.max([source_X.max(0), target_prime_X.max(0)], axis=0)
+    x1_grid, x2_grid = np.meshgrid(
+        np.linspace(x1_min - 0.1, x1_max + 0.1, 100), np.linspace(x2_min - 0.1, x2_max + 0.1, 100)
+    )
+    x_grid = np.stack([x1_grid.reshape(-1), x2_grid.reshape(-1)], axis=0)
+    return source_X, source_y, target_X, target_y, target_prime_X, target_prime_y, x_grid, x1_grid, x2_grid
 
 
 def get_loader(
@@ -16,6 +44,7 @@ def get_loader(
     target_y_task: np.ndarray,
     batch_size: int = 34,
     shuffle: bool = False,
+    return_ds: bool = False,
 ):
     """
     Get instances of torch.utils.data.DataLoader for domain invariant learning,
@@ -72,7 +101,10 @@ def get_loader(
     source_loader = DataLoader(source_ds, batch_size=batch_size, shuffle=shuffle)
     target_loader = DataLoader(target_ds, batch_size=batch_size, shuffle=shuffle)
 
-    return source_loader, target_loader, source_y_task, source_X, target_X, target_y_task
+    if return_ds:
+        return source_loader, target_loader, source_y_task, source_X, target_X, target_y_task, source_ds, target_ds
+    else:
+        return source_loader, target_loader, source_y_task, source_X, target_X, target_y_task
 
 
 def apply_sliding_window(
@@ -193,3 +225,14 @@ def visualize_tSNE(target_feature, source_feature):
     plt.ylabel("tsne_X2")
     plt.legend()
     plt.show()
+
+
+def tensordataset_to_splitted_loaders(ds, batch_size):
+    N_dataset = len(ds)
+    train_idx = [i for i in range(0, N_dataset // 2, 1)]
+    val_idx = [i for i in range(N_dataset // 2, N_dataset, 1)]
+    train_ds = Subset(ds, train_idx)
+    val_ds = Subset(ds, val_idx)
+    train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
+    val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=True)
+    return train_loader, val_loader

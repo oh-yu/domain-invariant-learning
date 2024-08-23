@@ -1,7 +1,7 @@
 import torch
 from torch import nn, optim
 
-from ..utils import utils
+from ..algo import supervised_algo
 from .conv1d_three_layers import Conv1dThreeLayers
 from .conv1d_two_layers import Conv1dTwoLayers
 from .mlp_decoder_three_layers import ThreeLayersDecoder
@@ -30,37 +30,26 @@ class CoDATS_F_C(nn.Module):
             self.num_epochs = 300
 
     def fit_without_adapt(self, source_loader):
-        for _ in range(self.num_epochs):
-            for source_X_batch, source_Y_batch in source_loader:
-                # Prep Data
-                source_y_task_batch = source_Y_batch[:, utils.COL_IDX_TASK]
-
-                # Forward
-                pred_y_task = self.decoder(self.conv1d(source_X_batch))
-                if self.decoder.output_size == 1:
-                    pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
-                else:
-                    source_y_task_batch = source_y_task_batch.to(torch.long)
-                    pred_y_task = torch.softmax(pred_y_task, dim=1)
-
-                loss_task = self.criterion(pred_y_task, source_y_task_batch)
-
-                # Backward
-                self.optimizer.zero_grad()
-                loss_task.backward()
-
-                # Updata Params
-                self.optimizer.step()
+        data = {"loader": source_loader}
+        network = {
+            "decoder": self.decoder,
+            "encoder": self.conv1d,
+            "optimizer": self.optimizer,
+            "criterion": self.criterion,
+        }
+        config = {"use_source_loader": True, "num_epochs": self.num_epochs}
+        supervised_algo.fit(data, network, **config)
 
     def fit_on_target(self, target_prime_loader):
-        for _ in range(self.num_epochs):
-            for target_prime_X_batch, target_prime_y_task_batch in target_prime_loader:
-                pred_y_task = self.predict_proba(target_prime_X_batch)
-                loss = self.criterion(pred_y_task, target_prime_y_task_batch)
-
-                self.optimizer.zero_grad()
-                loss.backward()
-                self.optimizer.step()
+        data = {"loader": target_prime_loader}
+        network = {
+            "decoder": self.decoder,
+            "encoder": self.conv1d,
+            "optimizer": self.optimizer,
+            "criterion": self.criterion,
+        }
+        config = {"use_source_loader": False, "num_epochs": self.num_epochs}
+        supervised_algo.fit(data, network, **config)
 
     def forward(self, x):
         return self.decoder(self.conv1d(x))
