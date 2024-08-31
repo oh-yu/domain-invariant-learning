@@ -1,5 +1,6 @@
 from datetime import datetime
 import pickle
+import random
 
 import pandas as pd
 import torch
@@ -67,7 +68,7 @@ def get_image_data_for_uda(name="MNIST"):
             transform=custom_transform,
         )
         train_data = CustomUDADataset(train_data, "source")
-        train_data = Subset(train_data, [i for i in range(0, 5000, 1)])
+        train_data = Subset(train_data, random.sample([i for i in range(0, len(train_data), 1)], 10000))
         train_loader = torch.utils.data.DataLoader(train_data, batch_size=64, shuffle=True)
         return train_loader, train_data
 
@@ -77,11 +78,11 @@ def get_image_data_for_uda(name="MNIST"):
             root="./domain-invariant-learning/experiments/MNIST/data/MNIST-M/training", transform=custom_transform
         )
         train_data = CustomUDADataset(imagefolder_data, "target")
-        train_data = Subset(train_data, [i for i in range(0, 5000, 1)])
+        train_data = Subset(train_data, random.sample([i for i in range(0, len(train_data), 1)], 10000))
         train_loader = DataLoader(train_data, batch_size=16, shuffle=True)
 
         train_data_gt = CustomUDADataset(imagefolder_data, "source")
-        train_data_gt = Subset(train_data_gt, [i for i in range(0, 5000, 1)])
+        train_data_gt = Subset(train_data_gt, random.sample([i for i in range(0, len(train_data_gt), 1)], 10000))
         train_loader_gt = DataLoader(train_data_gt, batch_size=128, shuffle=False)
         return train_loader, train_loader_gt, train_data
 
@@ -94,7 +95,7 @@ def get_image_data_for_uda(name="MNIST"):
             transform=custom_transform,
         )
         train_data = CustomUDADataset(train_data, "target")
-        train_data = Subset(train_data, [i for i in range(0, 5000, 1)])
+        train_data = Subset(train_data, random.sample([i for i in range(0, len(train_data), 1)], 10000))
         train_loader = DataLoader(train_data, batch_size=64, shuffle=True)
         test_data = torchvision.datasets.SVHN(
             "./domain-invariant-learning/experiments/MNIST/data/SVHN",
@@ -115,7 +116,7 @@ def get_image_data_for_uda(name="MNIST"):
             transform=custom_transform,
         )
         train_data = CustomUDADataset(train_data, "source")
-        train_data = Subset(train_data, [i for i in range(0, 5000, 1)])
+        train_data = Subset(train_data, random.sample([i for i in range(0, len(train_data), 1)], 10000))
         train_loader = DataLoader(train_data, batch_size=64, shuffle=True)
         return train_loader
 
