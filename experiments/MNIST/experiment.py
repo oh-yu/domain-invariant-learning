@@ -1,10 +1,11 @@
 from datetime import datetime
+import pickle
 
 import pandas as pd
 import torch
 import torchvision
 from absl import app, flags
-from torch.utils.data import DataLoader, TensorDataset
+from torch.utils.data import DataLoader, TensorDataset, Subset
 from torchvision import datasets, transforms
 from torchvision.datasets import ImageFolder
 
@@ -66,6 +67,7 @@ def get_image_data_for_uda(name="MNIST"):
             transform=custom_transform,
         )
         train_data = CustomUDADataset(train_data, "source")
+        train_data = Subset(train_data, [i for i in range(0, 5000, 1)])
         train_loader = torch.utils.data.DataLoader(train_data, batch_size=64, shuffle=True)
         return train_loader, train_data
 
@@ -75,9 +77,11 @@ def get_image_data_for_uda(name="MNIST"):
             root="./domain-invariant-learning/experiments/MNIST/data/MNIST-M/training", transform=custom_transform
         )
         train_data = CustomUDADataset(imagefolder_data, "target")
+        train_data = Subset(train_data, [i for i in range(0, 5000, 1)])
         train_loader = DataLoader(train_data, batch_size=16, shuffle=True)
 
         train_data_gt = CustomUDADataset(imagefolder_data, "source")
+        train_data_gt = Subset(train_data_gt, [i for i in range(0, 5000, 1)])
         train_loader_gt = DataLoader(train_data_gt, batch_size=128, shuffle=False)
         return train_loader, train_loader_gt, train_data
 
@@ -90,6 +94,7 @@ def get_image_data_for_uda(name="MNIST"):
             transform=custom_transform,
         )
         train_data = CustomUDADataset(train_data, "target")
+        train_data = Subset(train_data, [i for i in range(0, 5000, 1)])
         train_loader = DataLoader(train_data, batch_size=64, shuffle=True)
         test_data = torchvision.datasets.SVHN(
             "./domain-invariant-learning/experiments/MNIST/data/SVHN",
@@ -110,9 +115,9 @@ def get_image_data_for_uda(name="MNIST"):
             transform=custom_transform,
         )
         train_data = CustomUDADataset(train_data, "source")
+        train_data = Subset(train_data, [i for i in range(0, 5000, 1)])
         train_loader = DataLoader(train_data, batch_size=64, shuffle=True)
         return train_loader
-
 
 def danns_2d():
     # Load Data
@@ -236,10 +241,36 @@ def main(argv):
     df.to_csv(f"MNIST_{str(datetime.now())}_{FLAGS.algo_name}", index=False)
 
 
-MNIST = get_image_data_for_uda("MNIST")
-MNIST_M = get_image_data_for_uda("MNIST-M")
-SVHN = get_image_data_for_uda("SVHN")
-SVHN_TRAIN_ON_TARGET = get_image_data_for_uda("SVHN-trainontarget")
+# MNIST = get_image_data_for_uda("MNIST")
+# MNIST_M = get_image_data_for_uda("MNIST-M")
+# SVHN = get_image_data_for_uda("SVHN")
+# SVHN_TRAIN_ON_TARGET = get_image_data_for_uda("SVHN-trainontarget")
+with open("./MNIST-Data-Tmp/MNIST_train_loader.pickle", "rb") as f:
+    loader = pickle.load(f)
+with open("./MNIST-Data-Tmp/MNIST_train_data.pickle", "rb") as f:
+    ds = pickle.load(f)
+MNIST = loader, ds
+
+with open("./MNIST-Data-Tmp/MNIST-M_train_loader.pickle", "rb") as f:
+    loader = pickle.load(f)
+with open("./MNIST-Data-Tmp/MNIST-M_train_loader_gt.pickle", "rb") as f:
+    loader_gt = pickle.load(f)
+with open("./MNIST-Data-Tmp/MNIST-M_train_data.pickle", "rb") as f:
+    ds = pickle.load(f)
+MNIST_M = loader, loader_gt, ds
+
+with open("./MNIST-Data-Tmp/SVHN_train_loader.pickle", "rb") as f:
+    loader = pickle.load(f)
+with open("./MNIST-Data-Tmp/SVHN_train_data.pickle", "rb") as f:
+    ds = pickle.load(f)
+with open("./MNIST-Data-Tmp/SVHN_test_loader_gt.pickle", "rb") as f:
+    loader_test = pickle.load(f)   
+SVHN = loader, loader_test, ds
+
+with open("./MNIST-Data-Tmp/SVHN-trainontarget_train_loader.pickle", "rb") as f:
+    loader = pickle.load(f)
+SVHN_TRAIN_ON_TARGET = loader
 
 if __name__ == "__main__":
     app.run(main)
+
