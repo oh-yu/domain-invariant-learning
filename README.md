@@ -2,7 +2,7 @@
 python 3.9.7
 ## algo/
 implementations of domain invariant learning algo.
---algo_name can switch them.
+--algo_name can switch them (so far infeasible dan_algo.py in this manner).
 |file name|note|
 |---|---|
 |dann_algo.py|DANNs algo https://arxiv.org/pdf/1505.07818|
