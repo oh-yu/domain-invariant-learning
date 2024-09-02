@@ -97,9 +97,6 @@ def main(argv):
         config = {
             "num_epochs": 1000,
             "alpha": 1,
-            "is_changing_lr": True,
-            "epoch_thr_for_changing_lr": 200,
-            "changed_lrs": [0.00005, 0.00005],
             "do_plot": True,
         }
     feature_extractor, task_classifier, _ = ALGORYTHMS[FLAGS.algo_name].fit(data, network, **config)
