@@ -141,11 +141,11 @@ def fit(data, network, **kwargs):
             break
 
     if do_plot:
-        _plot_coral_loss(loss_corals, loss_tasks, loss_evals)
+        plot_coral_loss(loss_corals, loss_tasks, loss_evals)
     return feature_extractor, task_classifier, None
 
 
-def _plot_coral_loss(loss_corals, loss_tasks, loss_evals):
+def plot_coral_loss(loss_corals, loss_tasks, loss_evals):
     plt.plot(loss_corals, label="loss coral")
     plt.plot(loss_tasks, label="loss task")
     plt.xlabel("batch")
