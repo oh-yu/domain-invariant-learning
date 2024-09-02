@@ -250,8 +250,6 @@ class IsihDanns:
             config = {
                 "num_epochs": self.num_epochs_dim1,
                 "device": self.device,
-                "stop_during_epochs": self.stop_during_epochs,
-                "epoch_thr_for_stopping": 11,
                 "do_early_stop": self.do_early_stop,
             }
         self.feature_extractor, self.task_classifier_dim1, _ = ALGORYTHMS[FLAGS.algo_name].fit(data, network, **config)
@@ -407,8 +405,6 @@ class IsihDanns:
                 "num_epochs": self.num_epochs_dim2,
                 "is_psuedo_weights": True,
                 "device": self.device,
-                "stop_during_epochs": self.stop_during_epochs,
-                "epoch_thr_for_stopping": 11,
                 "do_early_stop": self.do_early_stop,
             }
 
