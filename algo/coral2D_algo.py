@@ -51,5 +51,17 @@ def fit(data, network, **kwargs):
         feature_extractor.train()
 
         for (source_X_batch, source_Y_batch), (target_X_batch, _), (target_prime_X_batch, ) in zip(source_loader, target_loader, target_prime_loader):
-            pass
+            if task_classifier_dim1.output_size == 1:
+                source_y_task_batch = source_Y_batch[:, utils.COL_IDX_TASK]
+                source_y_task_batch = source_y_task_batch.to(torch.float32)
+            else:
+                source_y_task_batch = source_Y_batch[:, utils.COL_IDX_TASK]
+                source_y_task_batch = source_y_task_batch.to(torch.long)
+            
+            # 1. Forward
+
+            # 2. Backward
+
+            # 3. Update Params
         
+        # 4. Eval
