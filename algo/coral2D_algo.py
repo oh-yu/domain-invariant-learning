@@ -49,7 +49,7 @@ def fit(data, network, **kwargs):
         task_classifier.train()
         feature_extractor.train()
 
-        for (source_X_batch, source_Y_batch), (target_X_batch, _), (target_prime_X_batch, ) in zip(source_loader, target_loader, target_prime_loader):
+        for (source_X_batch, source_Y_batch), (target_X_batch, _), (target_prime_X_batch, _) in zip(source_loader, target_loader, target_prime_loader):
             if task_classifier.output_size == 1:
                 source_y_task_batch = source_Y_batch[:, utils.COL_IDX_TASK]
                 source_y_task_batch = source_y_task_batch.to(torch.float32)
@@ -98,7 +98,7 @@ def fit(data, network, **kwargs):
             feature_extractor.eval()
             task_classifier.eval()
             target_prime_out = task_classifier.predict(feature_extractor(target_prime_X))
-            acc = sum(target_out == target_prime_y_task) / len(target_prime_y_task)
+            acc = sum(target_prime_out == target_prime_y_task) / len(target_prime_y_task)
             if epoch % 10 == 0:
                 print(f"Epoch: {epoch}, Loss Coral: {loss_coral}, Loss Task: {loss_task}, Acc: {acc}")
             early_stopping(acc.item())
