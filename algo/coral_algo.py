@@ -3,6 +3,7 @@ from typing import List
 import matplotlib.pyplot as plt
 import torch
 from torch import nn
+from tqdm import tqdm
 
 from ..utils import utils
 from .algo_utils import EarlyStopping, get_psuedo_label_weights
@@ -63,7 +64,7 @@ def fit(data, network, **kwargs):
     loss_corals = []
     loss_tasks = []
     loss_evals = []
-    for epoch in range(1, num_epochs + 1):
+    for epoch in tqdm(range(1, num_epochs + 1)):
         task_classifier.train()
         feature_extractor.train()
         if stop_during_epochs & (epoch == epoch_thr_for_stopping):

@@ -69,6 +69,7 @@ def fit(data, network, **kwargs):
                 source_preds = torch.sigmoid(source_out).reshape(-1)
                 loss_task = criterion(source_preds, source_y_task_batch)
             else:
+                criterion = nn.CrossEntropyLoss()
                 source_preds = torch.softmax(source_out, dim=1)
                 loss_task = criterion(source_preds, source_y_task_batch)
                 loss_task = loss_task.mean()
