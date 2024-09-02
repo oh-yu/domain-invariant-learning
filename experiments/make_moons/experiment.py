@@ -7,7 +7,7 @@ from absl import app, flags
 from torch import nn, optim
 from torch.utils.data import DataLoader, TensorDataset
 
-from ...algo import coral_algo, dann2D_algo, dann_algo
+from ...algo import coral_algo, dann2D_algo, dann_algo, coral2D_algo
 from ...networks import Encoder, ThreeLayersDecoder
 from ...utils import utils
 
@@ -172,7 +172,8 @@ def main(argv):
         "task_optimizer": task_optimizer,
     }
     config = {"num_epochs": 1000, "do_plot": True}
-    feature_extractor_dim12, task_classifier, _ = dann2D_algo.fit(data, network, **config)
+    algo_2D = dann2D_algo if FLAGS.algo_name == "DANN" else coral2D_algo
+    feature_extractor_dim12, task_classifier, _ = algo_2D.fit(data, network, **config)
     y_grid = task_classifier.predict_proba(feature_extractor_dim12(x_grid.T)).cpu().detach().numpy()
     pred_y_task = task_classifier.predict(feature_extractor_dim12(target_prime_X.to(device)))
     danns_2D_acc = sum(pred_y_task == target_prime_y_task) / len(pred_y_task)
