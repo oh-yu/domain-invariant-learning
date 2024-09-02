@@ -79,7 +79,7 @@ def fit(data, network, **kwargs):
 
             k = source_out.shape[1]
             loss_coral = get_MSE(cov_mat_source, cov_mat_target) * (1 / (4 * k ** 2))
-            loss_coral += get_MSE(cov_mat_target, cov_mat_target_prime) * (1 / (4 * k ** 2))
+            loss_coral += get_MSE(cov_mat_source, cov_mat_target_prime) * (1 / (4 * k ** 2))
 
             loss_corals.append(loss_coral.item())
             loss_tasks.append(loss_task.item())
