@@ -4,7 +4,7 @@ from absl import flags
 from torch import nn, optim
 from torch.utils.data import DataLoader, TensorDataset
 
-from ..algo import dann2D_algo
+from ..algo import dann2D_algo, coral2D_algo
 from ..utils import utils
 from .conv1d_three_layers import Conv1dThreeLayers
 from .conv1d_two_layers import Conv1dTwoLayers
@@ -13,7 +13,10 @@ from .mlp_decoder_three_layers import ThreeLayersDecoder
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 FLAGS = flags.FLAGS
-
+ALGORYTHMS = {
+    "DANN": dann2D_algo,
+    "CoRAL": coral2D_algo,
+}
 
 class Danns2D:
     def __init__(self, experiment: str):
@@ -194,7 +197,7 @@ class Danns2D:
             "task_optimizer": self.task_optimizer,
         }
         config = {"num_epochs": self.num_epochs, "device": self.device, "do_early_stop": self.do_early_stop}
-        self.feature_extractor, self.task_classifier, acc = dann2D_algo.fit(data, network, **config)
+        self.feature_extractor, self.task_classifier, acc = ALGORYTHMS[FLAGS.algo_name].fit(data, network, **config)
         return acc
 
     def predict(self, X):
