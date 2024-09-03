@@ -1,5 +1,5 @@
 # domain-invariant-learning
-We extend current unsupervised domain adaptation (especially domain invariant representation learning) to solve huge covariate shift betwween source and target.
+We extend current unsupervised domain adaptation (especially domain invariant representation learning) to solve huge covariate shift betwween source and target.  
 python 3.9.7
 
 ## algo/
@@ -10,7 +10,7 @@ implementations of domain invariant learning algo.
 |dann_algo.py|DANNs algo https://arxiv.org/pdf/1505.07818|
 |coral_algo.py|CoRAL algo https://arxiv.org/abs/1607.01719|
 |dan_algo.py|DAN algo https://arxiv.org/abs/1502.02791|
-|dann2D_algo.py|see our paper(TODO: Attach in the near future)|
+|**dann2D_algo.py**|**see our paper(TODO: Attach in the near future)**|
 |supervised_algo.py|supervised deep learning boilerplate for comparison test|
 
 ## experiments/
@@ -30,8 +30,8 @@ Domain Invariant Laerning and Without Adapt and Train on Target related free par
 |---|---|
 |dann.py|Figure 4: from https://arxiv.org/pdf/1505.07818|
 |codats.py|Figure 3: from https://arxiv.org/pdf/2005.10996|
-|danns_2d.py|see our paper(TODO: Attach in the near future)|
-|isih-DA.py|Algorythm 1 from https://www.jstage.jst.go.jp/article/tjsai/39/5/39_39-5_E-O41/_article/-char/ja/|
+|**danns_2d.py**|**see our paper(TODO: Attach in the near future)**|
+|**isih-DA.py**|**Algorythm 1 from https://www.jstage.jst.go.jp/article/tjsai/39/5/39_39-5_E-O41/_article/-char/ja/**|
 
 ## utils/
 Definition of generic functions to be called in multiple locations within the above dir structure.
