@@ -1,5 +1,7 @@
 # domain-invariant-learning
+We extend current unsupervised domain adaptation (especially domain invariant representation learning) to solve huge covariate shift betwween source and target.
 python 3.9.7
+
 ## algo/
 implementations of domain invariant learning algo.
 --algo_name can switch them (so far infeasible dan_algo.py in this manner).
