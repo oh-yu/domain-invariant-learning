@@ -41,7 +41,7 @@ class Codats:
             self.num_epochs = 300
             self.is_target_weights = True
             self.experiment = experiment
-            self.batch_size = 34
+            self.batch_size = 32
             self.do_early_stop = False
 
         elif experiment == "HHAR":

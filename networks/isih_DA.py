@@ -57,7 +57,7 @@ class IsihDanns:
             self.device = DEVICE
             self.stop_during_epochs = False
 
-            self.batch_size = 34
+            self.batch_size = 32
             self.experiment = experiment
             self.do_early_stop = False
 
