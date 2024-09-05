@@ -17,7 +17,7 @@ flags.DEFINE_integer("rotation_degree", -25, "rotation degree for target data")
 flags.DEFINE_string("algo_name", "DANN", "Which algo to use, DANN or CoRAL")
 flags.mark_flag_as_required("rotation_degree")
 flags.mark_flag_as_required("algo_name")
-
+plt.rcParams['image.cmap'] = 'coolwarm'
 
 ALGORYTHMS = {
     "DANN": dann_algo,
@@ -82,7 +82,7 @@ def main(argv):
             "task_optimizer": task_optimizer,
         }
         config = {
-            "num_epochs": 1000,
+            "num_epochs": 10,
             "do_plot": True,
             "is_target_weights": True,
         }

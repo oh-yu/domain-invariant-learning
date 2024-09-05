@@ -219,8 +219,8 @@ def visualize_tSNE(target_feature, source_feature):
     target_feature_tsne, source_feature_tsne = feature_tsne[:N_target], feature_tsne[N_target:]
 
     plt.figure()
-    plt.scatter(source_feature_tsne[:, 0], source_feature_tsne[:, 1], label="Source")
-    plt.scatter(target_feature_tsne[:, 0], target_feature_tsne[:, 1], label="Target")
+    plt.scatter(source_feature_tsne[:, 0], source_feature_tsne[:, 1], label="Source", c="tan")
+    plt.scatter(target_feature_tsne[:, 0], target_feature_tsne[:, 1], label="Target", c="lightsteelblue")
     plt.xlabel("tsne_X1")
     plt.ylabel("tsne_X2")
     # plt.legend()
