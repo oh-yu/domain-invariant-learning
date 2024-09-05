@@ -82,7 +82,7 @@ def main(argv):
             "task_optimizer": task_optimizer,
         }
         config = {
-            "num_epochs": 10,
+            "num_epochs": 1000,
             "do_plot": True,
             "is_target_weights": True,
         }
@@ -128,6 +128,7 @@ def main(argv):
     plt.scatter(target_prime_X[:, 0], target_prime_X[:, 1], c="black")
     plt.contourf(x1_grid, x2_grid, y_grid.reshape(100, 100), alpha=0.3)
     plt.colorbar()
+    plt.grid()
     plt.show()
 
     # # 2D-DANNs
