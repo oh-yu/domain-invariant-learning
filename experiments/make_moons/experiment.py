@@ -121,7 +121,7 @@ def main(argv):
     y_grid = y_grid.cpu().detach().numpy()
 
     plt.figure()
-    plt.title("Domain Adaptation Boundary")
+    # plt.title("Domain Adaptation Boundary")
     plt.xlabel("X1")
     plt.ylabel("X2")
     plt.scatter(source_X[:, 0], source_X[:, 1], c=source_y_task)
@@ -130,210 +130,210 @@ def main(argv):
     plt.colorbar()
     plt.show()
 
-    # 2D-DANNs
-    hidden_size = 10
-    num_domains = 1
-    num_classes = 1
-    feature_extractor_dim12 = Encoder(input_size=source_X.shape[1], output_size=hidden_size).to(device)
-    domain_classifier_dim1 = ThreeLayersDecoder(
-        input_size=hidden_size, output_size=num_domains, dropout_ratio=0, fc1_size=50, fc2_size=10
-    ).to(device)
-    domain_classifier_dim2 = ThreeLayersDecoder(
-        input_size=hidden_size, output_size=num_domains, dropout_ratio=0, fc1_size=50, fc2_size=10
-    ).to(device)
-    task_classifier = ThreeLayersDecoder(
-        input_size=hidden_size, output_size=num_classes, dropout_ratio=0, fc1_size=50, fc2_size=10
-    ).to(device)
-    criterion = nn.BCELoss()
-    feature_optimizer = optim.Adam(feature_extractor_dim12.parameters(), lr=learning_rate)
-    domain_optimizer_dim1 = optim.Adam(domain_classifier_dim1.parameters(), lr=learning_rate)
-    domain_optimizer_dim2 = optim.Adam(domain_classifier_dim2.parameters(), lr=learning_rate)
-    task_optimizer = optim.Adam(task_classifier.parameters(), lr=learning_rate)
+    # # 2D-DANNs
+    # hidden_size = 10
+    # num_domains = 1
+    # num_classes = 1
+    # feature_extractor_dim12 = Encoder(input_size=source_X.shape[1], output_size=hidden_size).to(device)
+    # domain_classifier_dim1 = ThreeLayersDecoder(
+    #     input_size=hidden_size, output_size=num_domains, dropout_ratio=0, fc1_size=50, fc2_size=10
+    # ).to(device)
+    # domain_classifier_dim2 = ThreeLayersDecoder(
+    #     input_size=hidden_size, output_size=num_domains, dropout_ratio=0, fc1_size=50, fc2_size=10
+    # ).to(device)
+    # task_classifier = ThreeLayersDecoder(
+    #     input_size=hidden_size, output_size=num_classes, dropout_ratio=0, fc1_size=50, fc2_size=10
+    # ).to(device)
+    # criterion = nn.BCELoss()
+    # feature_optimizer = optim.Adam(feature_extractor_dim12.parameters(), lr=learning_rate)
+    # domain_optimizer_dim1 = optim.Adam(domain_classifier_dim1.parameters(), lr=learning_rate)
+    # domain_optimizer_dim2 = optim.Adam(domain_classifier_dim2.parameters(), lr=learning_rate)
+    # task_optimizer = optim.Adam(task_classifier.parameters(), lr=learning_rate)
 
-    data = {
-        "source_loader": source_loader,
-        "target_loader": target_loader,
-        "target_prime_loader": target_prime_loader,
-        "target_prime_X": target_prime_X.to(utils.DEVICE),
-        "target_prime_y_task": target_prime_y_task,
-    }
-    network = {
-        "feature_extractor": feature_extractor_dim12,
-        "domain_classifier_dim1": domain_classifier_dim1,
-        "domain_classifier_dim2": domain_classifier_dim2,
-        "task_classifier": task_classifier,
-        "criterion": criterion,
-        "feature_optimizer": feature_optimizer,
-        "domain_optimizer_dim1": domain_optimizer_dim1,
-        "domain_optimizer_dim2": domain_optimizer_dim2,
-        "task_optimizer": task_optimizer,
-    }
-    config = {"num_epochs": 1000, "do_plot": True}
-    algo_2D = dann2D_algo if FLAGS.algo_name == "DANN" else coral2D_algo
-    feature_extractor_dim12, task_classifier, _ = algo_2D.fit(data, network, **config)
-    y_grid = task_classifier.predict_proba(feature_extractor_dim12(x_grid.T)).cpu().detach().numpy()
-    pred_y_task = task_classifier.predict(feature_extractor_dim12(target_prime_X.to(device)))
-    danns_2D_acc = sum(pred_y_task == target_prime_y_task) / len(pred_y_task)
-    print(f"2D-DANNs Accuracy: {danns_2D_acc.item()}")
-    plt.figure()
-    plt.title("2D-DANN Boundary")
-    plt.xlabel("X1")
-    plt.ylabel("X2")
-    plt.scatter(source_X[:, 0], source_X[:, 1], c=source_y_task)
-    plt.scatter(target_prime_X[:, 0], target_prime_X[:, 1], c="black")
-    plt.contourf(x1_grid, x2_grid, y_grid.reshape(100, 100), alpha=0.3)
-    plt.colorbar()
-    plt.show()
+    # data = {
+    #     "source_loader": source_loader,
+    #     "target_loader": target_loader,
+    #     "target_prime_loader": target_prime_loader,
+    #     "target_prime_X": target_prime_X.to(utils.DEVICE),
+    #     "target_prime_y_task": target_prime_y_task,
+    # }
+    # network = {
+    #     "feature_extractor": feature_extractor_dim12,
+    #     "domain_classifier_dim1": domain_classifier_dim1,
+    #     "domain_classifier_dim2": domain_classifier_dim2,
+    #     "task_classifier": task_classifier,
+    #     "criterion": criterion,
+    #     "feature_optimizer": feature_optimizer,
+    #     "domain_optimizer_dim1": domain_optimizer_dim1,
+    #     "domain_optimizer_dim2": domain_optimizer_dim2,
+    #     "task_optimizer": task_optimizer,
+    # }
+    # config = {"num_epochs": 1000, "do_plot": True}
+    # algo_2D = dann2D_algo if FLAGS.algo_name == "DANN" else coral2D_algo
+    # feature_extractor_dim12, task_classifier, _ = algo_2D.fit(data, network, **config)
+    # y_grid = task_classifier.predict_proba(feature_extractor_dim12(x_grid.T)).cpu().detach().numpy()
+    # pred_y_task = task_classifier.predict(feature_extractor_dim12(target_prime_X.to(device)))
+    # danns_2D_acc = sum(pred_y_task == target_prime_y_task) / len(pred_y_task)
+    # print(f"2D-DANNs Accuracy: {danns_2D_acc.item()}")
+    # plt.figure()
+    # plt.title("2D-DANN Boundary")
+    # plt.xlabel("X1")
+    # plt.ylabel("X2")
+    # plt.scatter(source_X[:, 0], source_X[:, 1], c=source_y_task)
+    # plt.scatter(target_prime_X[:, 0], target_prime_X[:, 1], c="black")
+    # plt.contourf(x1_grid, x2_grid, y_grid.reshape(100, 100), alpha=0.3)
+    # plt.colorbar()
+    # plt.show()
 
-    # step-by-step DANNs
-    hidden_size = 10
-    num_domains = 1
-    num_classes = 1
-    feature_extractor_dim12 = Encoder(input_size=source_X.shape[1], output_size=hidden_size).to(device)
-    domain_classifier_dim1 = ThreeLayersDecoder(
-        input_size=hidden_size, output_size=num_domains, dropout_ratio=0, fc1_size=50, fc2_size=10
-    ).to(device)
-    task_classifier_dim1 = ThreeLayersDecoder(
-        input_size=hidden_size, output_size=num_classes, dropout_ratio=0, fc1_size=50, fc2_size=10
-    ).to(device)
-    domain_classifier_dim2 = ThreeLayersDecoder(
-        input_size=hidden_size, output_size=num_domains, dropout_ratio=0, fc1_size=50, fc2_size=10
-    ).to(device)
-    task_classifier_dim2 = ThreeLayersDecoder(
-        input_size=hidden_size, output_size=num_classes, dropout_ratio=0, fc1_size=50, fc2_size=10
-    ).to(device)
+    # # step-by-step DANNs
+    # hidden_size = 10
+    # num_domains = 1
+    # num_classes = 1
+    # feature_extractor_dim12 = Encoder(input_size=source_X.shape[1], output_size=hidden_size).to(device)
+    # domain_classifier_dim1 = ThreeLayersDecoder(
+    #     input_size=hidden_size, output_size=num_domains, dropout_ratio=0, fc1_size=50, fc2_size=10
+    # ).to(device)
+    # task_classifier_dim1 = ThreeLayersDecoder(
+    #     input_size=hidden_size, output_size=num_classes, dropout_ratio=0, fc1_size=50, fc2_size=10
+    # ).to(device)
+    # domain_classifier_dim2 = ThreeLayersDecoder(
+    #     input_size=hidden_size, output_size=num_domains, dropout_ratio=0, fc1_size=50, fc2_size=10
+    # ).to(device)
+    # task_classifier_dim2 = ThreeLayersDecoder(
+    #     input_size=hidden_size, output_size=num_classes, dropout_ratio=0, fc1_size=50, fc2_size=10
+    # ).to(device)
 
-    criterion = nn.BCELoss()
-    feature_optimizer_dim1 = optim.Adam(feature_extractor_dim12.parameters(), lr=learning_rate)
-    domain_optimizer_dim1 = optim.Adam(domain_classifier_dim1.parameters(), lr=learning_rate)
-    task_optimizer_dim1 = optim.Adam(task_classifier_dim1.parameters(), lr=learning_rate)
-    feature_optimizer_dim2 = optim.Adam(feature_extractor_dim12.parameters(), lr=learning_rate)
-    domain_optimizer_dim2 = optim.Adam(domain_classifier_dim2.parameters(), lr=learning_rate)
-    task_optimizer_dim2 = optim.Adam(task_classifier_dim2.parameters(), lr=learning_rate)
-    ## 1st dim
+    # criterion = nn.BCELoss()
+    # feature_optimizer_dim1 = optim.Adam(feature_extractor_dim12.parameters(), lr=learning_rate)
+    # domain_optimizer_dim1 = optim.Adam(domain_classifier_dim1.parameters(), lr=learning_rate)
+    # task_optimizer_dim1 = optim.Adam(task_classifier_dim1.parameters(), lr=learning_rate)
+    # feature_optimizer_dim2 = optim.Adam(feature_extractor_dim12.parameters(), lr=learning_rate)
+    # domain_optimizer_dim2 = optim.Adam(domain_classifier_dim2.parameters(), lr=learning_rate)
+    # task_optimizer_dim2 = optim.Adam(task_classifier_dim2.parameters(), lr=learning_rate)
+    # ## 1st dim
 
-    data = {
-        "source_loader": source_loader,
-        "target_loader": target_loader,
-        "target_X": target_X,
-        "target_y_task": target_y_task,
-    }
+    # data = {
+    #     "source_loader": source_loader,
+    #     "target_loader": target_loader,
+    #     "target_X": target_X,
+    #     "target_y_task": target_y_task,
+    # }
 
-    if FLAGS.algo_name == "DANN":
-        network = {
-            "feature_extractor": feature_extractor_dim12,
-            "domain_classifier": domain_classifier_dim1,
-            "task_classifier": task_classifier_dim1,
-            "criterion": criterion,
-            "feature_optimizer": feature_optimizer_dim1,
-            "domain_optimizer": domain_optimizer_dim1,
-            "task_optimizer": task_optimizer_dim1,
-        }
-        config = {
-            "num_epochs": 200,
-            "do_plot": True,
-            "is_target_weights": True,
-        }
+    # if FLAGS.algo_name == "DANN":
+    #     network = {
+    #         "feature_extractor": feature_extractor_dim12,
+    #         "domain_classifier": domain_classifier_dim1,
+    #         "task_classifier": task_classifier_dim1,
+    #         "criterion": criterion,
+    #         "feature_optimizer": feature_optimizer_dim1,
+    #         "domain_optimizer": domain_optimizer_dim1,
+    #         "task_optimizer": task_optimizer_dim1,
+    #     }
+    #     config = {
+    #         "num_epochs": 200,
+    #         "do_plot": True,
+    #         "is_target_weights": True,
+    #     }
 
-    elif FLAGS.algo_name == "CoRAL":
-        network = {
-            "feature_extractor": feature_extractor_dim12,
-            "task_classifier": task_classifier_dim1,
-            "criterion": criterion,
-            "task_optimizer": task_optimizer_dim1,
-            "feature_optimizer": feature_optimizer_dim1,
-        }
-        config = {"num_epochs": 200, "alpha": 1, "do_plot": True}
-    feature_extractor_dim12, task_classifier_dim1, _ = ALGORYTHMS[FLAGS.algo_name].fit(data, network, **config)
+    # elif FLAGS.algo_name == "CoRAL":
+    #     network = {
+    #         "feature_extractor": feature_extractor_dim12,
+    #         "task_classifier": task_classifier_dim1,
+    #         "criterion": criterion,
+    #         "task_optimizer": task_optimizer_dim1,
+    #         "feature_optimizer": feature_optimizer_dim1,
+    #     }
+    #     config = {"num_epochs": 200, "alpha": 1, "do_plot": True}
+    # feature_extractor_dim12, task_classifier_dim1, _ = ALGORYTHMS[FLAGS.algo_name].fit(data, network, **config)
 
-    target_feature_eval = feature_extractor_dim12(target_X)
-    pred_y_task = task_classifier_dim1(target_feature_eval)
-    pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
+    # target_feature_eval = feature_extractor_dim12(target_X)
+    # pred_y_task = task_classifier_dim1(target_feature_eval)
+    # pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
 
-    ## 2nd dim
-    target_ds = TensorDataset(
-        target_X,
-        torch.cat([pred_y_task.detach().reshape(-1, 1), torch.zeros_like(target_y_task).reshape(-1, 1)], dim=1),
-    )
-    target_loader = DataLoader(target_ds, batch_size=34, shuffle=False)
+    # ## 2nd dim
+    # target_ds = TensorDataset(
+    #     target_X,
+    #     torch.cat([pred_y_task.detach().reshape(-1, 1), torch.zeros_like(target_y_task).reshape(-1, 1)], dim=1),
+    # )
+    # target_loader = DataLoader(target_ds, batch_size=34, shuffle=False)
 
-    data = {
-        "source_loader": target_loader,
-        "target_loader": target_prime_loader,
-        "target_X": target_prime_X.to(utils.DEVICE),
-        "target_y_task": target_prime_y_task,
-    }
-    if FLAGS.algo_name == "DANN":
-        network = {
-            "feature_extractor": feature_extractor_dim12,
-            "domain_classifier": domain_classifier_dim2,
-            "task_classifier": task_classifier_dim2,
-            "criterion": criterion,
-            "feature_optimizer": feature_optimizer_dim2,
-            "domain_optimizer": domain_optimizer_dim2,
-            "task_optimizer": task_optimizer_dim2,
-        }
-        config = {"num_epochs": 800, "do_plot": True, "is_target_weights": True, "is_psuedo_weights": True}
+    # data = {
+    #     "source_loader": target_loader,
+    #     "target_loader": target_prime_loader,
+    #     "target_X": target_prime_X.to(utils.DEVICE),
+    #     "target_y_task": target_prime_y_task,
+    # }
+    # if FLAGS.algo_name == "DANN":
+    #     network = {
+    #         "feature_extractor": feature_extractor_dim12,
+    #         "domain_classifier": domain_classifier_dim2,
+    #         "task_classifier": task_classifier_dim2,
+    #         "criterion": criterion,
+    #         "feature_optimizer": feature_optimizer_dim2,
+    #         "domain_optimizer": domain_optimizer_dim2,
+    #         "task_optimizer": task_optimizer_dim2,
+    #     }
+    #     config = {"num_epochs": 800, "do_plot": True, "is_target_weights": True, "is_psuedo_weights": True}
 
-    elif FLAGS.algo_name == "CoRAL":
-        network = {
-            "feature_extractor": feature_extractor_dim12,
-            "task_classifier": task_classifier_dim2,
-            "criterion": criterion,
-            "task_optimizer": task_optimizer_dim2,
-            "feature_optimizer": feature_optimizer_dim2,
-        }
-        config = {"num_epochs": 800, "alpha": 1, "is_psuedo_weights": True, "do_plot": True}
+    # elif FLAGS.algo_name == "CoRAL":
+    #     network = {
+    #         "feature_extractor": feature_extractor_dim12,
+    #         "task_classifier": task_classifier_dim2,
+    #         "criterion": criterion,
+    #         "task_optimizer": task_optimizer_dim2,
+    #         "feature_optimizer": feature_optimizer_dim2,
+    #     }
+    #     config = {"num_epochs": 800, "alpha": 1, "is_psuedo_weights": True, "do_plot": True}
 
-    feature_extractor_dim12, task_classifier_dim2, _ = ALGORYTHMS[FLAGS.algo_name].fit(data, network, **config)
+    # feature_extractor_dim12, task_classifier_dim2, _ = ALGORYTHMS[FLAGS.algo_name].fit(data, network, **config)
 
-    ## Eval
-    pred_y_task = task_classifier_dim2(feature_extractor_dim12(target_prime_X.to(utils.DEVICE)))
-    pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
-    pred_y_task = pred_y_task > 0.5
-    stepbystep_dann_acc = sum(pred_y_task == target_prime_y_task) / target_prime_y_task.shape[0]
-    print(f"step-by-step DANNs Accuracy:{stepbystep_dann_acc}")
+    # ## Eval
+    # pred_y_task = task_classifier_dim2(feature_extractor_dim12(target_prime_X.to(utils.DEVICE)))
+    # pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
+    # pred_y_task = pred_y_task > 0.5
+    # stepbystep_dann_acc = sum(pred_y_task == target_prime_y_task) / target_prime_y_task.shape[0]
+    # print(f"step-by-step DANNs Accuracy:{stepbystep_dann_acc}")
 
-    x_grid_feature = feature_extractor_dim12(x_grid.T)
-    y_grid = task_classifier_dim2(x_grid_feature)
-    y_grid = torch.sigmoid(y_grid)
-    y_grid = y_grid.cpu().detach().numpy()
+    # x_grid_feature = feature_extractor_dim12(x_grid.T)
+    # y_grid = task_classifier_dim2(x_grid_feature)
+    # y_grid = torch.sigmoid(y_grid)
+    # y_grid = y_grid.cpu().detach().numpy()
 
-    plt.figure()
-    plt.title("step-by-step DANNs Boundary")
-    plt.xlabel("X1")
-    plt.ylabel("X2")
-    plt.scatter(source_X[:, 0], source_X[:, 1], c=source_y_task)
-    plt.scatter(target_prime_X[:, 0], target_prime_X[:, 1], c="black")
-    plt.contourf(x1_grid, x2_grid, y_grid.reshape(100, 100), alpha=0.3)
-    plt.colorbar()
-    plt.show()
+    # plt.figure()
+    # plt.title("step-by-step DANNs Boundary")
+    # plt.xlabel("X1")
+    # plt.ylabel("X2")
+    # plt.scatter(source_X[:, 0], source_X[:, 1], c=source_y_task)
+    # plt.scatter(target_prime_X[:, 0], target_prime_X[:, 1], c="black")
+    # plt.contourf(x1_grid, x2_grid, y_grid.reshape(100, 100), alpha=0.3)
+    # plt.colorbar()
+    # plt.show()
 
-    # Without Adaptation
-    task_classifier = ThreeLayersDecoder(
-        input_size=source_X.shape[1], output_size=num_classes, dropout_ratio=0, fc1_size=50, fc2_size=10
-    ).to(device)
-    task_optimizer = optim.Adam(task_classifier.parameters(), lr=learning_rate)
-    task_classifier = utils.fit_without_adaptation(source_loader, task_classifier, task_optimizer, criterion, 1000)
-    pred_y_task = task_classifier(target_prime_X.to(device))
-    pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
-    pred_y_task = pred_y_task > 0.5
-    without_adapt_acc = sum(pred_y_task == target_prime_y_task) / target_prime_y_task.shape[0]
-    print(f"Without Adaptation Accuracy:{without_adapt_acc}")
+    # # Without Adaptation
+    # task_classifier = ThreeLayersDecoder(
+    #     input_size=source_X.shape[1], output_size=num_classes, dropout_ratio=0, fc1_size=50, fc2_size=10
+    # ).to(device)
+    # task_optimizer = optim.Adam(task_classifier.parameters(), lr=learning_rate)
+    # task_classifier = utils.fit_without_adaptation(source_loader, task_classifier, task_optimizer, criterion, 1000)
+    # pred_y_task = task_classifier(target_prime_X.to(device))
+    # pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
+    # pred_y_task = pred_y_task > 0.5
+    # without_adapt_acc = sum(pred_y_task == target_prime_y_task) / target_prime_y_task.shape[0]
+    # print(f"Without Adaptation Accuracy:{without_adapt_acc}")
 
-    y_grid = task_classifier(x_grid.T)
-    y_grid = torch.sigmoid(y_grid)
-    y_grid = y_grid.cpu().detach().numpy()
+    # y_grid = task_classifier(x_grid.T)
+    # y_grid = torch.sigmoid(y_grid)
+    # y_grid = y_grid.cpu().detach().numpy()
 
-    plt.figure()
-    plt.title("Without Adaptation Boundary")
-    plt.xlabel("X1")
-    plt.ylabel("X2")
-    plt.scatter(source_X[:, 0], source_X[:, 1], c=source_y_task)
-    plt.scatter(target_prime_X[:, 0], target_prime_X[:, 1], c="black")
-    plt.contourf(x1_grid, x2_grid, y_grid.reshape(100, 100), alpha=0.3)
-    plt.colorbar()
-    plt.show()
+    # plt.figure()
+    # plt.title("Without Adaptation Boundary")
+    # plt.xlabel("X1")
+    # plt.ylabel("X2")
+    # plt.scatter(source_X[:, 0], source_X[:, 1], c=source_y_task)
+    # plt.scatter(target_prime_X[:, 0], target_prime_X[:, 1], c="black")
+    # plt.contourf(x1_grid, x2_grid, y_grid.reshape(100, 100), alpha=0.3)
+    # plt.colorbar()
+    # plt.show()
 
     # t-SNE Visualization for Extracted Feature
     target_prime_feature_eval = target_prime_feature_eval.cpu().detach().numpy()
@@ -341,6 +341,8 @@ def main(argv):
     source_feature = source_feature.cpu().detach().numpy()
 
     utils.visualize_tSNE(target_prime_feature_eval, source_feature)
+    utils.visualize_tSNE_with_class_label(target_prime_feature_eval, source_feature, source_y_task, target_prime_y_task.cpu().detach().numpy())
+
 
     # to csv
     df = pd.DataFrame()

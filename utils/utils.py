@@ -13,7 +13,7 @@ COL_IDX_DOMAIN = 1
 def get_source_target_from_make_moons(n_samples=100, noise=0.05, rotation_degree=-30):
     # pylint: disable=too-many-locals
     # It seems reasonable in this case, since this method needs all of that.
-    source_X, source_y = make_moons(n_samples=n_samples, noise=noise)
+    source_X, source_y = make_moons(n_samples=n_samples, noise=noise, random_state=1111)
     source_X[:, 0] -= 0.5
 
     theta = np.radians(rotation_degree)
@@ -224,6 +224,34 @@ def visualize_tSNE(target_feature, source_feature):
     plt.xlabel("tsne_X1")
     plt.ylabel("tsne_X2")
     plt.legend()
+    plt.show()
+
+def visualize_tSNE_with_class_label(target_feature, source_feature, source_y_task, target_prime_y_task):
+    """
+    Draw scatter plot including t-SNE encoded feature for source and target data.
+    Small difference between them imply success of domain invarinat learning
+    (only in the point of domain invariant).
+
+    Parameters
+    ----------
+    target_feature : ndarray of shape(N, D)
+        N is the number of samples, D is the number of features.
+
+    source_feature : ndarray of shape(N, D)
+    """
+    tsne = TSNE(n_components=2, learning_rate="auto", init="pca", perplexity=5)
+    # TODO: Understand Argumetns for t-SNE
+    N_target = target_feature.shape[0]
+    feature = np.concatenate([target_feature, source_feature], axis=0)
+    feature_tsne = tsne.fit_transform(feature)
+    target_feature_tsne, source_feature_tsne = feature_tsne[:N_target], feature_tsne[N_target:]
+
+    plt.figure()
+    plt.scatter(source_feature_tsne[:, 0], source_feature_tsne[:, 1], c=source_y_task)
+    plt.scatter(target_feature_tsne[:, 0], target_feature_tsne[:, 1], c=target_prime_y_task)
+    plt.xlabel("tsne_X1")
+    plt.ylabel("tsne_X2")
+    # plt.legend()
     plt.show()
 
 
