@@ -223,7 +223,7 @@ def visualize_tSNE(target_feature, source_feature):
     plt.scatter(target_feature_tsne[:, 0], target_feature_tsne[:, 1], label="Target")
     plt.xlabel("tsne_X1")
     plt.ylabel("tsne_X2")
-    plt.legend()
+    # plt.legend()
     plt.show()
 
 def visualize_tSNE_with_class_label(target_feature, source_feature, source_y_task, target_prime_y_task):
