@@ -157,7 +157,7 @@ def danns_2d(source_idx: int, target_idx: int, winter_idx: int, summer_idx: int,
         train_target_prime_X = torch.tensor(train_target_prime_X, dtype=torch.float32).to(DEVICE)
         train_target_prime_y_domain = torch.ones(train_target_prime_X.shape[0]).to(DEVICE)
         target_prime_ds = TensorDataset(train_target_prime_X, train_target_prime_y_domain)
-        target_prime_loader = DataLoader(target_prime_ds, shuffle=True)
+        target_prime_loader = DataLoader(target_prime_ds, shuffle=True, batch_size=32)
 
         # Init 2D-DANNs
         danns_2d = Danns2D(experiment="ECOdataset")
