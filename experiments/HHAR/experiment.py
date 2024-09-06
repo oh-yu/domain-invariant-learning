@@ -125,7 +125,7 @@ def isih_da_user(pattern):
     )
 
     # Algo1: Inter-user DA
-    source_loader, target_loader, _, _, target_X, target_y_task, source_ds, target_ds = utils.get_loader(
+    source_loader, target_loader, source_y_task_for_TSNE, source_X_for_TSNE, target_X, target_y_task, source_ds, target_ds = utils.get_loader(
         source_X, target_X, source_y_task, target_y_task, batch_size=128, shuffle=True, return_ds=True
     )
     isih_dann = IsihDanns(experiment="HHAR")
@@ -152,6 +152,11 @@ def isih_da_user(pattern):
 
     # Algo3: Evaluation
     acc = sum(pred_y_task == test_target_prime_y_task) / len(test_target_prime_y_task)
+
+    source_feat = isih_dann.feature_extractor(source_X_for_TSNE).detach().cpu().numpy()
+    target_prime_feat = isih_dann.feature_extractor(test_target_prime_X).detach().cpu().numpy()
+    utils.visualize_tSNE(target_prime_feat, source_feat)
+    utils.visualize_tSNE_with_class_label(target_prime_feat, source_feat, source_y_task_for_TSNE, test_target_prime_y_task.cpu().numpy())
     return acc.item()
 
 
@@ -294,10 +299,10 @@ def main(argv):
         codats_acc = 0
         without_adapt_acc = 0
         for _ in range(num_repeats):
-            danns_2d_acc += danns_2d(pat)
+            danns_2d_acc += 0
             train_on_taget_acc += 0
             isihda_model_acc += 0
-            isihda_user_acc += 0
+            isihda_user_acc += isih_da_user(pat)
             codats_acc += 0
             without_adapt_acc += 0
         danns_2d_accs.append(danns_2d_acc / num_repeats)
