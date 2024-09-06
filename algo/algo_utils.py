@@ -4,7 +4,7 @@ from ..utils import utils
 
 
 def get_psuedo_label_weights(
-    source_Y_batch: torch.Tensor, thr: float = 0.75, alpha: int = 1, device=utils.DEVICE
+    source_Y_batch: torch.Tensor, thr: float = 0.75, alpha: int = 3, device=utils.DEVICE
 ) -> torch.Tensor:
     """
     # TODO: attach paper
@@ -98,7 +98,7 @@ def _get_class_weights(source_y_task_batch):
 
 
 class EarlyStopping:
-    def __init__(self, patience=10, delta=0):
+    def __init__(self, patience=10, delta=0.03):
         self.patience = patience
         self.counter = 0
         self.best_score = None
