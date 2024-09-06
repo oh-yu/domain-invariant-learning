@@ -210,8 +210,8 @@ def codats(pattern):
     (
         source_loader,
         target_loader,
-        _,
-        _,
+        source_y_task_for_TSNE,
+        source_X_for_TSNE,
         train_target_prime_X,
         train_target_prime_y_task,
         source_ds,
@@ -232,6 +232,11 @@ def codats(pattern):
 
     codats = Codats(experiment="HHAR")
     acc = codats.fit(source_ds, target_ds, test_target_prime_X, test_target_prime_y_task)
+
+    source_feat = codats.feature_extractor(source_X_for_TSNE).detach().cpu().numpy()
+    target_prime_feat = codats.feature_extractor(test_target_prime_X).detach().cpu().numpy()
+    utils.visualize_tSNE(target_prime_feat, source_feat)
+    utils.visualize_tSNE_with_class_label(target_prime_feat, source_feat, source_y_task_for_TSNE, test_target_prime_y_task.cpu().numpy())
     return acc
 
 
@@ -302,8 +307,8 @@ def main(argv):
             danns_2d_acc += 0
             train_on_taget_acc += 0
             isihda_model_acc += 0
-            isihda_user_acc += isih_da_user(pat)
-            codats_acc += 0
+            isihda_user_acc += 0
+            codats_acc += codats(pat)
             without_adapt_acc += 0
         danns_2d_accs.append(danns_2d_acc / num_repeats)
         train_on_taget_accs.append(train_on_taget_acc / num_repeats)
