@@ -352,6 +352,45 @@ def main(argv):
     plt.colorbar()
     plt.show()
 
+    # Train on Target
+    feature_extractor_trainontarget = Encoder(input_size=source_X.shape[1], output_size=hidden_size).to(device)
+    task_classifier = ThreeLayersDecoder(
+        input_size=hidden_size, output_size=num_classes, dropout_ratio=0, fc1_size=50, fc2_size=10
+    ).to(device)
+    optimizer = optim.Adam(list(task_classifier.parameters())+list(feature_extractor_trainontarget.parameters()), lr=learning_rate)
+    data = {
+        "loader": target_prime_loader
+    }
+    network = {
+        "decoder": task_classifier,
+        "encoder": feature_extractor_trainontarget,
+        "optimizer": optimizer,
+        "criterion": criterion
+    }
+    config = {
+        "use_source_loader": False,
+        "num_epochs": 1000
+    }
+    task_classifier, feature_extractor_trainontarget = supervised_algo.fit(data, network, **config)
+    pred_y_task = task_classifier(feature_extractor_trainontarget(target_prime_X.to(device)))
+    pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
+    pred_y_task = pred_y_task > 0.5
+    trainontarget_acc = sum(pred_y_task == target_prime_y_task) / target_prime_y_task.shape[0]
+    print(f"Train on Target Accuracy:{trainontarget_acc}")
+    y_grid = task_classifier(feature_extractor_trainontarget(x_grid.T))
+    y_grid = torch.sigmoid(y_grid)
+    y_grid = y_grid.cpu().detach().numpy()
+
+    plt.figure()
+    plt.title("Train on Target Boundary")
+    plt.xlabel("X1")
+    plt.ylabel("X2")
+    plt.scatter(source_X[:, 0], source_X[:, 1], c=source_y_task)
+    plt.scatter(target_prime_X[:, 0], target_prime_X[:, 1], c="black")
+    plt.contourf(x1_grid, x2_grid, y_grid.reshape(100, 100), alpha=0.3)
+    plt.colorbar()
+    plt.show()
+
     # t-SNE Visualization for Extracted Feature
     target_prime_feature_eval = target_prime_feature_eval.cpu().detach().numpy()
     source_feature = feature_extractor(source_X.to(device))
@@ -362,6 +401,7 @@ def main(argv):
     # to csv
     df = pd.DataFrame()
     df["PAT"] = [f"source->{FLAGS.rotation_degree}rotated->{FLAGS.rotation_degree*2}rotated"]
+    df["Train on Target"] = [trainontarget_acc.item()]
     df["2D-DANNs"] = [danns_2D_acc.item()]
     df["stepbystep-DANNs"] = [stepbystep_dann_acc.item()]
     df["DANNs"] = [dann_acc.item()]
