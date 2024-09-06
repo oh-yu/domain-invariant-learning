@@ -358,6 +358,8 @@ def main(argv):
         input_size=hidden_size, output_size=num_classes, dropout_ratio=0, fc1_size=50, fc2_size=10
     ).to(device)
     optimizer = optim.Adam(list(task_classifier.parameters())+list(feature_extractor_trainontarget.parameters()), lr=learning_rate)
+    target_prime_ds = TensorDataset(target_prime_X.to(device), target_prime_y_task)
+    target_prime_loader = DataLoader(target_prime_ds, batch_size=34)
     data = {
         "loader": target_prime_loader
     }
