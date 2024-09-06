@@ -6,8 +6,7 @@ import torch
 from absl import app, flags
 from torch import nn, optim
 from torch.utils.data import DataLoader, TensorDataset
-
-from ...algo import coral_algo, dann2D_algo, dann_algo, coral2D_algo
+from ...algo import coral_algo, dann2D_algo, dann_algo, coral2D_algo, supervised_algo
 from ...networks import Encoder, ThreeLayersDecoder
 from ...utils import utils
 
@@ -310,23 +309,79 @@ def main(argv):
     plt.show()
 
     # Without Adaptation
+    feature_extractor_withoutadapt = Encoder(input_size=source_X.shape[1], output_size=hidden_size).to(device)
     task_classifier = ThreeLayersDecoder(
-        input_size=source_X.shape[1], output_size=num_classes, dropout_ratio=0, fc1_size=50, fc2_size=10
+        input_size=hidden_size, output_size=num_classes, dropout_ratio=0, fc1_size=50, fc2_size=10
     ).to(device)
-    task_optimizer = optim.Adam(task_classifier.parameters(), lr=learning_rate)
-    task_classifier = utils.fit_without_adaptation(source_loader, task_classifier, task_optimizer, criterion, 1000)
-    pred_y_task = task_classifier(target_prime_X.to(device))
+
+    optimizer = optim.Adam(list(task_classifier.parameters())+list(feature_extractor_withoutadapt.parameters()), lr=learning_rate)
+    data = {
+        "loader": source_loader
+    }
+    network = {
+        "decoder": task_classifier,
+        "encoder": feature_extractor_withoutadapt,
+        "optimizer": optimizer,
+        "criterion": criterion
+    }
+    config = {
+        "use_source_loader": True,
+        "num_epochs": 1000
+    }
+    task_classifier, feature_extractor_withoutadapt = supervised_algo.fit(data, network, **config)
+    pred_y_task = task_classifier(feature_extractor_withoutadapt(target_prime_X.to(device)))
     pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
     pred_y_task = pred_y_task > 0.5
     without_adapt_acc = sum(pred_y_task == target_prime_y_task) / target_prime_y_task.shape[0]
     print(f"Without Adaptation Accuracy:{without_adapt_acc}")
 
-    y_grid = task_classifier(x_grid.T)
+    y_grid = task_classifier(feature_extractor_withoutadapt(x_grid.T))
     y_grid = torch.sigmoid(y_grid)
     y_grid = y_grid.cpu().detach().numpy()
 
     plt.figure()
     plt.title("Without Adaptation Boundary")
+    plt.xlabel("X1")
+    plt.ylabel("X2")
+    plt.scatter(source_X[:, 0], source_X[:, 1], c=source_y_task)
+    plt.scatter(target_prime_X[:, 0], target_prime_X[:, 1], c="black")
+    plt.contourf(x1_grid, x2_grid, y_grid.reshape(100, 100), alpha=0.3)
+    plt.colorbar()
+    plt.show()
+
+    # Train on Target
+    feature_extractor_trainontarget = Encoder(input_size=source_X.shape[1], output_size=hidden_size).to(device)
+    task_classifier = ThreeLayersDecoder(
+        input_size=hidden_size, output_size=num_classes, dropout_ratio=0, fc1_size=50, fc2_size=10
+    ).to(device)
+    optimizer = optim.Adam(list(task_classifier.parameters())+list(feature_extractor_trainontarget.parameters()), lr=learning_rate)
+    target_prime_ds = TensorDataset(target_prime_X.to(device), target_prime_y_task)
+    target_prime_loader = DataLoader(target_prime_ds, batch_size=34)
+    data = {
+        "loader": target_prime_loader
+    }
+    network = {
+        "decoder": task_classifier,
+        "encoder": feature_extractor_trainontarget,
+        "optimizer": optimizer,
+        "criterion": criterion
+    }
+    config = {
+        "use_source_loader": False,
+        "num_epochs": 1000
+    }
+    task_classifier, feature_extractor_trainontarget = supervised_algo.fit(data, network, **config)
+    pred_y_task = task_classifier(feature_extractor_trainontarget(target_prime_X.to(device)))
+    pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
+    pred_y_task = pred_y_task > 0.5
+    trainontarget_acc = sum(pred_y_task == target_prime_y_task) / target_prime_y_task.shape[0]
+    print(f"Train on Target Accuracy:{trainontarget_acc}")
+    y_grid = task_classifier(feature_extractor_trainontarget(x_grid.T))
+    y_grid = torch.sigmoid(y_grid)
+    y_grid = y_grid.cpu().detach().numpy()
+
+    plt.figure()
+    plt.title("Train on Target Boundary")
     plt.xlabel("X1")
     plt.ylabel("X2")
     plt.scatter(source_X[:, 0], source_X[:, 1], c=source_y_task)
@@ -345,6 +400,7 @@ def main(argv):
     # to csv
     df = pd.DataFrame()
     df["PAT"] = [f"source->{FLAGS.rotation_degree}rotated->{FLAGS.rotation_degree*2}rotated"]
+    df["Train on Target"] = [trainontarget_acc.item()]
     df["2D-DANNs"] = [danns_2D_acc.item()]
     df["stepbystep-DANNs"] = [stepbystep_dann_acc.item()]
     df["DANNs"] = [dann_acc.item()]
