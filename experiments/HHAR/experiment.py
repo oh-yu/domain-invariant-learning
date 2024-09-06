@@ -112,7 +112,7 @@ def danns_2d(pattern):
     source_feat = danns_2d.feature_extractor(source_X).detach().cpu().numpy()
     target_prime_feat = danns_2d.feature_extractor(test_target_prime_X).detach().cpu().numpy()
     utils.visualize_tSNE(target_prime_feat, source_feat)
-    utils.visualize_tSNE_with_class_label(target_prime_feat, source_feat, source_y_task.detach().cpu().numpy(), test_target_prime_y_task.detach().cpu().numpy())
+    utils.visualize_tSNE_with_class_label(target_prime_feat, source_feat, source_y_task.detach().cpu().numpy(), test_target_prime_y_task.cpu().numpy())
     return acc
 
 
