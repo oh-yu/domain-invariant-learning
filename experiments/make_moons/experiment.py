@@ -314,7 +314,7 @@ def main(argv):
     # Without Adaptation
     feature_extractor_withoutadapt = Encoder(input_size=source_X.shape[1], output_size=hidden_size).to(device)
     task_classifier = ThreeLayersDecoder(
-        input_size=source_X.shape[1], output_size=num_classes, dropout_ratio=0, fc1_size=50, fc2_size=10
+        input_size=hidden_size, output_size=num_classes, dropout_ratio=0, fc1_size=50, fc2_size=10
     ).to(device)
 
     optimizer = optim.Adam(list(task_classifier.parameters())+list(feature_extractor_withoutadapt.parameters()), lr=learning_rate)
@@ -331,7 +331,7 @@ def main(argv):
         "use_source_loader": True,
         "num_epochs": 1000
     }
-    task_classifier = supervised_algo.fit(data, network, **config)
+    task_classifier, feature_extractor_withoutadapt = supervised_algo.fit(data, network, **config)
     pred_y_task = task_classifier(feature_extractor_withoutadapt(target_prime_X.to(device)))
     pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
     pred_y_task = pred_y_task > 0.5
