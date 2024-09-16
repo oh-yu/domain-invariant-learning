@@ -14,6 +14,11 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 FLAGS = flags.FLAGS
 flags.DEFINE_integer("rotation_degree", -25, "rotation degree for target data")
 flags.DEFINE_string("algo_name", "DANN", "Which algo to use, DANN or CoRAL")
+flags.DEFINE_boolean(
+    "is_RV_tuning",
+    True,
+    "Whether or not use Reverse Validation based free params tuning method(5.1.2 algo from DANN paper)",
+)
 flags.mark_flag_as_required("rotation_degree")
 flags.mark_flag_as_required("algo_name")
 
