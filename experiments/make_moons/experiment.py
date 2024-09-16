@@ -139,6 +139,11 @@ def main(argv):
     rv_scores = danns_2d.fit(source_loader, target_loader, target_prime_loader, target_prime_X, target_prime_y_task)
     print(rv_scores)
 
-
+    import pandas as pd
+    df = pd.DataFrame(
+        {"RV_scores": rv_scores["scores"]},
+        {"Accuracies": rv_scores["accs"]}
+    )
+    print(df.corr())
 if __name__ == "__main__":
     app.run(main)

@@ -142,6 +142,8 @@ class Danns2D:
             {"lr": 0.001, "eps": 1e-08, "weight_decay": 0},
             {"lr": 0.05, "eps": 1e-08, "weight_decay": 0},
             {"lr": 0.01, "eps": 1e-08, "weight_decay": 0},
+            {"lr": 0.5, "eps": 1e-08, "weight_decay": 0},
+            {"lr": 0.1, "eps": 1e-08, "weight_decay": 0},
         ]
         RV_scores = {"free_params": [], "scores": [], "accs": []}
 
