@@ -21,7 +21,7 @@ ALGORYTHMS = {
 
 class Danns2D:
     def __init__(self, experiment: str):
-        assert experiment in ["ECOdataset", "ECOdataset_synthetic", "HHAR", "MNIST"]
+        assert experiment in ["ECOdataset", "ECOdataset_synthetic", "HHAR", "MNIST", "make_moons"]
         if experiment in ["ECOdataset", "ECOdataset_synthetic"]:
             self.feature_extractor = Conv1dTwoLayers(input_size=3).to(DEVICE)
             self.domain_classifier_dim1 = ThreeLayersDecoder(
@@ -87,25 +87,28 @@ class Danns2D:
             self.do_early_stop = False
         
         elif experiment in ["make_moons"]:
+            self.experiment = experiment
             hidden_size = 10
             num_domains = 1
             num_classes = 1
-            feature_extractor_dim12 = Encoder(input_size=2, output_size=hidden_size).to(DEVICE)
-            domain_classifier_dim1 = ThreeLayersDecoder(
+            self.feature_extractor = Encoder(input_size=2, output_size=hidden_size).to(DEVICE)
+            self.domain_classifier_dim1 = ThreeLayersDecoder(
                 input_size=hidden_size, output_size=num_domains, dropout_ratio=0, fc1_size=50, fc2_size=10
             ).to(DEVICE)
-            domain_classifier_dim2 = ThreeLayersDecoder(
+            self.domain_classifier_dim2 = ThreeLayersDecoder(
                 input_size=hidden_size, output_size=num_domains, dropout_ratio=0, fc1_size=50, fc2_size=10
             ).to(DEVICE)
-            task_classifier = ThreeLayersDecoder(
+            self.task_classifier = ThreeLayersDecoder(
                 input_size=hidden_size, output_size=num_classes, dropout_ratio=0, fc1_size=50, fc2_size=10
             ).to(DEVICE)
-            criterion = nn.BCELoss()
-            feature_optimizer = optim.Adam(feature_extractor_dim12.parameters(), lr=0.005)
-            domain_optimizer_dim1 = optim.Adam(domain_classifier_dim1.parameters(), lr=0.005)
-            domain_optimizer_dim2 = optim.Adam(domain_classifier_dim2.parameters(), lr=0.005)
-            task_optimizer = optim.Adam(task_classifier.parameters(), lr=0.005)
+            self.criterion = nn.BCELoss()
+            self.feature_optimizer = optim.Adam(self.feature_extractor.parameters(), lr=0.005)
+            self.domain_optimizer_dim1 = optim.Adam(self.domain_classifier_dim1.parameters(), lr=0.005)
+            self.domain_optimizer_dim2 = optim.Adam(self.domain_classifier_dim2.parameters(), lr=0.005)
+            self.task_optimizer = optim.Adam(self.task_classifier.parameters(), lr=0.005)
             self.num_epochs = 1000
+            self.batch_size = 34
+            self.device = DEVICE
 
     def fit(self, source_loader, target_loader, target_prime_loader, test_target_prime_X, test_target_prime_y_task):
         if FLAGS.is_RV_tuning:

@@ -98,7 +98,7 @@ def _get_class_weights(source_y_task_batch):
 
 
 class EarlyStopping:
-    def __init__(self, patience=10, delta=0):
+    def __init__(self, patience=10, delta=0.003):
         self.patience = patience
         self.counter = 0
         self.best_score = None
