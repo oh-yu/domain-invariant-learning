@@ -7,7 +7,7 @@ from absl import app, flags
 from torch import nn, optim
 from torch.utils.data import DataLoader, TensorDataset
 from ...algo import coral_algo, dann2D_algo, dann_algo, coral2D_algo, supervised_algo
-from ...networks import Encoder, ThreeLayersDecoder
+from ...networks import Encoder, ThreeLayersDecoder, Danns2D
 from ...utils import utils
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -130,46 +130,9 @@ def main(argv):
     plt.show()
 
     # 2D-DANNs
-    hidden_size = 10
-    num_domains = 1
-    num_classes = 1
-    feature_extractor_dim12 = Encoder(input_size=source_X.shape[1], output_size=hidden_size).to(device)
-    domain_classifier_dim1 = ThreeLayersDecoder(
-        input_size=hidden_size, output_size=num_domains, dropout_ratio=0, fc1_size=50, fc2_size=10
-    ).to(device)
-    domain_classifier_dim2 = ThreeLayersDecoder(
-        input_size=hidden_size, output_size=num_domains, dropout_ratio=0, fc1_size=50, fc2_size=10
-    ).to(device)
-    task_classifier = ThreeLayersDecoder(
-        input_size=hidden_size, output_size=num_classes, dropout_ratio=0, fc1_size=50, fc2_size=10
-    ).to(device)
-    criterion = nn.BCELoss()
-    feature_optimizer = optim.Adam(feature_extractor_dim12.parameters(), lr=learning_rate)
-    domain_optimizer_dim1 = optim.Adam(domain_classifier_dim1.parameters(), lr=learning_rate)
-    domain_optimizer_dim2 = optim.Adam(domain_classifier_dim2.parameters(), lr=learning_rate)
-    task_optimizer = optim.Adam(task_classifier.parameters(), lr=learning_rate)
+    danns_2d = Danns2D(experiment="make_moons")
+    feature_extractor_dim12, task_classifier, _ = danns_2d.fit(source_loader, target_loader, target_prime_loader, target_prime_X, target_prime_y_task)
 
-    data = {
-        "source_loader": source_loader,
-        "target_loader": target_loader,
-        "target_prime_loader": target_prime_loader,
-        "target_prime_X": target_prime_X.to(utils.DEVICE),
-        "target_prime_y_task": target_prime_y_task,
-    }
-    network = {
-        "feature_extractor": feature_extractor_dim12,
-        "domain_classifier_dim1": domain_classifier_dim1,
-        "domain_classifier_dim2": domain_classifier_dim2,
-        "task_classifier": task_classifier,
-        "criterion": criterion,
-        "feature_optimizer": feature_optimizer,
-        "domain_optimizer_dim1": domain_optimizer_dim1,
-        "domain_optimizer_dim2": domain_optimizer_dim2,
-        "task_optimizer": task_optimizer,
-    }
-    config = {"num_epochs": 1000, "do_plot": True}
-    algo_2D = dann2D_algo if FLAGS.algo_name == "DANN" else coral2D_algo
-    feature_extractor_dim12, task_classifier, _ = algo_2D.fit(data, network, **config)
     y_grid = task_classifier.predict_proba(feature_extractor_dim12(x_grid.T)).cpu().detach().numpy()
     pred_y_task = task_classifier.predict(feature_extractor_dim12(target_prime_X.to(device)))
     danns_2D_acc = sum(pred_y_task == target_prime_y_task) / len(pred_y_task)

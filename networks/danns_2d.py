@@ -10,6 +10,7 @@ from .conv1d_three_layers import Conv1dThreeLayers
 from .conv1d_two_layers import Conv1dTwoLayers
 from .conv2d import Conv2d
 from .mlp_decoder_three_layers import ThreeLayersDecoder
+from .mlp_encoder import Encoder
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 FLAGS = flags.FLAGS
@@ -84,6 +85,27 @@ class Danns2D:
             self.batch_size = 16
             self.experiment = experiment
             self.do_early_stop = False
+        
+        elif experiment in ["make_moons"]:
+            hidden_size = 10
+            num_domains = 1
+            num_classes = 1
+            feature_extractor_dim12 = Encoder(input_size=2, output_size=hidden_size).to(DEVICE)
+            domain_classifier_dim1 = ThreeLayersDecoder(
+                input_size=hidden_size, output_size=num_domains, dropout_ratio=0, fc1_size=50, fc2_size=10
+            ).to(DEVICE)
+            domain_classifier_dim2 = ThreeLayersDecoder(
+                input_size=hidden_size, output_size=num_domains, dropout_ratio=0, fc1_size=50, fc2_size=10
+            ).to(DEVICE)
+            task_classifier = ThreeLayersDecoder(
+                input_size=hidden_size, output_size=num_classes, dropout_ratio=0, fc1_size=50, fc2_size=10
+            ).to(DEVICE)
+            criterion = nn.BCELoss()
+            feature_optimizer = optim.Adam(feature_extractor_dim12.parameters(), lr=0.005)
+            domain_optimizer_dim1 = optim.Adam(domain_classifier_dim1.parameters(), lr=0.005)
+            domain_optimizer_dim2 = optim.Adam(domain_classifier_dim2.parameters(), lr=0.005)
+            task_optimizer = optim.Adam(task_classifier.parameters(), lr=0.005)
+            self.num_epochs = 1000
 
     def fit(self, source_loader, target_loader, target_prime_loader, test_target_prime_X, test_target_prime_y_task):
         if FLAGS.is_RV_tuning:
