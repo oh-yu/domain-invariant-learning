@@ -140,10 +140,9 @@ def main(argv):
     print(rv_scores)
 
     import pandas as pd
-    df = pd.DataFrame(
-        {"RV_scores": rv_scores["scores"]},
-        {"Accuracies": rv_scores["accs"]}
-    )
+    df = pd.DataFrame()
+    df["RV_scores"] = rv_scores["scores"]
+    df["Accs"] = rv_scores["accs"]
     print(df.corr())
 if __name__ == "__main__":
     app.run(main)
