@@ -10,7 +10,7 @@ COL_IDX_TASK = 0
 COL_IDX_DOMAIN = 1
 
 
-def get_source_target_from_make_moons(n_samples=100, noise=0.05, rotation_degree=-30):
+def get_source_target_from_make_moons(n_samples=100, noise=0.1, rotation_degree=-30):
     # pylint: disable=too-many-locals
     # It seems reasonable in this case, since this method needs all of that.
     source_X, source_y = make_moons(n_samples=n_samples, noise=noise, random_state=1111)
