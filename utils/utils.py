@@ -226,27 +226,9 @@ def visualize_tSNE(target_feature, source_feature):
     plt.grid()
     # plt.legend()
     plt.show()
+    return source_feature_tsne, target_feature_tsne
 
-def visualize_tSNE_with_class_label(target_feature, source_feature, source_y_task, target_prime_y_task):
-    """
-    Draw scatter plot including t-SNE encoded feature for source and target data.
-    Small difference between them imply success of domain invarinat learning
-    (only in the point of domain invariant).
-
-    Parameters
-    ----------
-    target_feature : ndarray of shape(N, D)
-        N is the number of samples, D is the number of features.
-
-    source_feature : ndarray of shape(N, D)
-    """
-    tsne = TSNE(n_components=2, learning_rate="auto", init="pca", perplexity=5)
-    # TODO: Understand Argumetns for t-SNE
-    N_target = target_feature.shape[0]
-    feature = np.concatenate([target_feature, source_feature], axis=0)
-    feature_tsne = tsne.fit_transform(feature)
-    target_feature_tsne, source_feature_tsne = feature_tsne[:N_target], feature_tsne[N_target:]
-
+def visualize_tSNE_with_class_label(source_feature_tsne, target_feature_tsne, source_y_task, target_prime_y_task):
     plt.figure()
     plt.scatter(source_feature_tsne[:, 0], source_feature_tsne[:, 1], c=source_y_task)
     plt.scatter(target_feature_tsne[:, 0], target_feature_tsne[:, 1], c=target_prime_y_task)

@@ -341,8 +341,8 @@ def main(argv):
     source_feature = feature_extractor(source_X.to(device))
     source_feature = source_feature.cpu().detach().numpy()
 
-    utils.visualize_tSNE(target_prime_feature_eval, source_feature)
-    utils.visualize_tSNE_with_class_label(target_prime_feature_eval, source_feature, source_y_task, target_prime_y_task.cpu().detach().numpy())
+    source_feature_tsne, target_feature_tsne = utils.visualize_tSNE(target_prime_feature_eval, source_feature)
+    utils.visualize_tSNE_with_class_label(source_feature_tsne, target_feature_tsne, source_y_task, target_prime_y_task.cpu().detach().numpy())
 
 
     # to csv
