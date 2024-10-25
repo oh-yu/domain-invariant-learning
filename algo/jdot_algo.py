@@ -1,6 +1,8 @@
 from typing import List
 
 import matplotlib.pyplot as plt
+import numpy as np
+import ot
 import torch
 from torch import nn
 from tqdm import tqdm
@@ -109,6 +111,21 @@ def fit(data, network, **kwargs):
             pred_target_y_task = task_classifier.predict_proba(target_X_batch)
 
             # 1.3 Optimal Transport
+            """
+            Intuitve Sense
+
+            Min: Σ_{i, j} c_ij * x_ij
+            s.t. 
+            (1) Σ_i x_ij = a_j, j∈{0, 1, 2, ..., M}
+            (2) Σ_j x_ij = b_i, i∈{0, 1, 2, ..., N}
+
+            x_ij: amount of flow from i to j
+            c_ij: cost(=distance between vectors) of flow from i to j
+            a_j: demand of j(uniform)
+            b_i: supply of i(uniform)
+            """
+            cost_mat = loss_domain_mat + alpha*loss_pseudo_task_mat
+            optimal_transport_weights = ot.emd2(np.ones(len(source_X_batch)) / len(source_X_batch), np.ones(len(target_X_batch)) / len(target_X_batch), cost_mat)
 
             # 1.4 Align Loss
             loss_align = 0
