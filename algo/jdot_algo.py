@@ -111,6 +111,28 @@ def fit(data, network, **kwargs):
             pred_target_y_task = task_classifier.predict_proba(target_X_batch)
 
             # 1.3 Optimal Transport
+            loss_domain_mat = torch.ones((target_X_batch.shape[0], source_X_batch.shape[0]))
+            for i in range(target_X_batch.shape[0]):
+                for j in range(source_X_batch.shape[0]):
+                    out = target_X_batch[i] - source_X_batch[j]
+                    out = out**2
+                    out = torch.sqrt(sum(out))
+                    loss_domain_mat[i][j] = out
+            
+            if task_classifier.output_size == 1:
+                criterion_pseudo = nn.BCELoss()
+                loss_pseudo_task_mat = torch.ones((target_X_batch.shape[0], source_X_batch.shape[0]))
+                for i in range(pred_target_y_task.shape[0]):
+                    for j in range(source_y_task_batch.shape[0]):
+                        loss_pseudo_task = criterion_pseudo(pred_target_y_task[i], source_y_task_batch[j])
+                        loss_pseudo_task_mat[i][j] = loss_pseudo_task
+            else:
+                criterion_pseudo = nn.BCELoss()
+                loss_pseudo_task_mat = torch.ones((target_X_batch.shape[0], source_X_batch.shape[0]))
+                for i in range(pred_target_y_task.shape[0]):
+                    for j in range(source_y_task_batch.shape[0]):
+                        loss_pseudo_task = criterion_pseudo(pred_target_y_task[i], source_y_task_batch[j])
+                        loss_pseudo_task_mat[i][j] = loss_pseudo_task
             """
             Intuitve Sense
 
@@ -124,46 +146,28 @@ def fit(data, network, **kwargs):
             a_j: demand of j(uniform)
             b_i: supply of i(uniform)
             """
-            cost_mat = loss_domain_mat + alpha*loss_pseudo_task_mat
-            optimal_transport_weights = ot.emd2(np.ones(len(source_X_batch)) / len(source_X_batch), np.ones(len(target_X_batch)) / len(target_X_batch), cost_mat)
+            cost_mat = loss_domain_mat + loss_pseudo_task_mat
+            optimal_transport_weights = ot.emd2(np.ones(len(target_X_batch)) / len(target_X_batch), np.ones(len(source_X_batch)) / len(source_X_batch), cost_mat)
 
             # 1.4 Align Loss
-            loss_align = 0
-            for i in range(target_X_batch.shape[0]):
-                for j in range(source_X_batch.shape[0]):
-                    out = target_X_batch[i] - source_X_batch[j]
-                    out = out**2
-                    out = torch.sqrt(sum(out))
-                    loss_domain += out
-            loss_domains.append(loss_domain.item())
+            loss_domain = torch.mean(optimal_transport_weights*loss_domain_mat)
 
             # 1.5 Task Loss
+            loss_pseudo_task = torch.mean(optimal_transport_weights*loss_pseudo_task_mat)
             if task_classifier.output_size == 1:
                 criterion_weight = nn.BCELoss(weight=weights.detach())
                 loss_task = criterion_weight(pred_source_y_task, source_y_task_batch)
                 loss_tasks.append(loss_task.item())
-
-                criterion_pseudo = nn.BCELoss()
-                loss_pseudo_task = 0
-                for i in range(pred_target_y_task.shape[0]):
-                    for j in range(source_y_task_batch.shape[0]):
-                        loss_pseudo_task += criterion_pseudo(pred_target_y_task[i], source_y_task_batch[j])
-                loss_peudo_tasks.append(loss_pseudo_task.item())
             else:
                 criterion_weight = nn.CrossEntropyLoss(reduction="none")
                 loss_task = criterion_weight(pred_source_y_task, source_y_task_batch)
                 loss_task = loss_task * weights
                 loss_task = loss_task.mean()
                 loss_tasks.append(loss_task.item())
-
-                criterion_pseudo = nn.BCELoss()
-                loss_pseudo_task = 0
-                for i in range(pred_target_y_task.shape[0]):
-                    for j in range(source_y_task_batch.shape[0]):
-                        loss_pseudo_task += criterion_pseudo(pred_target_y_task[i], source_y_task_batch[j])
-                loss_peudo_tasks.append(loss_pseudo_task.item())
-
+            
             # 2. Backward
+            loss = loss_task + loss_domain + loss_pseudo_task
+
             # 3. Update Params
         
 
