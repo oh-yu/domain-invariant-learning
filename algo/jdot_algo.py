@@ -110,7 +110,7 @@ def fit(data, network, **kwargs):
                 for j in range(source_X_batch.shape[0]):
                     out = target_X_batch[i] - source_X_batch[j]
                     out = out**2
-                    out = torch.sqrt(out)
+                    out = torch.sqrt(sum(out))
                     loss_domain += out
             loss_domains.append(loss_domain.item())
 
