@@ -99,6 +99,18 @@ def main(argv):
             "alpha": 1,
             "do_plot": True,
         }
+    if FLAGS.algo_name == "JDOT":
+        network = {
+            "feature_extractor": feature_extractor,
+            "task_classifier": task_classifier,
+            "criterion": criterion,
+            "feature_optimizer": feature_optimizer,
+            "task_optimizer": task_optimizer,
+        }
+        config = {
+            "num_epochs": 1000,
+            "do_plot": True,
+        }
     feature_extractor, task_classifier, _ = ALGORYTHMS[FLAGS.algo_name].fit(data, network, **config)
 
     target_prime_feature_eval = feature_extractor(target_prime_X)
