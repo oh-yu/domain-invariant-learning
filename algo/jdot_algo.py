@@ -167,14 +167,26 @@ def fit(data, network, **kwargs):
             
             # 2. Backward
             loss = loss_task + loss_domain + loss_pseudo_task
-
+            feature_optimizer.zero_grad()
+            task_optimizer.zero_grad()
+            loss.backward()
             # 3. Update Params
-        
-
+            feature_optimizer.step()
+            task_optimizer.step()
         # 4. Eval
-
-
-
+        feature_extractor.eval()
+        task_classifier.eval()
+        with torch.no_grad():
+            target_feature_eval = feature_extractor(target_X)
+            pred_y_task_eval = task_classifier.predict(target_feature_eval)
+            acc = sum(pred_y_task_eval == target_y_task) / target_y_task.shape[0]
+            early_stopping(acc)
+        loss_task_evals.append(acc.item())
+        if early_stopping.early_stop & do_early_stop:
+            break
+        print(f"Epoch: {epoch}, Loss Domain: {loss_domain}, Loss Task: {loss_task}, Loss Pseudo Task: {loss_pseudo_task}, Acc: {acc}")
+    # TODO: plot
+    return feature_extractor, task_classifier, loss_task_evals
 
 
 def _change_lr_during_jdot_training(
