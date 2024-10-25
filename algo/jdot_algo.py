@@ -95,6 +95,21 @@ def fit(data, network, **kwargs):
                 else:
                     source_y_task_batch = source_Y_batch[:, utils.COL_IDX_TASK]
                     source_y_task_batch = source_y_task_batch.to(torch.long)
+            psuedo_label_weights = get_psuedo_label_weights(source_Y_batch=source_Y_batch, device=device)
+
+            # 1. Forward
+            # 1.1 Feature Extractor
+
+            # 1.2 Task Classifier
+
+            # 1.3 Optimal Transport
+
+            # 2. Backward
+            # 3. Update Params
+        
+
+        # 4. Eval
+
 
 
 
