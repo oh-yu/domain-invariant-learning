@@ -104,7 +104,13 @@ def fit(data, network, **kwargs):
             # 1.1 Feature Extractor
             source_X_batch = feature_extractor(source_X_batch)
             target_X_batch = feature_extractor(target_X_batch)
+            # 1.2 Task Classifier
+            pred_source_y_task = task_classifier.predict_proba(source_X_batch)
+            pred_target_y_task = task_classifier.predict_proba(target_X_batch)
 
+            # 1.3 Optimal Transport
+
+            # 1.4 Align Loss
             loss_align = 0
             for i in range(target_X_batch.shape[0]):
                 for j in range(source_X_batch.shape[0]):
@@ -114,9 +120,7 @@ def fit(data, network, **kwargs):
                     loss_domain += out
             loss_domains.append(loss_domain.item())
 
-            # 1.2 Task Classifier
-            pred_source_y_task = task_classifier.predict_proba(source_X_batch)
-            pred_target_y_task = task_classifier.predict_proba(target_X_batch)
+            # 1.5 Task Loss
             if task_classifier.output_size == 1:
                 criterion_weight = nn.BCELoss(weight=weights.detach())
                 loss_task = criterion_weight(pred_source_y_task, source_y_task_batch)
@@ -141,10 +145,6 @@ def fit(data, network, **kwargs):
                     for j in range(source_y_task_batch.shape[0]):
                         loss_pseudo_task += criterion_pseudo(pred_target_y_task[i], source_y_task_batch[j])
                 loss_peudo_tasks.append(loss_pseudo_task.item())
-            
-
-
-            # 1.3 Optimal Transport
 
             # 2. Backward
             # 3. Update Params
