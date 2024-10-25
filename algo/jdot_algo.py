@@ -105,6 +105,15 @@ def fit(data, network, **kwargs):
             source_X_batch = feature_extractor(source_X_batch)
             target_X_batch = feature_extractor(target_X_batch)
 
+            loss_align = 0
+            for i in range(target_X_batch.shape[0]):
+                for j in range(source_X_batch.shape[0]):
+                    out = target_X_batch[i] - source_X_batch[j]
+                    out = out**2
+                    out = torch.sqrt(out)
+                    loss_domain += out
+            loss_domains.append(loss_domain.item())
+
             # 1.2 Task Classifier
             pred_source_y_task = task_classifier.predict_proba(source_X_batch)
             pred_target_y_task = task_classifier.predict_proba(target_X_batch)
