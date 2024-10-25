@@ -6,7 +6,7 @@ import torch
 from absl import app, flags
 from torch import nn, optim
 from torch.utils.data import DataLoader, TensorDataset
-from ...algo import coral_algo, dann2D_algo, dann_algo, coral2D_algo, supervised_algo
+from ...algo import coral_algo, dann2D_algo, dann_algo, coral2D_algo, supervised_algo, jdot_algo
 from ...networks import Encoder, ThreeLayersDecoder
 from ...utils import utils
 
@@ -21,6 +21,7 @@ flags.mark_flag_as_required("algo_name")
 ALGORYTHMS = {
     "DANN": dann_algo,
     "CoRAL": coral_algo,
+    "JDOT": jdot_algo
 }
 
 
