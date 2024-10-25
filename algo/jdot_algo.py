@@ -95,13 +95,26 @@ def fit(data, network, **kwargs):
                 else:
                     source_y_task_batch = source_Y_batch[:, utils.COL_IDX_TASK]
                     source_y_task_batch = source_y_task_batch.to(torch.long)
-            psuedo_label_weights = get_psuedo_label_weights(source_Y_batch=source_Y_batch, device=device)
-
+            if is_psuedo_weights:
+                weights = get_psuedo_label_weights(source_Y_batch=source_Y_batch, device=device).detach()
+            else:
+                weights = torch.ones_like(source_y_task_batch)
             # 1. Forward
             # 1.1 Feature Extractor
+            source_X_batch = feature_extractor(source_X_batch)
 
             # 1.2 Task Classifier
-
+            pred_source_y_task = task_classifier.predict_proba(source_X_batch)
+            if task_classifier.output_size == 1:
+                criterion_weight = nn.BCELoss(weight=weights.detach())
+                loss_task = criterion_weight(pred_source_y_task, source_y_task_batch)
+                loss_tasks.append(loss_task.item())
+            else:
+                criterion_weight = nn.CrossEntropyLoss(reduction="none")
+                loss_task = criterion_weight(pred_source_y_task, source_y_task_batch)
+                loss_task = loss_task * weights
+                loss_task = loss_task.mean()
+                loss_tasks.append(loss_task.item())
             # 1.3 Optimal Transport
 
             # 2. Backward
