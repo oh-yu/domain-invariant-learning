@@ -63,6 +63,7 @@ def fit(data, network, **kwargs):
     loss_domains = []
     loss_tasks = []
     loss_task_evals = []
+    loss_peudo_tasks = []
     num_epochs = torch.tensor(num_epochs, dtype=torch.int32).to(device)
     for epoch in tqdm(range(1, num_epochs.item() + 1)):
         epoch = torch.tensor(epoch, dtype=torch.float32).to(device)
@@ -102,19 +103,32 @@ def fit(data, network, **kwargs):
             # 1. Forward
             # 1.1 Feature Extractor
             source_X_batch = feature_extractor(source_X_batch)
+            target_X_batch = feature_extractor(target_X_batch)
 
             # 1.2 Task Classifier
             pred_source_y_task = task_classifier.predict_proba(source_X_batch)
+            pred_target_y_task = task_classifier.predict_proba(target_X_batch)
             if task_classifier.output_size == 1:
                 criterion_weight = nn.BCELoss(weight=weights.detach())
                 loss_task = criterion_weight(pred_source_y_task, source_y_task_batch)
                 loss_tasks.append(loss_task.item())
+
+                criterion_pseudo = nn.BCELoss()
+                loss_pseudo_task = criterion_pseudo(pred_target_y_task, source_y_task_batch)
+                loss_peudo_tasks.append(loss_pseudo_task.item())
             else:
                 criterion_weight = nn.CrossEntropyLoss(reduction="none")
                 loss_task = criterion_weight(pred_source_y_task, source_y_task_batch)
                 loss_task = loss_task * weights
                 loss_task = loss_task.mean()
                 loss_tasks.append(loss_task.item())
+
+                criterion_pseudo = nn.BCELoss()
+                loss_pseudo_task = criterion_pseudo(pred_target_y_task, source_y_task_batch)
+                loss_peudo_tasks.append(loss_pseudo_task.item())
+            
+
+
             # 1.3 Optimal Transport
 
             # 2. Backward
