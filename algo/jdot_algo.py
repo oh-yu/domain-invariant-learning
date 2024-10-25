@@ -114,7 +114,10 @@ def fit(data, network, **kwargs):
                 loss_tasks.append(loss_task.item())
 
                 criterion_pseudo = nn.BCELoss()
-                loss_pseudo_task = criterion_pseudo(pred_target_y_task, source_y_task_batch)
+                loss_pseudo_task = 0
+                for i in range(pred_target_y_task.shape[0]):
+                    for j in range(source_y_task_batch.shape[0]):
+                        loss_pseudo_task += criterion_pseudo(pred_target_y_task[i], source_y_task_batch[j])
                 loss_peudo_tasks.append(loss_pseudo_task.item())
             else:
                 criterion_weight = nn.CrossEntropyLoss(reduction="none")
@@ -124,7 +127,10 @@ def fit(data, network, **kwargs):
                 loss_tasks.append(loss_task.item())
 
                 criterion_pseudo = nn.BCELoss()
-                loss_pseudo_task = criterion_pseudo(pred_target_y_task, source_y_task_batch)
+                loss_pseudo_task = 0
+                for i in range(pred_target_y_task.shape[0]):
+                    for j in range(source_y_task_batch.shape[0]):
+                        loss_pseudo_task += criterion_pseudo(pred_target_y_task[i], source_y_task_batch[j])
                 loss_peudo_tasks.append(loss_pseudo_task.item())
             
 
