@@ -59,3 +59,43 @@ def fit(data, network, **kwargs):
     stop_during_epochs, epoch_thr_for_stopping = config["stop_during_epochs"], config["epoch_thr_for_stopping"]
     do_early_stop = config["do_early_stop"]
     # Fit
+    early_stopping = EarlyStopping()
+    loss_domains = []
+    loss_tasks = []
+    loss_task_evals = []
+    num_epochs = torch.tensor(num_epochs, dtype=torch.int32).to(device)
+    for epoch in tqdm(range(1, num_epochs.item() + 1)):
+        epoch = torch.tensor(epoch, dtype=torch.float32).to(device)
+        feature_extractor.train()
+        task_classifier.train()
+        if stop_during_epochs & (epoch.item() == epoch_thr_for_stopping):
+            break
+        if is_changing_lr:
+            feature_optimizer, task_optimizer = _change_lr_during_jdot_training(
+                feature_optimizer,
+                task_optimizer,
+                epoch,
+                epoch_thr=epoch_thr_for_changing_lr,
+                changed_lrs=changed_lrs,
+            )
+        # batch_training
+
+
+
+def _change_lr_during_jdot_training(
+    feature_optimizer: torch.optim.Adam,
+    task_optimizer: torch.optim.Adam,
+    epoch: torch.Tensor,
+    epoch_thr: int = 200,
+    changed_lrs: List[float] = [0.00005, 0.00005],
+):
+    """
+    Returns
+    -------
+    feature_optimizer : torch.optim.adam.Adam
+    task_optimizer : torch.optim.adam.Adam
+    """
+    if epoch == epoch_thr:
+        feature_optimizer.param_groups[0]["lr"] = changed_lrs[0]
+        task_optimizer.param_groups[0]["lr"] = changed_lrs[0]
+    return feature_optimizer, task_optimizer
