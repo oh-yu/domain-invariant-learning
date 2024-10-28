@@ -134,6 +134,7 @@ def main(argv):
     plt.show()
 
     # 2D-DANNs
+    # diff test
     hidden_size = 10
     num_domains = 1
     num_classes = 1
