@@ -111,7 +111,7 @@ def fit(data, network, **kwargs):
             pred_target_y_task = task_classifier.predict_proba(target_X_batch)
 
             # 1.3 Optimal Transport
-            loss_domain_mat = torch.cdist(target_X_batch, source_X_batch, p=2)
+            loss_domain_mat = torch.cdist(target_X_batch, source_X_batch, p=2).to("cpu")
             
             if task_classifier.output_size == 1:
                 criterion_pseudo = nn.BCELoss()
