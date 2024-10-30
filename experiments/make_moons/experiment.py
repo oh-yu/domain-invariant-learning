@@ -256,6 +256,19 @@ def main(argv):
             "feature_optimizer": feature_optimizer_dim1,
         }
         config = {"num_epochs": 200, "alpha": 1, "do_plot": True}
+    
+    elif FLAGS.algo_name == "JDOT":
+        network = {
+            "feature_extractor": feature_extractor_dim12,
+            "task_classifier": task_classifier_dim1,
+            "criterion": criterion,
+            "feature_optimizer": feature_optimizer_dim1,
+            "task_optimizer": task_optimizer_dim1,
+        }
+        config = {
+            "num_epochs": 200,
+            "do_plot": True,
+        }
     feature_extractor_dim12, task_classifier_dim1, _ = ALGORYTHMS[FLAGS.algo_name].fit(data, network, **config)
 
     target_feature_eval = feature_extractor_dim12(target_X)
@@ -296,7 +309,20 @@ def main(argv):
             "feature_optimizer": feature_optimizer_dim2,
         }
         config = {"num_epochs": 800, "alpha": 1, "is_psuedo_weights": True, "do_plot": True}
-
+    
+    elif FLAGS.algo_name == "JDOT":
+        network = {
+            "feature_extractor": feature_extractor_dim12,
+            "task_classifier": task_classifier_dim2,
+            "criterion": criterion,
+            "feature_optimizer": feature_optimizer_dim2,
+            "task_optimizer": task_optimizer_dim2,
+        }
+        config = {
+            "num_epochs": 800,
+            "do_plot": True,
+            "is_pseudo_weights": True
+        }
     feature_extractor_dim12, task_classifier_dim2, _ = ALGORYTHMS[FLAGS.algo_name].fit(data, network, **config)
 
     ## Eval
