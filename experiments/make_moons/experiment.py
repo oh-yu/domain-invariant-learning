@@ -311,7 +311,7 @@ def main(argv):
         config = {"num_epochs": 800, "alpha": 1, "is_psuedo_weights": True, "do_plot": True}
     
     elif FLAGS.algo_name == "JDOT":
-        nn.init.xavier_uniform_(feature_extractor_dim12.weight)
+        feature_extractor_dim12 = Encoder(input_size=source_X.shape[1], output_size=hidden_size).to(device)
         network = {
             "feature_extractor": feature_extractor_dim12,
             "task_classifier": task_classifier_dim2,
