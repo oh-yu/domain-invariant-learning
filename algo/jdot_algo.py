@@ -112,34 +112,15 @@ def fit(data, network, **kwargs):
 
             # 1.3 Optimal Transport
             loss_domain_mat = torch.cdist(target_X_batch, source_X_batch, p=2).to("cpu")
-            
+
+            criterion_pseudo = nn.CrossEntropyLoss(reduction='none')
             if task_classifier.output_size == 1:
-                criterion_pseudo = nn.BCELoss()
-                loss_pseudo_task_mat = torch.ones((target_X_batch.shape[0], source_X_batch.shape[0]))
-                for i in range(pred_target_y_task.shape[0]):
-                    for j in range(source_y_task_batch.shape[0]):
-                        loss_pseudo_task = criterion_pseudo(pred_target_y_task[i], source_y_task_batch[j])
-                        loss_pseudo_task_mat[i][j] = loss_pseudo_task
-            else:
-                criterion_pseudo = nn.BCELoss()
-                loss_pseudo_task_mat = torch.ones((target_X_batch.shape[0], source_X_batch.shape[0]))
-                for i in range(pred_target_y_task.shape[0]):
-                    for j in range(source_y_task_batch.shape[0]):
-                        loss_pseudo_task = criterion_pseudo(pred_target_y_task[i], source_y_task_batch[j])
-                        loss_pseudo_task_mat[i][j] = loss_pseudo_task
-            """
-            Intuitve Sense
+                pred_target_y_task = torch.cat([(1-pred_target_y_task).reshape(-1, 1), pred_target_y_task.reshape(-1, 1)], dim=1)
+            pred_target_y_task = pred_target_y_task.unsqueeze(0).expand(len(source_y_task_batch), -1, -1)
+            source_y_task_batch_expanded = source_y_task_batch.unsqueeze(1).expand(-1, len(pred_target_y_task))
+            loss_pseudo_task_mat = criterion_pseudo(pred_target_y_task.reshape(-1, 2), source_y_task_batch_expanded.reshape(-1).to(torch.long)).reshape(len(source_y_task_batch_expanded), len(pred_target_y_task)).T
+            loss_pseudo_task_mat = loss_pseudo_task_mat.to("cpu")
 
-            Min: Σ_{i, j} c_ij * x_ij
-            s.t. 
-            (1) Σ_i x_ij = a_j, j∈{0, 1, 2, ..., M}
-            (2) Σ_j x_ij = b_i, i∈{0, 1, 2, ..., N}
-
-            x_ij: amount of flow from i to j
-            c_ij: cost(=distance between vectors) of flow from i to j
-            a_j: demand of j(uniform)
-            b_i: supply of i(uniform)
-            """
             cost_mat = loss_domain_mat + loss_pseudo_task_mat
             optimal_transport_weights = ot.emd2(torch.ones(len(target_X_batch)) / len(target_X_batch), torch.ones(len(source_X_batch)) / len(source_X_batch), cost_mat)
 
