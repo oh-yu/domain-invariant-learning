@@ -115,4 +115,7 @@ def fit(data, network, **kwargs):
             cost_mat_dim2 = loss_domain_mat_dim2 + loss_pseudo_task_mat_dim2
             optimal_transport_weights_dim2 = ot.emd2(torch.ones(len(target_prime_X_batch)) / len(target_prime_X_batch), torch.ones(len(source_X_batch)) / len(source_X_batch), cost_mat_dim2)
 
+            # 1.4 Align Loss
+            loss_domain = torch.mean(optimal_transport_weights_dim1*loss_domain_mat_dim1)
+            loss_domain += torch.mean(optimal_transport_weights_dim2*loss_domain_mat_dim2)
             
