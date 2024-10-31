@@ -89,3 +89,19 @@ def fit(data, network, **kwargs):
             pred_source_y_task = task_classifier.predict_proba(source_X_batch)
             pred_target_y_task = task_classifier.predict_proba(target_X_batch)
             pred_target_prime_y_task = task_classifier.predict_proba(target_prime_X_batch)
+
+            # 1.3 Optimal Transport
+            ## 1.3.1 Dim1
+            loss_domain_mat_dim1 = torch.cdist(target_X_batch, source_X_batch, p=2).to("cpu")
+            criterion_pseudo = nn.CrossEntropyLoss(reduction='none')
+            if task_classifier.output_size == 1:
+                pred_target_y_task = torch.cat([(1-pred_target_y_task).reshape(-1, 1), pred_target_y_task.reshape(-1, 1)], dim=1)
+            num_classes = pred_target_y_task.shape[1]
+            pred_target_y_task = pred_target_y_task.unsqueeze(0).expand(len(source_y_task_batch), -1, -1)
+            source_y_task_batch_expanded = source_y_task_batch.unsqueeze(1).expand(-1, len(pred_target_y_task))
+            loss_pseudo_task_mat = criterion_pseudo(pred_target_y_task.reshape(-1, num_classes), source_y_task_batch_expanded.reshape(-1).to(torch.long)).reshape(len(source_y_task_batch_expanded), len(pred_target_y_task)).T
+            loss_pseudo_task_mat = loss_pseudo_task_mat.to("cpu")
+            cost_mat = loss_domain_mat + loss_pseudo_task_mat
+            optimal_transport_weights = ot.emd2(torch.ones(len(target_X_batch)) / len(target_X_batch), torch.ones(len(source_X_batch)) / len(source_X_batch), cost_mat)
+
+            ## 1.3.2 Dim2
