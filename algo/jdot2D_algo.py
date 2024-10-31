@@ -54,16 +54,6 @@ def fit(data, network, **kwargs):
         epoch = torch.tensor(epoch, dtype=torch.float32).to(device)
         feature_extractor.train()
         task_classifier.train()
-        if stop_during_epochs & (epoch.item() == epoch_thr_for_stopping):
-            break
-        if is_changing_lr:
-            feature_optimizer, task_optimizer = _change_lr_during_jdot_training(
-                feature_optimizer,
-                task_optimizer,
-                epoch,
-                epoch_thr=epoch_thr_for_changing_lr,
-                changed_lrs=changed_lrs,
-            )
         # batch_training
         for (source_X_batch, source_Y_batch), (target_X_batch, _), (target_prime_X_batch, _) in zip(source_loader, target_loader, target_prime_loader):
             # 0. Data
@@ -71,14 +61,8 @@ def fit(data, network, **kwargs):
                 source_y_task_batch = source_Y_batch[:, utils.COL_IDX_TASK] > 0.5
                 source_y_task_batch = source_y_task_batch.to(torch.float32)
             else:
-                if is_psuedo_weights:
-                    output_size = source_Y_batch[:, :-1].shape[1]
-                    source_y_task_batch = source_Y_batch[:, :output_size]
-                    source_y_task_batch = torch.argmax(source_y_task_batch, dim=1)
-                    source_y_task_batch = source_y_task_batch.to(torch.long)
-                else:
-                    source_y_task_batch = source_Y_batch[:, utils.COL_IDX_TASK]
-                    source_y_task_batch = source_y_task_batch.to(torch.long)
+                source_y_task_batch = source_Y_batch[:, utils.COL_IDX_TASK]
+                source_y_task_batch = source_y_task_batch.to(torch.long)
             
             # 1. Forward
             # 1.1 Feature Extractor
@@ -124,13 +108,13 @@ def fit(data, network, **kwargs):
             loss_pseudo_task += torch.mean(optimal_transport_weights_dim2*loss_pseudo_task_mat_dim2)
 
             if task_classifier.output_size == 1:
-                criterion_weight = nn.BCELoss(weight=weights.detach())
+                criterion_weight = nn.BCELoss()
                 loss_task = criterion_weight(pred_source_y_task, source_y_task_batch)
                 loss_tasks.append(loss_task.item())
             else:
                 criterion_weight = nn.CrossEntropyLoss(reduction="none")
                 loss_task = criterion_weight(pred_source_y_task, source_y_task_batch)
-                loss_task = loss_task * weights
+                loss_task = loss_task
                 loss_task = loss_task.mean()
                 loss_tasks.append(loss_task.item())
             
@@ -142,7 +126,7 @@ def fit(data, network, **kwargs):
 
             # 3. Update Params
             feature_optimizer.step()
-            task_classifier.step()
+            task_optimizer.step()
 
         
         # 4. Eval
