@@ -118,4 +118,44 @@ def fit(data, network, **kwargs):
             # 1.4 Align Loss
             loss_domain = torch.mean(optimal_transport_weights_dim1*loss_domain_mat_dim1)
             loss_domain += torch.mean(optimal_transport_weights_dim2*loss_domain_mat_dim2)
+
+            # 1.5 Task Loss
+            loss_pseudo_task = torch.mean(optimal_transport_weights_dim1*loss_pseudo_task_mat_dim1)
+            loss_pseudo_task += torch.mean(optimal_transport_weights_dim2*loss_pseudo_task_mat_dim2)
+
+            if task_classifier.output_size == 1:
+                criterion_weight = nn.BCELoss(weight=weights.detach())
+                loss_task = criterion_weight(pred_source_y_task, source_y_task_batch)
+                loss_tasks.append(loss_task.item())
+            else:
+                criterion_weight = nn.CrossEntropyLoss(reduction="none")
+                loss_task = criterion_weight(pred_source_y_task, source_y_task_batch)
+                loss_task = loss_task * weights
+                loss_task = loss_task.mean()
+                loss_tasks.append(loss_task.item())
             
+            # 2. Backward
+            loss = loss_task + loss_domain + loss_pseudo_task
+            feature_optimizer.zero_grad()
+            task_classifier.zero_grad()
+            loss.backward()
+
+            # 3. Update Params
+            feature_optimizer.step()
+            task_classifier.step()
+
+        
+        # 4. Eval
+        feature_extractor.eval()
+        task_classifier.eval()
+        with torch.no_grad():
+            target_prime_feature_eval = feature_extractor(target_prime_X)
+            pred_y_task_eval = task_classifier.predict(target_prime_feature_eval)
+            acc = sum(pred_y_task_eval == target_prime_y_task) / target_prime_y_task.shape[0]
+            early_stopping(acc)
+        loss_task_evals.append(acc.item())
+        if early_stopping.early_stop & do_early_stop:
+            break
+        print(f"Epoch: {epoch}, Loss Domain: {loss_domain}, Loss Task: {loss_task}, Loss Pseudo Task: {loss_pseudo_task}, Acc: {acc}")
+    # TODO: plot
+    return feature_extractor, task_classifier, loss_task_evals
