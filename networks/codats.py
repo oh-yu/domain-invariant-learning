@@ -4,7 +4,7 @@ from absl import flags
 from torch import nn, optim
 from torch.utils.data import DataLoader, TensorDataset
 
-from ..algo import coral_algo, dann_algo
+from ..algo import coral_algo, dann_algo, jdot_algo
 from ..utils import utils
 from .conv1d_three_layers import Conv1dThreeLayers
 from .conv1d_two_layers import Conv1dTwoLayers
@@ -15,6 +15,7 @@ FLAGS = flags.FLAGS
 ALGORYTHMS = {
     "DANN": dann_algo,
     "CoRAL": coral_algo,
+    "JDOT": jdot_algo
 }
 
 
@@ -203,7 +204,15 @@ class Codats:
                 "task_optimizer": self.task_optimizer,
             }
             config = {"num_epochs": self.num_epochs, "do_early_stop": self.do_early_stop}
-
+        elif FLAGS.algo_name == "JDOT":
+            network = {
+                "feature_extractor": self.feature_extractor,
+                "task_classifier": self.task_classifier,
+                "criterion": self.criterion,
+                "feature_optimizer": self.feature_optimizer,
+                "task_optimizer": self.task_optimizer, 
+            }
+            config = {"num_epochs": self.num_epochs, "do_early_stop": self.do_early_stop}
         self.feature_extractor, self.task_classifier, _ = ALGORYTHMS[FLAGS.algo_name].fit(data, network, **config)
 
     def predict(self, x: torch.Tensor) -> torch.Tensor:
