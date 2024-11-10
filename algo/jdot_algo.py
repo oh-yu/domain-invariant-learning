@@ -65,7 +65,7 @@ def fit(data, network, **kwargs):
     loss_domains = []
     loss_tasks = []
     loss_task_evals = []
-    loss_peudo_tasks = []
+    loss_pseudo_tasks = []
     num_epochs = torch.tensor(num_epochs, dtype=torch.int32).to(device)
     for epoch in tqdm(range(1, num_epochs.item() + 1)):
         epoch = torch.tensor(epoch, dtype=torch.float32).to(device)
@@ -127,9 +127,11 @@ def fit(data, network, **kwargs):
 
             # 1.4 Align Loss
             loss_domain = torch.mean(optimal_transport_weights*loss_domain_mat)
+            loss_domains.append(loss_domain.item())
 
             # 1.5 Task Loss
             loss_pseudo_task = torch.mean(optimal_transport_weights*loss_pseudo_task_mat)
+            loss_pseudo_tasks.append(loss_pseudo_task.item())
             if task_classifier.output_size == 1:
                 criterion_weight = nn.BCELoss(weight=weights.detach())
                 loss_task = criterion_weight(pred_source_y_task, source_y_task_batch)
@@ -161,8 +163,28 @@ def fit(data, network, **kwargs):
         if early_stopping.early_stop & do_early_stop:
             break
         print(f"Epoch: {epoch}, Loss Domain: {loss_domain}, Loss Task: {loss_task}, Loss Pseudo Task: {loss_pseudo_task}, Acc: {acc}")
-    # TODO: plot
+    _plot_jdot_loss(do_plot, loss_domains, loss_pseudo_tasks, loss_tasks, loss_task_evals)
     return feature_extractor, task_classifier, loss_task_evals
+
+
+def _plot_jdot_loss(do_plot: bool, loss_domains: List[float], loss_pseudo_tasks: List[float], loss_tasks: List[float], loss_task_evals: List[float]) -> None:
+    """
+    plot losses
+    """
+    if do_plot:
+        plt.figure()
+        plt.plot(loss_domains, label="loss_domain")
+        plt.plot(loss_pseudo_tasks, label="loss_pseudo_task")
+        plt.plot(loss_tasks, label="loss_task")
+        plt.xlabel("Batch")
+        plt.ylabel("Loss")
+        plt.legend()
+
+        plt.figure()
+        plt.plot(loss_task_evals, label="loss_task_eval")
+        plt.xlabel("Epoch")
+        plt.ylabel("Accuracy")
+        plt.show()
 
 
 def _change_lr_during_jdot_training(
