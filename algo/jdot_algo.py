@@ -175,15 +175,20 @@ def _plot_jdot_loss(do_plot: bool, loss_domains: List[float], loss_pseudo_tasks:
         plt.figure()
         plt.plot(loss_domains, label="loss_domain")
         plt.plot(loss_pseudo_tasks, label="loss_pseudo_task")
+        plt.xlabel("batch")
+        plt.ylabel("loss")
+        plt.legend()
+
+        plt.figure()
         plt.plot(loss_tasks, label="loss_task")
-        plt.xlabel("Batch")
-        plt.ylabel("Loss")
+        plt.xlabel("batch")
+        plt.ylabel("cross entropy loss")
         plt.legend()
 
         plt.figure()
         plt.plot(loss_task_evals, label="loss_task_eval")
-        plt.xlabel("Epoch")
-        plt.ylabel("Accuracy")
+        plt.xlabel("epoch")
+        plt.ylabel("accuracy")
         plt.show()
 
 
