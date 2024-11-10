@@ -152,13 +152,13 @@ def fit(data, network, **kwargs):
         plt.legend()
 
         plt.figure()
-        plt.plot(loss_tasks)
+        plt.plot(loss_tasks, label="loss_task")
         plt.xlabel("batch")
         plt.ylabel("cross entropy loss")
         plt.legend()
 
         plt.figure()
-        plt.plot(loss_task_evals)
+        plt.plot(loss_task_evals, label="loss_task_eval")
         plt.xlabel("epoch")
         plt.ylabel("accuracy")
         plt.legend()
