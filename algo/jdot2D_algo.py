@@ -52,6 +52,7 @@ def fit(data, network, **kwargs):
     num_epochs = torch.tensor(num_epochs, dtype=torch.int32).to(device)
     for epoch in tqdm(range(1, num_epochs.item() + 1)):
         epoch = torch.tensor(epoch, dtype=torch.float32).to(device)
+        scheduler = 2 / (1 + torch.exp(-10 * (epoch / (num_epochs + 1)))) - 1
         feature_extractor.train()
         task_classifier.train()
         # batch_training
@@ -121,7 +122,7 @@ def fit(data, network, **kwargs):
                 loss_tasks.append(loss_task.item())
             
             # 2. Backward
-            loss = loss_task + loss_domain + loss_pseudo_task
+            loss = loss_task + scheduler*loss_domain + loss_pseudo_task
             feature_optimizer.zero_grad()
             task_classifier.zero_grad()
             loss.backward()
