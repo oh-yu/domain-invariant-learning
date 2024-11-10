@@ -48,7 +48,7 @@ def fit(data, network, **kwargs):
     loss_domains = []
     loss_tasks = []
     loss_task_evals = []
-    loss_peudo_tasks = []
+    loss_pseudo_tasks = []
     num_epochs = torch.tensor(num_epochs, dtype=torch.int32).to(device)
     for epoch in tqdm(range(1, num_epochs.item() + 1)):
         epoch = torch.tensor(epoch, dtype=torch.float32).to(device)
@@ -102,10 +102,12 @@ def fit(data, network, **kwargs):
             # 1.4 Align Loss
             loss_domain = torch.mean(optimal_transport_weights_dim1*loss_domain_mat_dim1)
             loss_domain += torch.mean(optimal_transport_weights_dim2*loss_domain_mat_dim2)
+            loss_domains.append(loss_domain.item())
 
             # 1.5 Task Loss
             loss_pseudo_task = torch.mean(optimal_transport_weights_dim1*loss_pseudo_task_mat_dim1)
             loss_pseudo_task += torch.mean(optimal_transport_weights_dim2*loss_pseudo_task_mat_dim2)
+            loss_pseudo_tasks.append(loss_pseudo_task.item())
 
             if task_classifier.output_size == 1:
                 criterion_weight = nn.BCELoss()
@@ -141,5 +143,25 @@ def fit(data, network, **kwargs):
         if early_stopping.early_stop & do_early_stop:
             break
         print(f"Epoch: {epoch}, Loss Domain: {loss_domain}, Loss Task: {loss_task}, Loss Pseudo Task: {loss_pseudo_task}, Acc: {acc}")
-    # TODO: plot
+    if do_plot:
+        plt.figure()
+        plt.plot(loss_domains, label="loss_domain")
+        plt.plot(loss_pseudo_tasks, label="loss_pseudo_task")
+        plt.xlabel("batch")
+        plt.ylabel("loss")
+        plt.legend()
+
+        plt.figure()
+        plt.plot(loss_tasks)
+        plt.xlabel("batch")
+        plt.ylabel("cross entropy loss")
+        plt.legend()
+
+        plt.figure()
+        plt.plot(loss_task_evals)
+        plt.xlabel("epoch")
+        plt.ylabel("accuracy")
+        plt.legend()
+        plt.show()
+
     return feature_extractor, task_classifier, loss_task_evals
