@@ -103,7 +103,8 @@ def fit(data, network, **kwargs):
 
             else:
                 loss_domain_mat_dim2 = loss_domain_mat_dim2[:, :source_X_batch.shape[0]]
-                cost_mat_dim2 = loss_domain_mat_dim2 + loss_pseudo_task_mat_dim2.to("cpu")
+                loss_pseudo_task_mat_dim2 = loss_pseudo_task_mat_dim2.to("cpu")
+                cost_mat_dim2 = loss_domain_mat_dim2 + loss_pseudo_task_mat_dim2
                 optimal_transport_weights_dim2 = ot.emd(torch.ones(len(target_prime_X_batch)) / len(target_prime_X_batch), torch.ones(len(source_X_batch)) / len(source_X_batch), cost_mat_dim2)
 
 
