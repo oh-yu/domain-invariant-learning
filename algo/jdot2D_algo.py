@@ -90,7 +90,7 @@ def fit(data, network, **kwargs):
             optimal_transport_weights_dim1 = ot.emd(torch.ones(len(target_X_batch)) / len(target_X_batch), torch.ones(len(source_X_batch)) / len(source_X_batch), cost_mat_dim1)
 
             ## 1.3.2 Dim2
-            loss_domain_mat_dim2 = torch.cdist(target_prime_X_batch, source_X_batch, p=2).to("cpu")
+            loss_domain_mat_dim2 = torch.cdist(target_prime_X_batch, target_X_batch, p=2).to("cpu")
             if task_classifier.output_size == 1:
                 pred_target_prime_y_task = torch.cat([(1-pred_target_prime_y_task).reshape(-1, 1), pred_target_prime_y_task.reshape(-1, 1)], dim=1)
             pred_target_prime_y_task = pred_target_prime_y_task.unsqueeze(0).expand(len(source_y_task_batch), -1, -1)

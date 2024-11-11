@@ -108,7 +108,7 @@ def main(argv):
             "task_optimizer": task_optimizer,
         }
         config = {
-            "num_epochs": 1000,
+            "num_epochs": 1500,
             "do_plot": True,
         }
     feature_extractor, task_classifier, _ = ALGORYTHMS[FLAGS.algo_name].fit(data, network, **config)
@@ -187,6 +187,7 @@ def main(argv):
         algo_2D = coral2D_algo
     elif FLAGS.algo_name == "JDOT":
         algo_2D = jdot2D_algo
+        config = {"num_epochs": 1500, "do_plot": True}
     feature_extractor_dim12, task_classifier, _ = algo_2D.fit(data, network, **config)
     y_grid = task_classifier.predict_proba(feature_extractor_dim12(x_grid.T)).cpu().detach().numpy()
     pred_y_task = task_classifier.predict(feature_extractor_dim12(target_prime_X.to(device)))
@@ -271,7 +272,7 @@ def main(argv):
             "task_optimizer": task_optimizer_dim1,
         }
         config = {
-            "num_epochs": 200,
+            "num_epochs": 500,
             "do_plot": True,
         }
     feature_extractor_dim12, task_classifier_dim1, _ = ALGORYTHMS[FLAGS.algo_name].fit(data, network, **config)
@@ -325,7 +326,7 @@ def main(argv):
             "task_optimizer": task_optimizer_dim2,
         }
         config = {
-            "num_epochs": 800,
+            "num_epochs": 1000,
             "do_plot": True,
             "is_pseudo_weights": True
         }
