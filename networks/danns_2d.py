@@ -180,9 +180,13 @@ class Danns2D:
             )
 
             # Get RV Loss
-            criterion = nn.BCELoss()
             pred_y_task = self.predict_proba(val_source_X)
-            acc_RV = criterion(pred_y_task, val_source_y_task.to(torch.float32))
+            if self.experiment == "make_moons"
+                criterion = nn.BCELoss()
+                acc_RV = criterion(pred_y_task, val_source_y_task.to(torch.float32))
+            else
+                criterion = nn.CELoss()
+                acc_RV = criterion(pred_y_task, val_source_y_task.to(torch.long))
             RV_scores["free_params"].append(param)
             RV_scores["scores"].append(acc_RV.item())
 
@@ -199,8 +203,24 @@ class Danns2D:
                 self.do_early_stop = False
             self._fit(source_loader, target_loader, target_prime_loader, val_source_X, val_source_y_task)
             pred_y_task = self.predict_proba(test_target_prime_X)
-            acc = criterion(pred_y_task, test_target_prime_y_task.to(torch.float32))
+            if self.experiment == "make_moons":
+                acc = criterion(pred_y_task, test_target_prime_y_task.to(torch.float32))
+            else:
+                acc = criterion(pred_y_task, test_target_prime_y_task.to(torch.long))
             RV_scores["accs"].append(acc.item())
+        
+        import matplotlib.pyplot as plt
+        plt.plot(RV_scores["scores"], label="RV_based_Score")
+        plt.plot(RV_scores["accs"], label="Diff_between_UDAmodel_and_groundtruth")
+        plt.legend()
+        plt.savefig("RVscores_vs_groundtruth.png")
+
+        import pandas as pd
+        df = pd.DataFrame()
+        df["RV_scores"] = RC_scores["scores"]
+        df["Accs"] = RC_scores["accs"]
+        print(df.corr())
+        df.to_csv("RVscores_vs_groundtruth.csv")
         return RV_scores
 
     def _fit(self, source_loader, target_loader, target_prime_loader, test_target_prime_X, test_target_prime_y_task):
