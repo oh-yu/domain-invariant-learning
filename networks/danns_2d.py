@@ -133,7 +133,7 @@ class Danns2D:
 
         free_params = [
             {"lr": lr, "eps": 1e-08, "weight_decay": 0}
-            for lr in np.linspace(0.001, 0.00001, 25)
+            for lr in np.linspace(0.01, 0.00001, 15)
         ]
         RV_scores = {"free_params": [], "scores": [], "accs": []}
 
@@ -181,10 +181,10 @@ class Danns2D:
 
             # Get RV Loss
             pred_y_task = self.predict_proba(val_source_X)
-            if self.experiment == "make_moons"
+            if self.experiment == "make_moons":
                 criterion = nn.BCELoss()
                 acc_RV = criterion(pred_y_task, val_source_y_task.to(torch.float32))
-            else
+            else:
                 criterion = nn.CELoss()
                 acc_RV = criterion(pred_y_task, val_source_y_task.to(torch.long))
             RV_scores["free_params"].append(param)
