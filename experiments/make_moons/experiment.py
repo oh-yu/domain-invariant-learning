@@ -137,7 +137,11 @@ def main(argv):
     # 2D-DANNs
     danns_2d = Danns2D(experiment="make_moons")
     rv_scores = danns_2d.fit(source_loader, target_loader, target_prime_loader, target_prime_X, target_prime_y_task)
-    print(rv_scores)
+    import matplotlib.pyplot as plt
+    plt.plot(rv_scores["scores"], label="RV_based_Score")
+    plt.plot(rv_scores["accs"], label="Diff_between_UDAmodel_and_groundtruth")
+    plt.legend()
+    plt.show()
 
     import pandas as pd
     df = pd.DataFrame()

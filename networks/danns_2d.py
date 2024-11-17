@@ -132,18 +132,15 @@ class Danns2D:
         train_source_loader, val_source_loader = utils.tensordataset_to_splitted_loaders(source_ds, self.batch_size)
 
         free_params = [
-            {"lr": 0.000005, "eps": 1e-08, "weight_decay": 0},
+            {"lr": 0.00000001, "eps": 1e-08, "weight_decay": 0},
+            {"lr": 0.0000001, "eps": 1e-08, "weight_decay": 0},
             {"lr": 0.000001, "eps": 1e-08, "weight_decay": 0},
-            {"lr": 0.00005, "eps": 1e-08, "weight_decay": 0},
             {"lr": 0.00001, "eps": 1e-08, "weight_decay": 0},
-            {"lr": 0.0005, "eps": 1e-08, "weight_decay": 0},
             {"lr": 0.0001, "eps": 1e-08, "weight_decay": 0},
-            {"lr": 0.005, "eps": 1e-08, "weight_decay": 0},
             {"lr": 0.001, "eps": 1e-08, "weight_decay": 0},
-            {"lr": 0.05, "eps": 1e-08, "weight_decay": 0},
             {"lr": 0.01, "eps": 1e-08, "weight_decay": 0},
-            {"lr": 0.5, "eps": 1e-08, "weight_decay": 0},
             {"lr": 0.1, "eps": 1e-08, "weight_decay": 0},
+            {"lr": 1, "eps": 1e-08, "weight_decay": 0},
         ]
         RV_scores = {"free_params": [], "scores": [], "accs": []}
 
@@ -190,8 +187,9 @@ class Danns2D:
             )
 
             # Get RV Loss
-            pred_y_task = self.predict(val_source_X)
-            acc_RV = sum(pred_y_task == val_source_y_task) / len(pred_y_task)
+            criterion = nn.BCELoss()
+            pred_y_task = self.predict_proba(val_source_X)
+            acc_RV = criterion(pred_y_task, val_source_y_task.to(torch.float32))
             RV_scores["free_params"].append(param)
             RV_scores["scores"].append(acc_RV.item())
 
@@ -207,8 +205,8 @@ class Danns2D:
             else:
                 self.do_early_stop = False
             self._fit(source_loader, target_loader, target_prime_loader, val_source_X, val_source_y_task)
-            pred_y_task = self.predict(test_target_prime_X)
-            acc = sum(pred_y_task == test_target_prime_y_task) / pred_y_task.shape[0]
+            pred_y_task = self.predict_proba(test_target_prime_X)
+            acc = criterion(pred_y_task, test_target_prime_y_task.to(torch.float32))
             RV_scores["accs"].append(acc.item())
         return RV_scores
 
@@ -238,4 +236,9 @@ class Danns2D:
     def predict(self, X):
         out = self.feature_extractor(X)
         out = self.task_classifier.predict(out)
+        return out
+
+    def predict_proba(self, X):
+        out = self.feature_extractor(X)
+        out = self.task_classifier.predict_proba(out)
         return out
