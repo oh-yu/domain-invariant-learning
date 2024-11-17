@@ -133,7 +133,7 @@ class Danns2D:
 
         free_params = [
             {"lr": lr, "eps": 1e-08, "weight_decay": 0}
-            for lr in np.linspace(0.01, 0.00001, 15)
+            for lr in np.linspace(0.01, 0.00001, 10)
         ]
         RV_scores = {"free_params": [], "scores": [], "accs": []}
 
@@ -217,8 +217,8 @@ class Danns2D:
 
         import pandas as pd
         df = pd.DataFrame()
-        df["RV_scores"] = RC_scores["scores"]
-        df["Accs"] = RC_scores["accs"]
+        df["RV_scores"] = RV_scores["scores"]
+        df["Accs"] = RV_scores["accs"]
         print(df.corr())
         df.to_csv("RVscores_vs_groundtruth.csv")
         return RV_scores
