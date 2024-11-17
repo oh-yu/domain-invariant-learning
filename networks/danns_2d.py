@@ -132,8 +132,14 @@ class Danns2D:
         train_source_loader, val_source_loader = utils.tensordataset_to_splitted_loaders(source_ds, self.batch_size)
 
         free_params = [
-            {"lr": lr, "eps": 1e-08, "weight_decay": 0}
-            for lr in np.linspace(0.01, 0.00001, 10)
+           {"lr": 0.00000001, "eps": 1e-08, "weight_decay": 0},
+           {"lr": 0.0000001, "eps": 1e-08, "weight_decay": 0},
+           {"lr": 0.000001, "eps": 1e-08, "weight_decay": 0},
+           {"lr": 0.00001, "eps": 1e-08, "weight_decay": 0},
+           {"lr": 0.0001, "eps": 1e-08, "weight_decay": 0},
+           {"lr": 0.001, "eps": 1e-08, "weight_decay": 0},
+           {"lr": 0.01, "eps": 1e-08, "weight_decay": 0},
+           {"lr": 0.1, "eps": 1e-08, "weight_decay": 0},
         ]
         RV_scores = {"free_params": [], "scores": [], "accs": []}
 
@@ -185,7 +191,7 @@ class Danns2D:
                 criterion = nn.BCELoss()
                 acc_RV = criterion(pred_y_task, val_source_y_task.to(torch.float32))
             else:
-                criterion = nn.CELoss()
+                criterion = nn.CrossEntropyLoss()
                 acc_RV = criterion(pred_y_task, val_source_y_task.to(torch.long))
             RV_scores["free_params"].append(param)
             RV_scores["scores"].append(acc_RV.item())
