@@ -80,6 +80,7 @@ class danns_base(ABC):
             self.is_target_weights = False
             self.batch_size = 64
             self.experiment = experiment
+            self.do_early_stop = False
 
 
     def fit(
