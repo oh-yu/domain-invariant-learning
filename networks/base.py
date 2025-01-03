@@ -70,15 +70,16 @@ class danns_base(ABC):
             self.domain_classifier = ThreeLayersDecoder(input_size=1152, output_size=1, fc1_size=1024, fc2_size=1024).to(
                 self.device
             )
-            self.domain_criterion = nn.BCELoss()
+            self.criterion = nn.BCELoss()
 
             self.feature_optimizer = optim.Adam(self.feature_extractor.parameters(), lr=1e-4)
             self.domain_optimizer = optim.Adam(self.domain_classifier.parameters(), lr=1e-4)
             self.task_optimizer = optim.Adam(self.task_classifier.parameters(), lr=1e-4)
-            self.num_ecochs = 100
+            self.num_epochs = 100
 
             self.is_target_weights = False
             self.batch_size = 64
+            self.experiment = experiment
 
 
     def fit(
