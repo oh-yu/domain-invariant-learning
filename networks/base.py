@@ -7,10 +7,6 @@ from torch.utils.data import DataLoader, TensorDataset
 
 from ..algo import coral_algo, dann_algo, jdot_algo, supervised_algo
 from ..utils import utils
-from .conv1d_three_layers import Conv1dThreeLayers
-from .conv1d_two_layers import Conv1dTwoLayers
-from .conv2d import Conv2d
-from .mlp_decoder_three_layers import ThreeLayersDecoder
 
 
 FLAGS = flags.FLAGS
