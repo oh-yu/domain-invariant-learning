@@ -253,4 +253,39 @@ class DannsBase(ABC):
         self.feature_extractor.eval()
 
 
-class SupervisedBase
+class SupervisedBase:
+    def __init__(self):
+        pass
+    def fit_without_adapt(self, source_loader):
+        data = {"loader": source_loader}
+        network = {
+            "decoder": self.decoder,
+            "encoder": self.encoder,
+            "optimizer": self.optimizer,
+            "criterion": self.criterion,
+        }
+        config = {"use_source_loader": True, "num_epochs": self.num_epochs}
+        supervised_algo.fit(data, network, **config)
+
+    def fit_on_target(self, train_target_prime_loader):
+        data = {"loader": train_target_prime_loader}
+        network = {
+            "decoder": self.decoder,
+            "encoder": self.encoder,
+            "optimizer": self.optimizer,
+            "criterion": self.criterion,
+        }
+        config = {
+            "use_source_loader": False,
+            "num_epochs": self.num_epochs,
+        }
+        supervised_algo.fit(data, network, **config)
+
+    def forward(self, x):
+        return self.decoder(self.encoder(x))
+
+    def predict(self, x):
+        return self.decoder.predict(self.encoder(x))
+
+    def predict_proba(self, x):
+        return self.decoder.predict_proba(self.encoder(x))
