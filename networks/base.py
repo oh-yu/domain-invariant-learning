@@ -5,7 +5,7 @@ import torch
 from torch import nn, optim
 from torch.utils.data import DataLoader, TensorDataset
 
-from ..algo import coral_algo, dann_algo, jdot_algo
+from ..algo import coral_algo, dann_algo, jdot_algo, supervised_algo
 from ..utils import utils
 from .conv1d_three_layers import Conv1dThreeLayers
 from .conv1d_two_layers import Conv1dTwoLayers
@@ -253,9 +253,9 @@ class DannsBase(ABC):
         self.feature_extractor.eval()
 
 
-class SupervisedBase:
+class SupervisedBase(nn.Module):
     def __init__(self):
-        pass
+        super().__init__()
     def fit_without_adapt(self, source_loader):
         data = {"loader": source_loader}
         network = {

@@ -7,7 +7,7 @@ from .mlp_decoder_three_layers import ThreeLayersDecoder
 from .base import SupervisedBase
 
 
-class Dann_F_C(nn.Module, SupervisedBase):
+class Dann_F_C(SupervisedBase):
     def __init__(self):
         super().__init__()
         self.device = torch.device("cpu")
