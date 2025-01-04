@@ -15,7 +15,7 @@ class CoDATS_F_C(nn.Module, SupervisedBase):
         super().__init__()
         assert experiment in ["ECOdataset", "ECOdataset_synthetic", "HHAR"]
         if experiment in ["ECOdataset", "ECOdataset_synthetic"]:
-            self.conv1d = Conv1dTwoLayers(input_size=3).to(DEVICE)
+            self.encoder = Conv1dTwoLayers(input_size=3).to(DEVICE)
             self.decoder = ThreeLayersDecoder(
                 input_size=128, output_size=1, dropout_ratio=0, fc1_size=50, fc2_size=10
             ).to(DEVICE)
@@ -24,7 +24,7 @@ class CoDATS_F_C(nn.Module, SupervisedBase):
             self.num_epochs = 300
 
         elif experiment == "HHAR":
-            self.conv1d = Conv1dThreeLayers(input_size=6).to(DEVICE)
+            self.encoder = Conv1dThreeLayers(input_size=6).to(DEVICE)
             self.decoder = ThreeLayersDecoder(input_size=128, output_size=6, dropout_ratio=0.3).to(DEVICE)
             self.optimizer = optim.Adam(list(self.conv1d.parameters()) + list(self.decoder.parameters()), lr=1e-4)
             self.criterion = nn.CrossEntropyLoss()
