@@ -7,7 +7,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from torch.utils.data import DataLoader, TensorDataset
 
-from ...networks import Codats, CoDATS_F_C, Danns2D, IsihDanns
+from ...networks import Codats, CoDATS_F_C, Danns2D, IsihDanns, Rdann
 from ...utils import utils
 
 GT_TO_INT = {"bike": 0, "stairsup": 1, "stairsdown": 2, "stand": 3, "walk": 4, "sit": 5}
@@ -221,6 +221,7 @@ def codats(pattern):
     test_target_prime_y_task = test_target_prime_y_task.to(utils.DEVICE)
 
     codats = Codats(experiment="HHAR")
+    # codats = Rdann(experiment="HHAR")
     acc = codats.fit(source_ds, target_ds, test_target_prime_X, test_target_prime_y_task)
     return acc
 

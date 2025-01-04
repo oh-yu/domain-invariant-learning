@@ -10,3 +10,4 @@ from .isih_DA import IsihDanns
 from .mlp_decoder_one_layer import OneLayerDecoder
 from .mlp_decoder_three_layers import ThreeLayersDecoder
 from .mlp_encoder import Encoder
+from .rdann import Rdann

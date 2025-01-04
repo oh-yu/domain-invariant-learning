@@ -1,11 +1,12 @@
 import torch
-from rnn import ManyToOneRNN
+from .rnn import ManyToOneRNN
 from torch import nn, optim
 
-from networks.mlp_decoder_three_layers import ThreeLayersDecoder
+from .mlp_decoder_three_layers import ThreeLayersDecoder
 from ..algo import dann_algo
 from .base import DannsBase
 from ..utils import utils
+
 
 class Rdann(DannsBase):
     """
@@ -20,10 +21,15 @@ class Rdann(DannsBase):
                 utils.DEVICE
             )
             self.domain_classifier = ThreeLayersDecoder(input_size=128, output_size=1).to(utils.DEVICE)
-            self.task_classifier = ThreeLayersDecoder(input_size=128, output_size=10).to(utils.DEVICE)
+            self.task_classifier = ThreeLayersDecoder(input_size=128, output_size=6).to(utils.DEVICE)
             self.criterion = nn.BCELoss()
 
             self.feature_optimizer = optim.Adam(self.feature_extractor.parameters(), lr=1e-3)
             self.domain_optimizer = optim.Adam(self.domain_classifier.parameters(), lr=1e-3)
             self.task_optimizer = optim.Adam(self.task_classifier.parameters(), lr=1e-3)
-            self.num_epochs = 100
+            self.num_epochs = 300
+            self.batch_size = 128
+            self.do_early_stop = False
+            self.is_target_weights = True
+            self.experiment = experiment
+            self.device = utils.DEVICE
