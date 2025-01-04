@@ -1,6 +1,6 @@
-from .base import danns_base
+from .base import DannsBase
 
-class Codats(danns_base):
+class Codats(DannsBase):
     """
     CoDATS model https://arxiv.org/abs/2005.10996
     """

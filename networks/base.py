@@ -21,7 +21,7 @@ ALGORYTHMS = {
 }
 
 
-class danns_base(ABC):
+class DannsBase(ABC):
     def __init__(self, experiment: str) -> None:
         assert experiment in ["ECOdataset", "ECOdataset_synthetic", "HHAR", "MNIST"]
         if experiment in ["ECOdataset", "ECOdataset_synthetic"]:
@@ -251,3 +251,6 @@ class danns_base(ABC):
     def set_eval(self):
         self.task_classifier.eval()
         self.feature_extractor.eval()
+
+
+class SupervisedBase
