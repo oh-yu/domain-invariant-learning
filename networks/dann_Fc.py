@@ -36,8 +36,7 @@ class Dann_F_C(nn.Module):
             "criterion": self.criterion,
         }
         config = {
-            "use_source_loader": True,
-            # Note: train_data = CustomUDADataset(train_data, "source")
+            "use_source_loader": False,
             "num_epochs": self.num_epochs,
         }
         supervised_algo.fit(data, network, **config)
