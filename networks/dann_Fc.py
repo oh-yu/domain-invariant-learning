@@ -13,6 +13,6 @@ class Dann_F_C(SupervisedBase):
         self.device = torch.device("cpu")
         self.encoder = Conv2d().to(self.device)
         self.decoder = ThreeLayersDecoder(input_size=1152, output_size=10, fc1_size=3072, fc2_size=2048).to(self.device)
-        self.optimizer = optim.Adam(list(self.conv2d.parameters()) + list(self.decoder.parameters()), lr=1e-4)
+        self.optimizer = optim.Adam(list(self.encoder.parameters()) + list(self.decoder.parameters()), lr=1e-4)
         self.criterion = nn.CrossEntropyLoss()
         self.num_epochs = 10
