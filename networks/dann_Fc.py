@@ -2,9 +2,9 @@ import torch
 from torch import nn, optim
 
 from ..algo import supervised_algo
+from .base import SupervisedBase
 from .conv2d import Conv2d
 from .mlp_decoder_three_layers import ThreeLayersDecoder
-from .base import SupervisedBase
 
 
 class Dann_F_C(SupervisedBase):

@@ -1,11 +1,11 @@
 import torch
-from .rnn import ManyToOneRNN
 from torch import nn, optim
 
-from .mlp_decoder_three_layers import ThreeLayersDecoder
 from ..algo import dann_algo
-from .base import DannsBase
 from ..utils import utils
+from .base import DannsBase
+from .mlp_decoder_three_layers import ThreeLayersDecoder
+from .rnn import ManyToOneRNN
 
 
 class Rdann(DannsBase):

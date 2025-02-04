@@ -4,7 +4,7 @@ from absl import flags
 from torch import nn, optim
 from torch.utils.data import DataLoader, TensorDataset
 
-from ..algo import dann2D_algo, coral2D_algo, jdot2D_algo
+from ..algo import coral2D_algo, dann2D_algo, jdot2D_algo
 from ..utils import utils
 from .conv1d_three_layers import Conv1dThreeLayers
 from .conv1d_two_layers import Conv1dTwoLayers

@@ -1,9 +1,9 @@
 import torch
 from torch import nn, optim
 
+from .base import DannsBase
 from .conv2d import Conv2d
 from .mlp_decoder_three_layers import ThreeLayersDecoder
-from .base import DannsBase
 
 
 class Dann(DannsBase):

@@ -1,13 +1,13 @@
 from abc import ABC, abstractmethod
-from absl import flags
+
 import numpy as np
 import torch
+from absl import flags
 from torch import nn, optim
 from torch.utils.data import DataLoader, TensorDataset
 
 from ..algo import coral_algo, dann_algo, jdot_algo, supervised_algo
 from ..utils import utils
-
 
 FLAGS = flags.FLAGS
 ALGORYTHMS = {"DANN": dann_algo, "CoRAL": coral_algo, "JDOT": jdot_algo}
