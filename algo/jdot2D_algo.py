@@ -24,7 +24,7 @@ def fit(data, network, **kwargs):
         data["target_prime_loader"],
     )
     target_prime_X, target_prime_y_task = data["target_prime_X"], data["target_prime_y_task"]
-    feature_extractor, task_classifier  = (
+    feature_extractor, task_classifier = (
         network["feature_extractor"],
         network["task_classifier"],
     )
@@ -56,7 +56,9 @@ def fit(data, network, **kwargs):
         feature_extractor.train()
         task_classifier.train()
         # batch_training
-        for (source_X_batch, source_Y_batch), (target_X_batch, _), (target_prime_X_batch, _) in zip(source_loader, target_loader, target_prime_loader):
+        for (source_X_batch, source_Y_batch), (target_X_batch, _), (target_prime_X_batch, _) in zip(
+            source_loader, target_loader, target_prime_loader
+        ):
             # 0. Data
             if task_classifier.output_size == 1:
                 source_y_task_batch = source_Y_batch[:, utils.COL_IDX_TASK] > 0.5
@@ -64,7 +66,7 @@ def fit(data, network, **kwargs):
             else:
                 source_y_task_batch = source_Y_batch[:, utils.COL_IDX_TASK]
                 source_y_task_batch = source_y_task_batch.to(torch.long)
-            
+
             # 1. Forward
             # 1.1 Feature Extractor
             source_X_batch = feature_extractor(source_X_batch)
@@ -78,44 +80,74 @@ def fit(data, network, **kwargs):
             # 1.3 Optimal Transport
             ## 1.3.1 Dim1
             loss_domain_mat_dim1 = torch.cdist(target_X_batch, source_X_batch, p=2).to("cpu")
-            criterion_pseudo = nn.CrossEntropyLoss(reduction='none')
+            criterion_pseudo = nn.CrossEntropyLoss(reduction="none")
             if task_classifier.output_size == 1:
-                pred_target_y_task = torch.cat([(1-pred_target_y_task).reshape(-1, 1), pred_target_y_task.reshape(-1, 1)], dim=1)
+                pred_target_y_task = torch.cat(
+                    [(1 - pred_target_y_task).reshape(-1, 1), pred_target_y_task.reshape(-1, 1)], dim=1
+                )
             num_classes = pred_target_y_task.shape[1]
             pred_target_y_task = pred_target_y_task.unsqueeze(0).expand(len(source_y_task_batch), -1, -1)
             source_y_task_batch_expanded = source_y_task_batch.unsqueeze(1).expand(-1, pred_target_y_task.shape[1])
-            loss_pseudo_task_mat_dim1 = criterion_pseudo(pred_target_y_task.reshape(-1, num_classes), source_y_task_batch_expanded.reshape(-1).to(torch.long)).reshape(len(source_y_task_batch_expanded), pred_target_y_task.shape[1]).T
+            loss_pseudo_task_mat_dim1 = (
+                criterion_pseudo(
+                    pred_target_y_task.reshape(-1, num_classes), source_y_task_batch_expanded.reshape(-1).to(torch.long)
+                )
+                .reshape(len(source_y_task_batch_expanded), pred_target_y_task.shape[1])
+                .T
+            )
             loss_pseudo_task_mat_dim1 = loss_pseudo_task_mat_dim1.to("cpu")
             cost_mat_dim1 = loss_domain_mat_dim1 + loss_pseudo_task_mat_dim1
-            optimal_transport_weights_dim1 = ot.emd(torch.ones(len(target_X_batch)) / len(target_X_batch), torch.ones(len(source_X_batch)) / len(source_X_batch), cost_mat_dim1)
+            optimal_transport_weights_dim1 = ot.emd(
+                torch.ones(len(target_X_batch)) / len(target_X_batch),
+                torch.ones(len(source_X_batch)) / len(source_X_batch),
+                cost_mat_dim1,
+            )
 
             ## 1.3.2 Dim2
             loss_domain_mat_dim2 = torch.cdist(target_prime_X_batch, target_X_batch, p=2).to("cpu")
             if task_classifier.output_size == 1:
-                pred_target_prime_y_task = torch.cat([(1-pred_target_prime_y_task).reshape(-1, 1), pred_target_prime_y_task.reshape(-1, 1)], dim=1)
+                pred_target_prime_y_task = torch.cat(
+                    [(1 - pred_target_prime_y_task).reshape(-1, 1), pred_target_prime_y_task.reshape(-1, 1)], dim=1
+                )
             pred_target_prime_y_task = pred_target_prime_y_task.unsqueeze(0).expand(len(source_y_task_batch), -1, -1)
-            source_y_task_batch_expanded = source_y_task_batch.unsqueeze(1).expand(-1, pred_target_prime_y_task.shape[1])
-            loss_pseudo_task_mat_dim2 = criterion_pseudo(pred_target_prime_y_task.reshape(-1, num_classes), source_y_task_batch_expanded.reshape(-1).to(torch.long)).reshape(len(source_y_task_batch_expanded), pred_target_prime_y_task.shape[1]).T
+            source_y_task_batch_expanded = source_y_task_batch.unsqueeze(1).expand(
+                -1, pred_target_prime_y_task.shape[1]
+            )
+            loss_pseudo_task_mat_dim2 = (
+                criterion_pseudo(
+                    pred_target_prime_y_task.reshape(-1, num_classes),
+                    source_y_task_batch_expanded.reshape(-1).to(torch.long),
+                )
+                .reshape(len(source_y_task_batch_expanded), pred_target_prime_y_task.shape[1])
+                .T
+            )
             if target_X_batch.shape[0] <= source_X_batch.shape[0]:
-                loss_pseudo_task_mat_dim2 = loss_pseudo_task_mat_dim2.to("cpu")[:, :loss_domain_mat_dim2.shape[1]]
+                loss_pseudo_task_mat_dim2 = loss_pseudo_task_mat_dim2.to("cpu")[:, : loss_domain_mat_dim2.shape[1]]
                 cost_mat_dim2 = loss_domain_mat_dim2 + loss_pseudo_task_mat_dim2
-                optimal_transport_weights_dim2 = ot.emd(torch.ones(len(target_prime_X_batch)) / len(target_prime_X_batch), torch.ones(len(target_X_batch)) / len(target_X_batch), cost_mat_dim2)
+                optimal_transport_weights_dim2 = ot.emd(
+                    torch.ones(len(target_prime_X_batch)) / len(target_prime_X_batch),
+                    torch.ones(len(target_X_batch)) / len(target_X_batch),
+                    cost_mat_dim2,
+                )
 
             else:
-                loss_domain_mat_dim2 = loss_domain_mat_dim2[:, :source_X_batch.shape[0]]
+                loss_domain_mat_dim2 = loss_domain_mat_dim2[:, : source_X_batch.shape[0]]
                 loss_pseudo_task_mat_dim2 = loss_pseudo_task_mat_dim2.to("cpu")
                 cost_mat_dim2 = loss_domain_mat_dim2 + loss_pseudo_task_mat_dim2
-                optimal_transport_weights_dim2 = ot.emd(torch.ones(len(target_prime_X_batch)) / len(target_prime_X_batch), torch.ones(len(source_X_batch)) / len(source_X_batch), cost_mat_dim2)
-
+                optimal_transport_weights_dim2 = ot.emd(
+                    torch.ones(len(target_prime_X_batch)) / len(target_prime_X_batch),
+                    torch.ones(len(source_X_batch)) / len(source_X_batch),
+                    cost_mat_dim2,
+                )
 
             # 1.4 Align Loss
-            loss_domain = torch.mean(optimal_transport_weights_dim1*loss_domain_mat_dim1)
-            loss_domain += torch.mean(optimal_transport_weights_dim2*loss_domain_mat_dim2)
+            loss_domain = torch.mean(optimal_transport_weights_dim1 * loss_domain_mat_dim1)
+            loss_domain += torch.mean(optimal_transport_weights_dim2 * loss_domain_mat_dim2)
             loss_domains.append(loss_domain.item())
 
             # 1.5 Task Loss
-            loss_pseudo_task = torch.mean(optimal_transport_weights_dim1*loss_pseudo_task_mat_dim1)
-            loss_pseudo_task += torch.mean(optimal_transport_weights_dim2*loss_pseudo_task_mat_dim2)
+            loss_pseudo_task = torch.mean(optimal_transport_weights_dim1 * loss_pseudo_task_mat_dim1)
+            loss_pseudo_task += torch.mean(optimal_transport_weights_dim2 * loss_pseudo_task_mat_dim2)
             loss_pseudo_tasks.append(loss_pseudo_task.item())
 
             if task_classifier.output_size == 1:
@@ -128,9 +160,9 @@ def fit(data, network, **kwargs):
                 loss_task = loss_task
                 loss_task = loss_task.mean()
                 loss_tasks.append(loss_task.item())
-            
+
             # 2. Backward
-            loss = loss_task + scheduler*loss_domain + loss_pseudo_task
+            loss = loss_task + scheduler * loss_domain + loss_pseudo_task
             feature_optimizer.zero_grad()
             task_classifier.zero_grad()
             loss.backward()
@@ -139,7 +171,6 @@ def fit(data, network, **kwargs):
             feature_optimizer.step()
             task_optimizer.step()
 
-        
         # 4. Eval
         feature_extractor.eval()
         task_classifier.eval()
@@ -151,7 +182,9 @@ def fit(data, network, **kwargs):
         loss_task_evals.append(acc.item())
         if early_stopping.early_stop & do_early_stop:
             break
-        print(f"Epoch: {epoch}, Loss Domain: {loss_domain}, Loss Task: {loss_task}, Loss Pseudo Task: {loss_pseudo_task}, Acc: {acc}")
+        print(
+            f"Epoch: {epoch}, Loss Domain: {loss_domain}, Loss Task: {loss_task}, Loss Pseudo Task: {loss_pseudo_task}, Acc: {acc}"
+        )
     if do_plot:
         plt.figure()
         plt.plot(loss_domains, label="loss_domain")

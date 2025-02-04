@@ -13,11 +13,7 @@ from .mlp_decoder_three_layers import ThreeLayersDecoder
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 FLAGS = flags.FLAGS
-ALGORYTHMS = {
-    "DANN": dann_algo,
-    "CoRAL": coral_algo,
-    "JDOT": jdot_algo
-}
+ALGORYTHMS = {"DANN": dann_algo, "CoRAL": coral_algo, "JDOT": jdot_algo}
 
 
 class IsihDanns:

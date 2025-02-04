@@ -10,11 +10,7 @@ from ..utils import utils
 
 
 FLAGS = flags.FLAGS
-ALGORYTHMS = {
-    "DANN": dann_algo,
-    "CoRAL": coral_algo,
-    "JDOT": jdot_algo
-}
+ALGORYTHMS = {"DANN": dann_algo, "CoRAL": coral_algo, "JDOT": jdot_algo}
 
 
 class DannsBase(ABC):
@@ -38,7 +34,6 @@ class DannsBase(ABC):
             pred_y_task = self.predict(test_target_X)
             acc = sum(pred_y_task == test_target_y_task) / len(pred_y_task)
             return acc.item()
-
 
     def _fit_RV(
         self,
@@ -129,7 +124,6 @@ class DannsBase(ABC):
         acc = sum(pred_y_task == test_target_y_task) / test_target_y_task.shape[0]
         return acc.item()
 
-
     def _fit(
         self,
         source_loader: torch.utils.data.dataloader.DataLoader,
@@ -157,7 +151,7 @@ class DannsBase(ABC):
                 "num_epochs": self.num_epochs,
                 "is_target_weights": self.is_target_weights,
                 "do_early_stop": self.do_early_stop,
-                "device": self.device
+                "device": self.device,
             }
         elif FLAGS.algo_name == "CoRAL":
             network = {
@@ -174,11 +168,10 @@ class DannsBase(ABC):
                 "task_classifier": self.task_classifier,
                 "criterion": self.criterion,
                 "feature_optimizer": self.feature_optimizer,
-                "task_optimizer": self.task_optimizer, 
+                "task_optimizer": self.task_optimizer,
             }
             config = {"num_epochs": self.num_epochs, "do_early_stop": self.do_early_stop, "device": self.device}
         self.feature_extractor, self.task_classifier, _ = ALGORYTHMS[FLAGS.algo_name].fit(data, network, **config)
-
 
     def predict(self, x: torch.Tensor) -> torch.Tensor:
         return self.task_classifier.predict(self.feature_extractor(x))
@@ -194,6 +187,7 @@ class DannsBase(ABC):
 class SupervisedBase(nn.Module):
     def __init__(self):
         super().__init__()
+
     def fit_without_adapt(self, source_loader):
         data = {"loader": source_loader}
         network = {

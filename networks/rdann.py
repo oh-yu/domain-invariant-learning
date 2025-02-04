@@ -13,13 +13,9 @@ class Rdann(DannsBase):
     R-DANN model https://browse.arxiv.org/pdf/2005.10996.pdf
     """
 
-    def __init__(
-        self, experiment: str
-    ) -> None:
+    def __init__(self, experiment: str) -> None:
         if experiment == "HHAR":
-            self.feature_extractor = ManyToOneRNN(input_size=6, hidden_size=128, num_layers=3).to(
-                utils.DEVICE
-            )
+            self.feature_extractor = ManyToOneRNN(input_size=6, hidden_size=128, num_layers=3).to(utils.DEVICE)
             self.domain_classifier = ThreeLayersDecoder(input_size=128, output_size=1).to(utils.DEVICE)
             self.task_classifier = ThreeLayersDecoder(input_size=128, output_size=6).to(utils.DEVICE)
             self.criterion = nn.BCELoss()

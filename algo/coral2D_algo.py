@@ -9,6 +9,7 @@ from ..utils import utils
 from .algo_utils import EarlyStopping
 from .coral_algo import get_covariance_matrix, get_MSE, plot_coral_loss
 
+
 def fit(data, network, **kwargs):
     # Args
     source_loader, target_loader, target_prime_loader = (
@@ -17,7 +18,7 @@ def fit(data, network, **kwargs):
         data["target_prime_loader"],
     )
     target_prime_X, target_prime_y_task = data["target_prime_X"], data["target_prime_y_task"]
-    feature_extractor, task_classifier  = (
+    feature_extractor, task_classifier = (
         network["feature_extractor"],
         network["task_classifier"],
     )
@@ -49,14 +50,16 @@ def fit(data, network, **kwargs):
         task_classifier.train()
         feature_extractor.train()
 
-        for (source_X_batch, source_Y_batch), (target_X_batch, _), (target_prime_X_batch, _) in zip(source_loader, target_loader, target_prime_loader):
+        for (source_X_batch, source_Y_batch), (target_X_batch, _), (target_prime_X_batch, _) in zip(
+            source_loader, target_loader, target_prime_loader
+        ):
             if task_classifier.output_size == 1:
                 source_y_task_batch = source_Y_batch[:, utils.COL_IDX_TASK]
                 source_y_task_batch = source_y_task_batch.to(torch.float32)
             else:
                 source_y_task_batch = source_Y_batch[:, utils.COL_IDX_TASK]
                 source_y_task_batch = source_y_task_batch.to(torch.long)
-            
+
             # 1. Forward
             source_X_batch = feature_extractor(source_X_batch)
             target_X_batch = feature_extractor(target_X_batch)

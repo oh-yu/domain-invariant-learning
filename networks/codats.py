@@ -6,6 +6,7 @@ from .conv1d_two_layers import Conv1dTwoLayers
 from .mlp_decoder_three_layers import ThreeLayersDecoder
 from ..utils import utils
 
+
 class Codats(DannsBase):
     """
     CoDATS model https://arxiv.org/abs/2005.10996
@@ -35,7 +36,9 @@ class Codats(DannsBase):
         elif experiment == "HHAR":
             self.device = utils.DEVICE
             self.feature_extractor = Conv1dThreeLayers(input_size=6).to(self.device)
-            self.domain_classifier = ThreeLayersDecoder(input_size=128, output_size=1, dropout_ratio=0.3).to(self.device)
+            self.domain_classifier = ThreeLayersDecoder(input_size=128, output_size=1, dropout_ratio=0.3).to(
+                self.device
+            )
             self.task_classifier = ThreeLayersDecoder(input_size=128, output_size=6, dropout_ratio=0.3).to(self.device)
 
             self.criterion = nn.BCELoss()

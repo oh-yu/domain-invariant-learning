@@ -76,16 +76,10 @@ def fit(data, network, **kwargs):
             break
         if is_changing_lr:
             feature_optimizer, task_optimizer = _change_lr_during_jdot_training(
-                feature_optimizer,
-                task_optimizer,
-                epoch,
-                epoch_thr=epoch_thr_for_changing_lr,
-                changed_lrs=changed_lrs,
+                feature_optimizer, task_optimizer, epoch, epoch_thr=epoch_thr_for_changing_lr, changed_lrs=changed_lrs,
             )
         # batch_training
-        for (source_X_batch, source_Y_batch), (target_X_batch, _) in zip(
-            source_loader, target_loader
-        ):
+        for (source_X_batch, source_Y_batch), (target_X_batch, _) in zip(source_loader, target_loader):
             # 0. Data
             if task_classifier.output_size == 1:
                 source_y_task_batch = source_Y_batch[:, utils.COL_IDX_TASK] > 0.5
@@ -114,24 +108,36 @@ def fit(data, network, **kwargs):
             # 1.3 Optimal Transport
             loss_domain_mat = torch.cdist(target_X_batch, source_X_batch, p=2).to("cpu")
 
-            criterion_pseudo = nn.CrossEntropyLoss(reduction='none')
+            criterion_pseudo = nn.CrossEntropyLoss(reduction="none")
             if task_classifier.output_size == 1:
-                pred_target_y_task = torch.cat([(1-pred_target_y_task).reshape(-1, 1), pred_target_y_task.reshape(-1, 1)], dim=1)
+                pred_target_y_task = torch.cat(
+                    [(1 - pred_target_y_task).reshape(-1, 1), pred_target_y_task.reshape(-1, 1)], dim=1
+                )
             num_classes = pred_target_y_task.shape[1]
             pred_target_y_task = pred_target_y_task.unsqueeze(0).expand(len(source_y_task_batch), -1, -1)
             source_y_task_batch_expanded = source_y_task_batch.unsqueeze(1).expand(-1, pred_target_y_task.shape[1])
-            loss_pseudo_task_mat = criterion_pseudo(pred_target_y_task.reshape(-1, num_classes), source_y_task_batch_expanded.reshape(-1).to(torch.long)).reshape(len(source_y_task_batch_expanded), pred_target_y_task.shape[1]).T
+            loss_pseudo_task_mat = (
+                criterion_pseudo(
+                    pred_target_y_task.reshape(-1, num_classes), source_y_task_batch_expanded.reshape(-1).to(torch.long)
+                )
+                .reshape(len(source_y_task_batch_expanded), pred_target_y_task.shape[1])
+                .T
+            )
             loss_pseudo_task_mat = loss_pseudo_task_mat.to("cpu")
 
             cost_mat = loss_domain_mat + loss_pseudo_task_mat
-            optimal_transport_weights = ot.emd(torch.ones(len(target_X_batch)) / len(target_X_batch), torch.ones(len(source_X_batch)) / len(source_X_batch), cost_mat)
+            optimal_transport_weights = ot.emd(
+                torch.ones(len(target_X_batch)) / len(target_X_batch),
+                torch.ones(len(source_X_batch)) / len(source_X_batch),
+                cost_mat,
+            )
 
             # 1.4 Align Loss
-            loss_domain = torch.mean(optimal_transport_weights*loss_domain_mat)
+            loss_domain = torch.mean(optimal_transport_weights * loss_domain_mat)
             loss_domains.append(loss_domain.item())
 
             # 1.5 Task Loss
-            loss_pseudo_task = torch.mean(optimal_transport_weights*loss_pseudo_task_mat)
+            loss_pseudo_task = torch.mean(optimal_transport_weights * loss_pseudo_task_mat)
             loss_pseudo_tasks.append(loss_pseudo_task.item())
             if task_classifier.output_size == 1:
                 criterion_weight = nn.BCELoss(weight=weights.detach())
@@ -143,9 +149,9 @@ def fit(data, network, **kwargs):
                 loss_task = loss_task * weights
                 loss_task = loss_task.mean()
                 loss_tasks.append(loss_task.item())
-            
+
             # 2. Backward
-            loss = loss_task + scheduler*loss_domain + loss_pseudo_task
+            loss = loss_task + scheduler * loss_domain + loss_pseudo_task
             feature_optimizer.zero_grad()
             task_optimizer.zero_grad()
             loss.backward()
@@ -163,12 +169,20 @@ def fit(data, network, **kwargs):
         loss_task_evals.append(acc.item())
         if early_stopping.early_stop & do_early_stop:
             break
-        print(f"Epoch: {epoch}, Loss Domain: {loss_domain}, Loss Task: {loss_task}, Loss Pseudo Task: {loss_pseudo_task}, Acc: {acc}")
+        print(
+            f"Epoch: {epoch}, Loss Domain: {loss_domain}, Loss Task: {loss_task}, Loss Pseudo Task: {loss_pseudo_task}, Acc: {acc}"
+        )
     _plot_jdot_loss(do_plot, loss_domains, loss_pseudo_tasks, loss_tasks, loss_task_evals)
     return feature_extractor, task_classifier, loss_task_evals
 
 
-def _plot_jdot_loss(do_plot: bool, loss_domains: List[float], loss_pseudo_tasks: List[float], loss_tasks: List[float], loss_task_evals: List[float]) -> None:
+def _plot_jdot_loss(
+    do_plot: bool,
+    loss_domains: List[float],
+    loss_pseudo_tasks: List[float],
+    loss_tasks: List[float],
+    loss_task_evals: List[float],
+) -> None:
     """
     plot losses
     """

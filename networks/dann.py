@@ -5,6 +5,7 @@ from .conv2d import Conv2d
 from .mlp_decoder_three_layers import ThreeLayersDecoder
 from .base import DannsBase
 
+
 class Dann(DannsBase):
     def __init__(self, experiment="MNIST"):
         if experiment == "MNIST":
@@ -14,9 +15,9 @@ class Dann(DannsBase):
             self.task_classifier = ThreeLayersDecoder(input_size=1152, output_size=10, fc1_size=3072, fc2_size=2048).to(
                 self.device
             )
-            self.domain_classifier = ThreeLayersDecoder(input_size=1152, output_size=1, fc1_size=1024, fc2_size=1024).to(
-                self.device
-            )
+            self.domain_classifier = ThreeLayersDecoder(
+                input_size=1152, output_size=1, fc1_size=1024, fc2_size=1024
+            ).to(self.device)
             self.criterion = nn.BCELoss()
 
             self.feature_optimizer = optim.Adam(self.feature_extractor.parameters(), lr=1e-4)

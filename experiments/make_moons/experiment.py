@@ -18,11 +18,7 @@ flags.mark_flag_as_required("rotation_degree")
 flags.mark_flag_as_required("algo_name")
 
 
-ALGORYTHMS = {
-    "DANN": dann_algo,
-    "CoRAL": coral_algo,
-    "JDOT": jdot_algo
-}
+ALGORYTHMS = {"DANN": dann_algo, "CoRAL": coral_algo, "JDOT": jdot_algo}
 
 
 def main(argv):
@@ -262,7 +258,7 @@ def main(argv):
             "feature_optimizer": feature_optimizer_dim1,
         }
         config = {"num_epochs": 200, "alpha": 1, "do_plot": True}
-    
+
     elif FLAGS.algo_name == "JDOT":
         network = {
             "feature_extractor": feature_extractor_dim12,
@@ -315,7 +311,7 @@ def main(argv):
             "feature_optimizer": feature_optimizer_dim2,
         }
         config = {"num_epochs": 800, "alpha": 1, "is_psuedo_weights": True, "do_plot": True}
-    
+
     elif FLAGS.algo_name == "JDOT":
         feature_extractor_dim12 = Encoder(input_size=source_X.shape[1], output_size=hidden_size).to(device)
         network = {
@@ -325,11 +321,7 @@ def main(argv):
             "feature_optimizer": feature_optimizer_dim2,
             "task_optimizer": task_optimizer_dim2,
         }
-        config = {
-            "num_epochs": 1000,
-            "do_plot": True,
-            "is_pseudo_weights": True
-        }
+        config = {"num_epochs": 1000, "do_plot": True, "is_pseudo_weights": True}
     feature_extractor_dim12, task_classifier_dim2, _ = ALGORYTHMS[FLAGS.algo_name].fit(data, network, **config)
 
     ## Eval
@@ -360,20 +352,17 @@ def main(argv):
         input_size=hidden_size, output_size=num_classes, dropout_ratio=0, fc1_size=50, fc2_size=10
     ).to(device)
 
-    optimizer = optim.Adam(list(task_classifier.parameters())+list(feature_extractor_withoutadapt.parameters()), lr=learning_rate)
-    data = {
-        "loader": source_loader
-    }
+    optimizer = optim.Adam(
+        list(task_classifier.parameters()) + list(feature_extractor_withoutadapt.parameters()), lr=learning_rate
+    )
+    data = {"loader": source_loader}
     network = {
         "decoder": task_classifier,
         "encoder": feature_extractor_withoutadapt,
         "optimizer": optimizer,
-        "criterion": criterion
+        "criterion": criterion,
     }
-    config = {
-        "use_source_loader": True,
-        "num_epochs": 1000
-    }
+    config = {"use_source_loader": True, "num_epochs": 1000}
     task_classifier, feature_extractor_withoutadapt = supervised_algo.fit(data, network, **config)
     pred_y_task = task_classifier(feature_extractor_withoutadapt(target_prime_X.to(device)))
     pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
@@ -400,22 +389,19 @@ def main(argv):
     task_classifier = ThreeLayersDecoder(
         input_size=hidden_size, output_size=num_classes, dropout_ratio=0, fc1_size=50, fc2_size=10
     ).to(device)
-    optimizer = optim.Adam(list(task_classifier.parameters())+list(feature_extractor_trainontarget.parameters()), lr=learning_rate)
+    optimizer = optim.Adam(
+        list(task_classifier.parameters()) + list(feature_extractor_trainontarget.parameters()), lr=learning_rate
+    )
     target_prime_ds = TensorDataset(target_prime_X.to(device), target_prime_y_task)
     target_prime_loader = DataLoader(target_prime_ds, batch_size=34)
-    data = {
-        "loader": target_prime_loader
-    }
+    data = {"loader": target_prime_loader}
     network = {
         "decoder": task_classifier,
         "encoder": feature_extractor_trainontarget,
         "optimizer": optimizer,
-        "criterion": criterion
+        "criterion": criterion,
     }
-    config = {
-        "use_source_loader": False,
-        "num_epochs": 1000
-    }
+    config = {"use_source_loader": False, "num_epochs": 1000}
     task_classifier, feature_extractor_trainontarget = supervised_algo.fit(data, network, **config)
     pred_y_task = task_classifier(feature_extractor_trainontarget(target_prime_X.to(device)))
     pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
