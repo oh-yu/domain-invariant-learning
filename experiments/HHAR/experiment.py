@@ -7,7 +7,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from torch.utils.data import DataLoader, TensorDataset
 
-from ...networks import Codats, CoDATS_F_C, Danns2D, IsihDanns, Rdann
+from ...networks import Codats, CoDATS_F_C, Danns2D, IsihDanns
 from ...utils import utils
 
 GT_TO_INT = {"bike": 0, "stairsup": 1, "stairsdown": 2, "stand": 3, "walk": 4, "sit": 5}

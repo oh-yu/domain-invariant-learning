@@ -1,6 +1,3 @@
-from typing import List
-
-import matplotlib.pyplot as plt
 import torch
 from torch import nn
 from tqdm import tqdm

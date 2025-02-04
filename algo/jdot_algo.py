@@ -1,14 +1,13 @@
 from typing import List
 
 import matplotlib.pyplot as plt
-import numpy as np
 import ot
 import torch
 from torch import nn
 from tqdm import tqdm
 
 from ..utils import utils
-from .algo_utils import EarlyStopping, get_psuedo_label_weights, get_terminal_weights
+from .algo_utils import EarlyStopping, get_psuedo_label_weights
 
 
 def fit(data, network, **kwargs):
@@ -24,7 +23,6 @@ def fit(data, network, **kwargs):
         network["feature_extractor"],
         network["task_classifier"],
     )
-    criterion = network["criterion"]
     feature_optimizer, task_optimizer = (
         network["feature_optimizer"],
         network["task_optimizer"],
@@ -46,11 +44,7 @@ def fit(data, network, **kwargs):
     }
     config.update(kwargs)
     num_epochs = config["num_epochs"]
-    is_target_weights, is_class_weights, is_psuedo_weights = (
-        config["is_target_weights"],
-        config["is_class_weights"],
-        config["is_psuedo_weights"],
-    )
+    is_psuedo_weights = config["is_psuedo_weights"]
     do_plot, _ = config["do_plot"], config["do_print"]
     device = config["device"]
     is_changing_lr, epoch_thr_for_changing_lr, changed_lrs = (

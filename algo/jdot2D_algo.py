@@ -1,15 +1,11 @@
-from typing import List
-
 import matplotlib.pyplot as plt
-import numpy as np
 import ot
 import torch
 from torch import nn
 from tqdm import tqdm
 
 from ..utils import utils
-from .algo_utils import EarlyStopping, get_terminal_weights
-from .jdot_algo import _change_lr_during_jdot_training
+from .algo_utils import EarlyStopping
 
 
 def fit(data, network, **kwargs):
@@ -28,7 +24,6 @@ def fit(data, network, **kwargs):
         network["feature_extractor"],
         network["task_classifier"],
     )
-    criterion = network["criterion"]
     feature_optimizer, task_optimizer = (
         network["feature_optimizer"],
         network["task_optimizer"],

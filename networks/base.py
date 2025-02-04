@@ -1,9 +1,9 @@
-from abc import ABC, abstractmethod
+from abc import ABC
 
 import numpy as np
 import torch
 from absl import flags
-from torch import nn, optim
+from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
 
 from ..algo import coral_algo, dann_algo, jdot_algo, supervised_algo

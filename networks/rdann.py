@@ -1,7 +1,5 @@
-import torch
 from torch import nn, optim
 
-from ..algo import dann_algo
 from ..utils import utils
 from .base import DannsBase
 from .mlp_decoder_three_layers import ThreeLayersDecoder

@@ -1,7 +1,6 @@
 import torch
 from torch import nn, optim
 
-from ..algo import supervised_algo
 from .base import SupervisedBase
 from .conv1d_three_layers import Conv1dThreeLayers
 from .conv1d_two_layers import Conv1dTwoLayers
