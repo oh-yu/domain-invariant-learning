@@ -109,7 +109,6 @@ def get_image_data_for_uda(name="MNIST"):
             download=True,
             transform=custom_transform,
         )
-        train_data = CustomUDADataset(train_data, "source")
         train_loader = DataLoader(train_data, batch_size=64, shuffle=True)
         return train_loader
 
