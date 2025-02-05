@@ -7,7 +7,7 @@ from absl import app, flags
 from torch import nn, optim
 from torch.utils.data import DataLoader, TensorDataset
 
-from ...algo import coral_algo, dann2D_algo, dann_algo
+from ...algo import coral2D_algo, coral_algo, dann2D_algo, dann_algo, jdot2D_algo, jdot_algo, supervised_algo
 from ...networks import Encoder, ThreeLayersDecoder
 from ...utils import utils
 
@@ -19,10 +19,7 @@ flags.mark_flag_as_required("rotation_degree")
 flags.mark_flag_as_required("algo_name")
 
 
-ALGORYTHMS = {
-    "DANN": dann_algo,
-    "CoRAL": coral_algo,
-}
+ALGORYTHMS = {"DANN": dann_algo, "CoRAL": coral_algo, "JDOT": jdot_algo}
 
 
 def main(argv):
@@ -37,7 +34,7 @@ def main(argv):
         x_grid,
         x1_grid,
         x2_grid,
-    ) = utils.get_source_target_from_make_moons(rotation_degree=FLAGS.rotation_degree)
+    ) = utils.get_source_target_from_make_moons(rotation_degree=FLAGS.rotation_degree, noise=0.1)
     source_loader, target_prime_loader, source_y_task, source_X, target_prime_X, target_prime_y_task = utils.get_loader(
         source_X, target_prime_X, source_y_task, target_prime_y_task
     )
@@ -97,9 +94,18 @@ def main(argv):
         config = {
             "num_epochs": 1000,
             "alpha": 1,
-            "is_changing_lr": True,
-            "epoch_thr_for_changing_lr": 200,
-            "changed_lrs": [0.00005, 0.00005],
+            "do_plot": True,
+        }
+    if FLAGS.algo_name == "JDOT":
+        network = {
+            "feature_extractor": feature_extractor,
+            "task_classifier": task_classifier,
+            "criterion": criterion,
+            "feature_optimizer": feature_optimizer,
+            "task_optimizer": task_optimizer,
+        }
+        config = {
+            "num_epochs": 1500,
             "do_plot": True,
         }
     feature_extractor, task_classifier, _ = ALGORYTHMS[FLAGS.algo_name].fit(data, network, **config)
@@ -172,7 +178,14 @@ def main(argv):
         "task_optimizer": task_optimizer,
     }
     config = {"num_epochs": 1000, "do_plot": True}
-    feature_extractor_dim12, task_classifier, _ = dann2D_algo.fit(data, network, **config)
+    if FLAGS.algo_name == "DANN":
+        algo_2D = dann2D_algo
+    elif FLAGS.algo_name == "CoRAL":
+        algo_2D = coral2D_algo
+    elif FLAGS.algo_name == "JDOT":
+        algo_2D = jdot2D_algo
+        config = {"num_epochs": 1500, "do_plot": True}
+    feature_extractor_dim12, task_classifier, _ = algo_2D.fit(data, network, **config)
     y_grid = task_classifier.predict_proba(feature_extractor_dim12(x_grid.T)).cpu().detach().numpy()
     pred_y_task = task_classifier.predict(feature_extractor_dim12(target_prime_X.to(device)))
     danns_2D_acc = sum(pred_y_task == target_prime_y_task) / len(pred_y_task)
@@ -246,6 +259,19 @@ def main(argv):
             "feature_optimizer": feature_optimizer_dim1,
         }
         config = {"num_epochs": 200, "alpha": 1, "do_plot": True}
+
+    elif FLAGS.algo_name == "JDOT":
+        network = {
+            "feature_extractor": feature_extractor_dim12,
+            "task_classifier": task_classifier_dim1,
+            "criterion": criterion,
+            "feature_optimizer": feature_optimizer_dim1,
+            "task_optimizer": task_optimizer_dim1,
+        }
+        config = {
+            "num_epochs": 500,
+            "do_plot": True,
+        }
     feature_extractor_dim12, task_classifier_dim1, _ = ALGORYTHMS[FLAGS.algo_name].fit(data, network, **config)
 
     target_feature_eval = feature_extractor_dim12(target_X)
@@ -287,6 +313,16 @@ def main(argv):
         }
         config = {"num_epochs": 800, "alpha": 1, "is_psuedo_weights": True, "do_plot": True}
 
+    elif FLAGS.algo_name == "JDOT":
+        feature_extractor_dim12 = Encoder(input_size=source_X.shape[1], output_size=hidden_size).to(device)
+        network = {
+            "feature_extractor": feature_extractor_dim12,
+            "task_classifier": task_classifier_dim2,
+            "criterion": criterion,
+            "feature_optimizer": feature_optimizer_dim2,
+            "task_optimizer": task_optimizer_dim2,
+        }
+        config = {"num_epochs": 1000, "do_plot": True, "is_pseudo_weights": True}
     feature_extractor_dim12, task_classifier_dim2, _ = ALGORYTHMS[FLAGS.algo_name].fit(data, network, **config)
 
     ## Eval
@@ -312,23 +348,73 @@ def main(argv):
     plt.show()
 
     # Without Adaptation
+    feature_extractor_withoutadapt = Encoder(input_size=source_X.shape[1], output_size=hidden_size).to(device)
     task_classifier = ThreeLayersDecoder(
-        input_size=source_X.shape[1], output_size=num_classes, dropout_ratio=0, fc1_size=50, fc2_size=10
+        input_size=hidden_size, output_size=num_classes, dropout_ratio=0, fc1_size=50, fc2_size=10
     ).to(device)
-    task_optimizer = optim.Adam(task_classifier.parameters(), lr=learning_rate)
-    task_classifier = utils.fit_without_adaptation(source_loader, task_classifier, task_optimizer, criterion, 1000)
-    pred_y_task = task_classifier(target_prime_X.to(device))
+
+    optimizer = optim.Adam(
+        list(task_classifier.parameters()) + list(feature_extractor_withoutadapt.parameters()), lr=learning_rate
+    )
+    data = {"loader": source_loader}
+    network = {
+        "decoder": task_classifier,
+        "encoder": feature_extractor_withoutadapt,
+        "optimizer": optimizer,
+        "criterion": criterion,
+    }
+    config = {"use_source_loader": True, "num_epochs": 1000}
+    task_classifier, feature_extractor_withoutadapt = supervised_algo.fit(data, network, **config)
+    pred_y_task = task_classifier(feature_extractor_withoutadapt(target_prime_X.to(device)))
     pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
     pred_y_task = pred_y_task > 0.5
     without_adapt_acc = sum(pred_y_task == target_prime_y_task) / target_prime_y_task.shape[0]
     print(f"Without Adaptation Accuracy:{without_adapt_acc}")
 
-    y_grid = task_classifier(x_grid.T)
+    y_grid = task_classifier(feature_extractor_withoutadapt(x_grid.T))
     y_grid = torch.sigmoid(y_grid)
     y_grid = y_grid.cpu().detach().numpy()
 
     plt.figure()
     plt.title("Without Adaptation Boundary")
+    plt.xlabel("X1")
+    plt.ylabel("X2")
+    plt.scatter(source_X[:, 0], source_X[:, 1], c=source_y_task)
+    plt.scatter(target_prime_X[:, 0], target_prime_X[:, 1], c="black")
+    plt.contourf(x1_grid, x2_grid, y_grid.reshape(100, 100), alpha=0.3)
+    plt.colorbar()
+    plt.show()
+
+    # Train on Target
+    feature_extractor_trainontarget = Encoder(input_size=source_X.shape[1], output_size=hidden_size).to(device)
+    task_classifier = ThreeLayersDecoder(
+        input_size=hidden_size, output_size=num_classes, dropout_ratio=0, fc1_size=50, fc2_size=10
+    ).to(device)
+    optimizer = optim.Adam(
+        list(task_classifier.parameters()) + list(feature_extractor_trainontarget.parameters()), lr=learning_rate
+    )
+    target_prime_ds = TensorDataset(target_prime_X.to(device), target_prime_y_task)
+    target_prime_loader = DataLoader(target_prime_ds, batch_size=34)
+    data = {"loader": target_prime_loader}
+    network = {
+        "decoder": task_classifier,
+        "encoder": feature_extractor_trainontarget,
+        "optimizer": optimizer,
+        "criterion": criterion,
+    }
+    config = {"use_source_loader": False, "num_epochs": 1000}
+    task_classifier, feature_extractor_trainontarget = supervised_algo.fit(data, network, **config)
+    pred_y_task = task_classifier(feature_extractor_trainontarget(target_prime_X.to(device)))
+    pred_y_task = torch.sigmoid(pred_y_task).reshape(-1)
+    pred_y_task = pred_y_task > 0.5
+    trainontarget_acc = sum(pred_y_task == target_prime_y_task) / target_prime_y_task.shape[0]
+    print(f"Train on Target Accuracy:{trainontarget_acc}")
+    y_grid = task_classifier(feature_extractor_trainontarget(x_grid.T))
+    y_grid = torch.sigmoid(y_grid)
+    y_grid = y_grid.cpu().detach().numpy()
+
+    plt.figure()
+    plt.title("Train on Target Boundary")
     plt.xlabel("X1")
     plt.ylabel("X2")
     plt.scatter(source_X[:, 0], source_X[:, 1], c=source_y_task)
@@ -347,6 +433,7 @@ def main(argv):
     # to csv
     df = pd.DataFrame()
     df["PAT"] = [f"source->{FLAGS.rotation_degree}rotated->{FLAGS.rotation_degree*2}rotated"]
+    df["Train on Target"] = [trainontarget_acc.item()]
     df["2D-DANNs"] = [danns_2D_acc.item()]
     df["stepbystep-DANNs"] = [stepbystep_dann_acc.item()]
     df["DANNs"] = [dann_acc.item()]

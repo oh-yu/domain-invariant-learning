@@ -4,7 +4,7 @@ from absl import flags
 from torch import nn, optim
 from torch.utils.data import DataLoader, TensorDataset
 
-from ..algo import coral_algo, dann_algo
+from ..algo import coral_algo, dann_algo, jdot_algo
 from ..utils import utils
 from .conv1d_three_layers import Conv1dThreeLayers
 from .conv1d_two_layers import Conv1dTwoLayers
@@ -13,10 +13,7 @@ from .mlp_decoder_three_layers import ThreeLayersDecoder
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 FLAGS = flags.FLAGS
-ALGORYTHMS = {
-    "DANN": dann_algo,
-    "CoRAL": coral_algo,
-}
+ALGORYTHMS = {"DANN": dann_algo, "CoRAL": coral_algo, "JDOT": jdot_algo}
 
 
 class IsihDanns:
@@ -57,7 +54,7 @@ class IsihDanns:
             self.device = DEVICE
             self.stop_during_epochs = False
 
-            self.batch_size = 34
+            self.batch_size = 32
             self.experiment = experiment
             self.do_early_stop = False
 
@@ -250,8 +247,19 @@ class IsihDanns:
             config = {
                 "num_epochs": self.num_epochs_dim1,
                 "device": self.device,
-                "stop_during_epochs": self.stop_during_epochs,
-                "epoch_thr_for_stopping": 11,
+                "do_early_stop": self.do_early_stop,
+            }
+        elif FLAGS.algo_name == "JDOT":
+            network = {
+                "feature_extractor": self.feature_extractor,
+                "task_classifier": self.task_classifier_dim1,
+                "criterion": self.criterion,
+                "feature_optimizer": self.feature_optimizer_dim1,
+                "task_optimizer": self.task_optimizer_dim1,
+            }
+            config = {
+                "num_epochs": self.num_epochs_dim1,
+                "device": self.device,
                 "do_early_stop": self.do_early_stop,
             }
         self.feature_extractor, self.task_classifier_dim1, _ = ALGORYTHMS[FLAGS.algo_name].fit(data, network, **config)
@@ -407,11 +415,22 @@ class IsihDanns:
                 "num_epochs": self.num_epochs_dim2,
                 "is_psuedo_weights": True,
                 "device": self.device,
-                "stop_during_epochs": self.stop_during_epochs,
-                "epoch_thr_for_stopping": 11,
                 "do_early_stop": self.do_early_stop,
             }
-
+        elif FLAGS.algo_name == "JDOT":
+            network = {
+                "feature_extractor": self.feature_extractor,
+                "task_classifier": self.task_classifier_dim2,
+                "criterion": self.criterion,
+                "feature_optimizer": self.feature_optimizer_dim2,
+                "task_optimizer": self.task_optimizer_dim2,
+            }
+            config = {
+                "num_epochs": self.num_epochs_dim2,
+                "is_psuedo_weights": True,
+                "device": self.device,
+                "do_early_stop": self.do_early_stop,
+            }
         self.feature_extractor, self.task_classifier_dim2, _ = ALGORYTHMS[FLAGS.algo_name].fit(data, network, **config)
 
     def predict(self, X: torch.Tensor, is_1st_dim: bool) -> torch.Tensor:

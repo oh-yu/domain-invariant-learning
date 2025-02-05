@@ -221,6 +221,7 @@ def codats(pattern):
     test_target_prime_y_task = test_target_prime_y_task.to(utils.DEVICE)
 
     codats = Codats(experiment="HHAR")
+    # codats = Rdann(experiment="HHAR")
     acc = codats.fit(source_ds, target_ds, test_target_prime_X, test_target_prime_y_task)
     return acc
 

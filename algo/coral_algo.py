@@ -3,6 +3,7 @@ from typing import List
 import matplotlib.pyplot as plt
 import torch
 from torch import nn
+from tqdm import tqdm
 
 from ..utils import utils
 from .algo_utils import EarlyStopping, get_psuedo_label_weights
@@ -63,7 +64,7 @@ def fit(data, network, **kwargs):
     loss_corals = []
     loss_tasks = []
     loss_evals = []
-    for epoch in range(1, num_epochs + 1):
+    for epoch in tqdm(range(1, num_epochs + 1)):
         task_classifier.train()
         feature_extractor.train()
         if stop_during_epochs & (epoch == epoch_thr_for_stopping):
@@ -141,11 +142,11 @@ def fit(data, network, **kwargs):
             break
 
     if do_plot:
-        _plot_coral_loss(loss_corals, loss_tasks, loss_evals)
+        plot_coral_loss(loss_corals, loss_tasks, loss_evals)
     return feature_extractor, task_classifier, None
 
 
-def _plot_coral_loss(loss_corals, loss_tasks, loss_evals):
+def plot_coral_loss(loss_corals, loss_tasks, loss_evals):
     plt.plot(loss_corals, label="loss coral")
     plt.plot(loss_tasks, label="loss task")
     plt.xlabel("batch")
